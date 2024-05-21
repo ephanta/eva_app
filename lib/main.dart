@@ -4,16 +4,27 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// The main entry point for the Flutter application.
-void main() {
-Future main() async {
-  await dotenv.load();
+Future<void> main() async {
+  try {
+    await dotenv.load(fileName: '.env');
+    print('.env Datei erfolgreich geladen');
+  } catch (e) {
+    print('Fehler beim Laden der .env Datei: $e');
+  }
   initializeSupabase();
   runApp(const MyApp());
 }
 
 void initializeSupabase() async {
-  await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!, anonKey: dotenv.env['SUPABASE_KEY']!);
+  try {
+    await Supabase.initialize(
+      url: dotenv.env['SUPABASE_URL']!,
+      anonKey: dotenv.env['SUPABASE_KEY']!,
+    );
+    print('Supabase erfolgreich initialisiert');
+  } catch (e) {
+    print('Fehler bei der Initialisierung von Supabase: $e');
+  }
 }
 
 class MyApp extends StatelessWidget {
