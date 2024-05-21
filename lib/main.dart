@@ -12,7 +12,7 @@ Future<void> main() async {
     print('Fehler beim Laden der .env Datei: $e');
   }
   initializeSupabase();
-  runApp(const MyApp());
+  runApp(const FamilyFeastApp());
 }
 
 void initializeSupabase() async {
@@ -27,8 +27,8 @@ void initializeSupabase() async {
   }
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class FamilyFeastApp extends StatelessWidget {
+  const FamilyFeastApp({super.key});
 
   /// This widget is the root of your application.
   @override
@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'FamilyFeast'),
+      home: const HomeScreen(title: 'FamilyFeast'),
     );
   }
 }
