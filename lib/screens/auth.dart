@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'home.dart';
+import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -10,30 +9,6 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  Future<void> _signIn() async {
-    try {
-      final response = await Supabase.instance.client.auth.signInWithPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
-      );
-
-      if (response.session != null) {
-        // Navigate to main app
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen(title: 'FamilyFeast')),
-        );
-      }
-    } catch (e) {
-      // Handle unexpected errors
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An unexpected error occurred: $e')),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,20 +17,38 @@ class _AuthScreenState extends State<AuthScreen> {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Password'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _signIn,
-              child: const Text('Sign In'),
+            Column(
+              children: [
+                // Email Auth
+                SupaEmailAuth(
+                  //TODO: Fix this
+                  redirectTo: '/',
+                  onSignInComplete: (response) {
+                    //TODO: Fix this
+                    Navigator.pushNamed(context, '/');
+                  },
+                  //TODO: Fix this
+                  onSignUpComplete: (response) {
+                    Navigator.pushNamed(context, '/');
+                  },
+                  metadataFields: [
+                    MetaDataField(
+                      prefixIcon: const Icon(Icons.person),
+                      label: 'Nutzername',
+                      key: 'username',
+                      validator: (val) {
+                        if (val == null || val.isEmpty) {
+                          return 'Bitte geben Sie einen Nutzernamen ein';
+                        }
+                        return null;
+                      },
+                    ),
+                    //TODO: Edit label and other text
+                  ],
+                ),
+              ],
             ),
           ],
         ),
