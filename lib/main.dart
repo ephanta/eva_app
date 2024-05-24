@@ -2,6 +2,7 @@ import 'package:eva_app/screens/home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:eva_app/screens/auth.dart';
 
 /// The main entry point for the Flutter application.
 Future<void> main() async {
@@ -11,11 +12,11 @@ Future<void> main() async {
   } catch (e) {
     print('Fehler beim Laden der .env Datei: $e');
   }
-  initializeSupabase();
+  await initializeSupabase();
   runApp(const FamilyFeastApp());
 }
 
-void initializeSupabase() async {
+Future<void> initializeSupabase() async {
   try {
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']!,
@@ -27,20 +28,38 @@ void initializeSupabase() async {
   }
 }
 
-class FamilyFeastApp extends StatelessWidget {
+class FamilyFeastApp extends StatefulWidget {
   const FamilyFeastApp({super.key});
 
-  /// This widget is the root of your application.
+  @override
+  _FamilyFeastAppState createState() => _FamilyFeastAppState();
+}
+
+class _FamilyFeastAppState extends State<FamilyFeastApp> {
+  bool _isAuthenticated = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthStatus();
+  }
+
+  Future<void> _checkAuthStatus() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    setState(() {
+      _isAuthenticated = session != null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'FamilyFeast',
       theme: ThemeData(
-        // This is the theme of your application.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-      home: const HomeScreen(title: 'FamilyFeast'),
+      home: _isAuthenticated ? const HomeScreen(title: 'FamilyFeast') : const AuthScreen(),
     );
   }
 }
