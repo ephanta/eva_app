@@ -1,4 +1,5 @@
 import 'package:eva_app/screens/home.dart';
+import 'package:eva_app/screens/profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,6 +17,7 @@ Future<void> main() async {
   runApp(const FamilyFeastApp());
 }
 
+/// Initializes Supabase
 Future<void> initializeSupabase() async {
   try {
     await Supabase.initialize(
@@ -28,6 +30,7 @@ Future<void> initializeSupabase() async {
   }
 }
 
+/// The root widget of the application
 class FamilyFeastApp extends StatefulWidget {
   const FamilyFeastApp({super.key});
 
@@ -35,15 +38,25 @@ class FamilyFeastApp extends StatefulWidget {
   _FamilyFeastAppState createState() => _FamilyFeastAppState();
 }
 
+/// The state of the FamilyFeastApp
 class _FamilyFeastAppState extends State<FamilyFeastApp> {
+  late final SupabaseClient _client;
   bool _isAuthenticated = false;
 
   @override
   void initState() {
     super.initState();
+    _client = Supabase.instance.client;
+    _client.auth.onAuthStateChange.listen((event) {
+      final session = event.session;
+      setState(() {
+        _isAuthenticated = session != null;
+      });
+    });
     _checkAuthStatus();
   }
 
+  /// Checks the authentication status
   Future<void> _checkAuthStatus() async {
     final session = Supabase.instance.client.auth.currentSession;
     setState(() {
@@ -54,12 +67,34 @@ class _FamilyFeastAppState extends State<FamilyFeastApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'FamilyFeast',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-      home: _isAuthenticated ? const HomeScreen(title: 'FamilyFeast') : const AuthScreen(),
+      initialRoute: _isAuthenticated ? '/' : '/auth',
+      routes: {
+        '/': (context) => _isAuthenticated ? const HomeScreen(title: 'FamilyFeast') : const AuthScreen(),
+        '/auth': (context) => const AuthScreen(),
+        '/profile': (context) => _isAuthenticated ? const ProfileScreen() : const AuthScreen(),
+      },
+      onUnknownRoute: (RouteSettings settings) {
+        return MaterialPageRoute<void>(
+          settings: settings,
+          builder: (BuildContext context) => const Scaffold(
+            body: Center(
+              child: Text(
+                'Not Found',
+                style: TextStyle(
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
