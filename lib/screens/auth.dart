@@ -1,9 +1,8 @@
-import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 import '../components/app_bar_custom.dart';
+import '../routes/app_router.gr.dart';
 
 /// {@category Screens}
 /// Ansicht für das Anmelden oder Registrieren eines Nutzers
@@ -47,16 +46,21 @@ class _AuthScreenState extends State<AuthScreen> {
                   'Authentifizierung',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
-                // Email Auth
+                /// Email Auth
                 SupaEmailAuth(
                   localization: const SupaEmailAuthLocalization(
                     enterEmail: 'E-Mail eingeben',
+                    validEmailError: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
                     enterPassword: 'Passwort eingeben',
+                    passwordLengthError: 'Das Passwort muss mindestens 6 Zeichen lang sein',
                     forgotPassword: 'Passwort vergessen?',
                     signIn: 'Anmelden',
                     signUp: 'Registrieren',
                     dontHaveAccount: 'Sie haben noch keinen Account? Registrieren Sie sich!',
                     haveAccount: 'Sie haben bereits einen Account? Melden Sie sich an!',
+                    sendPasswordReset: 'Passwort zurücksetzen',
+                    backToSignIn: 'Zurück zur Anmeldung',
+                    unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten',
                   ),
                   redirectTo: '/',
                   onSignInComplete: (response) {
@@ -79,6 +83,24 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ],
                 ),
+                // TODO: Fix provider in supabase setup
+                // /// Social Auth
+                // SupaSocialsAuth(
+                //   localization: const SupaSocialsAuthLocalization(
+                //     continueWith: 'Weiter mit',
+                //     unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten',
+                //     updatePassword: 'Bitte aktualisieren Sie Ihr Passwort',
+                //     successSignInMessage: 'Erfolgreich angemeldet',
+                //   ),
+                //   socialProviders: const [
+                //     OAuthProvider.google,
+                //   ],
+                //   colored: true,
+                //   onSuccess: (response) {
+                //     _checkAuthStatus(); // Check authentication status after sign in
+                //   },
+                //   onError: (error) {},
+                // ),
               ],
             ),
           ],
