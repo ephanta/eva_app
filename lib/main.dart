@@ -5,7 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:eva_app/screens/auth.dart';
 
-/// The main entry point for the Flutter application.
+/// Die Hauptmethode für die Flutter-Anwendung.
 Future<void> main() async {
   try {
     await dotenv.load(fileName: '.env');
@@ -17,7 +17,7 @@ Future<void> main() async {
   runApp(const FamilyFeastApp());
 }
 
-/// Initializes Supabase
+/// Initialisierung Supabase
 Future<void> initializeSupabase() async {
   try {
     await Supabase.initialize(
@@ -30,7 +30,7 @@ Future<void> initializeSupabase() async {
   }
 }
 
-/// The root widget of the application
+/// Das Root-Widget der Anwendung
 class FamilyFeastApp extends StatefulWidget {
   const FamilyFeastApp({super.key});
 
@@ -38,7 +38,7 @@ class FamilyFeastApp extends StatefulWidget {
   _FamilyFeastAppState createState() => _FamilyFeastAppState();
 }
 
-/// The state of the FamilyFeastApp
+/// Der Zustand der FamilyFeastApp
 class _FamilyFeastAppState extends State<FamilyFeastApp> {
   late final SupabaseClient _client;
   bool _isAuthenticated = false;
@@ -56,7 +56,7 @@ class _FamilyFeastAppState extends State<FamilyFeastApp> {
     _checkAuthStatus();
   }
 
-  /// Checks the authentication status
+  /// Überprüft und aktualisiert den Authentifizierungsstatus
   Future<void> _checkAuthStatus() async {
     final session = Supabase.instance.client.auth.currentSession;
     setState(() {

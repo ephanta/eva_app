@@ -1,10 +1,9 @@
-
-// HomeScreen
 import 'package:flutter/material.dart';
 
-import '../components/BottomNavBarItem.dart';
+import '../components/bottom_nav_bar_item.dart';
 
-/// A screen that displays the home page
+/// {@category Screens}
+/// Ansicht für die Home-Seite
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key, required this.title});
 
@@ -14,7 +13,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-/// The state of the HomeScreen
+/// Der Zustand für die Home-Seite
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
+import '../components/app_bar_custom.dart';
 
+/// {@category Screens}
+/// Ansicht für das Profil des angemeldeten Benutzers
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -8,15 +11,12 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
+/// Der Zustand für die Profil-Seite
 class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profil'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-
-      ),
+      appBar: const AppBarCustom(),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
-import '../screens/home.dart';
+import '../components/app_bar_custom.dart';
 
+/// {@category Screens}
+/// Ansicht für das Anmelden oder Registrieren eines Nutzers
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
 
@@ -10,6 +11,7 @@ class AuthScreen extends StatefulWidget {
   _AuthScreenState createState() => _AuthScreenState();
 }
 
+/// Der Zustand für die Authentifizierungsseite
 class _AuthScreenState extends State<AuthScreen> {
 
   @override
@@ -28,7 +30,8 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
+      // appBar: AppBar(title: const Text('Login')),
+      appBar: const AppBarCustom(),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -36,8 +39,21 @@ class _AuthScreenState extends State<AuthScreen> {
           children: [
             Column(
               children: [
+                Text(
+                  'Authentifizierung',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
                 // Email Auth
                 SupaEmailAuth(
+                  localization: const SupaEmailAuthLocalization(
+                    enterEmail: 'E-Mail eingeben',
+                    enterPassword: 'Passwort eingeben',
+                    forgotPassword: 'Passwort vergessen?',
+                    signIn: 'Anmelden',
+                    signUp: 'Registrieren',
+                    dontHaveAccount: 'Sie haben noch keinen Account? Registrieren Sie sich!',
+                    haveAccount: 'Sie haben bereits einen Account? Melden Sie sich an!',
+                  ),
                   redirectTo: '/',
                   onSignInComplete: (response) {
                     _checkAuthStatus(); // Check authentication status after sign in
