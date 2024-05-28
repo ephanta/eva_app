@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import '../components/app_bar_custom.dart';
 
 /// {@category Screens}
-/// Ansicht für den Wochenplaner
+/// Ansicht für die Einkaufsliste
 @RoutePage()
-class PlannerScreen extends StatefulWidget {
-  const PlannerScreen({super.key});
+class ShoppingListScreen extends StatefulWidget {
+  const ShoppingListScreen({super.key});
 
   @override
-  State<PlannerScreen> createState() => _PlannerScreenState();
+  State<ShoppingListScreen> createState() => _ShoppingListScreenState();
 }
 
 /// Der Zustand für die Wochenplan-Seite
-class _PlannerScreenState extends State<PlannerScreen> {
+class _ShoppingListScreenState extends State<ShoppingListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(

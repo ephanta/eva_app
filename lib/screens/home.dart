@@ -1,25 +1,21 @@
+import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:eva_app/components/app_bar_custom.dart';
 import 'package:flutter/material.dart';
 
-import '../components/BottomNavBarItem.dart';
+import '../components/bottom_nav_bar_item.dart';
 
+/// {@category Screens}
+/// Ansicht für die Home-Seite
+@RoutePage()
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+/// Der Zustand für die Home-Seite
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
 
@@ -32,25 +28,14 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.person),
-            onPressed: () {
-              // Aktion beim Klicken des Icons ausführen
-            },
-          ),
-        ],
-      ),
+      appBar: const AppBarCustom(showArrow: false, showProfile: true),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
               'Rezept des Tages',
-              style: Theme.of(context).textTheme.headline4,
+              style: Theme.of(context).textTheme.headlineMedium,
             ),
             Container(
               color: Theme.of(context).colorScheme.primary,
@@ -58,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
               margin: const EdgeInsets.all(10),
               child: Text(
                 'Name des Gerichts',
-                style: Theme.of(context).textTheme.headline6,
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
             ),
           ],
@@ -72,8 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.grey.withOpacity(0.5),
               spreadRadius: 1,
               blurRadius: 3,
-              offset:
-                  Offset(0, -1), // ändere Offset, um den Schatten zu justieren
+              offset: const Offset(0, -1),
             ),
           ],
         ),

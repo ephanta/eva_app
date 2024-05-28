@@ -1,9 +1,9 @@
-import 'package:eva_app/screens/home.dart';
+import 'package:eva_app/routes/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// The main entry point for the Flutter application.
+/// Die Hauptmethode für die Flutter-Anwendung.
 Future<void> main() async {
   try {
     await dotenv.load(fileName: '.env');
@@ -11,11 +11,12 @@ Future<void> main() async {
   } catch (e) {
     print('Fehler beim Laden der .env Datei: $e');
   }
-  initializeSupabase();
-  runApp(const FamilyFeastApp());
+  await initializeSupabase();
+  runApp(FamilyFeastApp());
 }
 
-void initializeSupabase() async {
+/// Initialisierung Supabase
+Future<void> initializeSupabase() async {
   try {
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']!,
@@ -27,20 +28,37 @@ void initializeSupabase() async {
   }
 }
 
-class FamilyFeastApp extends StatelessWidget {
-  const FamilyFeastApp({super.key});
+/// Das Root-Widget der Anwendung
+class FamilyFeastApp extends StatefulWidget {
+  FamilyFeastApp({super.key});
 
-  /// This widget is the root of your application.
+  @override
+  _FamilyFeastAppState createState() => _FamilyFeastAppState();
+}
+
+/// Der Zustand der FamilyFeastApp
+class _FamilyFeastAppState extends State<FamilyFeastApp> {
+
+  /// AppRouter für das Verwenden von Routen
+  final _appRouter = AppRouter();
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
       title: 'FamilyFeast',
       theme: ThemeData(
-        // This is the theme of your application.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-      home: const HomeScreen(title: 'FamilyFeast'),
+
+      /// Konfiguration des AppRouters
+      routerConfig: _appRouter.config(),
     );
   }
 }
