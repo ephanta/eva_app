@@ -1,13 +1,15 @@
+import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:eva_app/components/app_bar_custom.dart';
 import 'package:flutter/material.dart';
 
 import '../components/bottom_nav_bar_item.dart';
 
 /// {@category Screens}
 /// Ansicht für die Home-Seite
+@RoutePage()
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.title});
-
-  final String title;
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -26,18 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person),
-            onPressed: () {
-              Navigator.of(context).pushNamed('/profile');
-            },
-          ),
-        ],
-      ),
+      appBar: const AppBarCustom(showArrow: false, showProfile: true),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

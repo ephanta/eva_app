@@ -1,9 +1,13 @@
+import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 import '../components/app_bar_custom.dart';
 
 /// {@category Screens}
 /// Ansicht für das Anmelden oder Registrieren eines Nutzers
+@RoutePage()
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
 
@@ -23,15 +27,15 @@ class _AuthScreenState extends State<AuthScreen> {
   Future<void> _checkAuthStatus() async {
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
-      Navigator.pushReplacementNamed(context, '/');
+      AutoRouter.of(context).push(const HomeRoute());
+
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(title: const Text('Login')),
-      appBar: const AppBarCustom(),
+      appBar: const AppBarCustom(showArrow: false, showProfile: false),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
