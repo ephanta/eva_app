@@ -2,7 +2,7 @@ import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
-import '../components/app_bar_custom.dart';
+import '../widgets/navigation/app_bar_custom.dart';
 import '../routes/app_router.gr.dart';
 
 /// {@category Screens}

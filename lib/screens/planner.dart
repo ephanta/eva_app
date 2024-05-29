@@ -1,7 +1,7 @@
 import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import '../components/app_bar_custom.dart';
+import '../widgets/navigation/app_bar_custom.dart';
 
 /// {@category Screens}
 /// Ansicht für den Wochenplaner

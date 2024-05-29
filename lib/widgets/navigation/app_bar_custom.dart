@@ -1,10 +1,10 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import '../../data/constants.dart';
-import '../routes/app_router.gr.dart';
+import '../../../data/constants.dart';
+import '../../routes/app_router.gr.dart';
 
-/// {@category Components}
-/// Komponente für die App-Bar
+/// {@category Widgets}
+/// Widget für die App-Bar
 class AppBarCustom extends StatelessWidget implements PreferredSizeWidget {
   const AppBarCustom({
     super.key, required this.showArrow, required this.showProfile,

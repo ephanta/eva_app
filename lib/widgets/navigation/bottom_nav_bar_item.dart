@@ -23,6 +23,8 @@ class BottomNavBarItem extends StatelessWidget {
         color: selected ? Colors.deepOrange : Colors.transparent,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          //children do link to Route
+
           children: [
             Icon(
               icon,
