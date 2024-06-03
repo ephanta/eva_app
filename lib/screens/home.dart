@@ -115,6 +115,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<List<dynamic>> _fetchUserHouseholds() async {
+    /// Erhalte alle Ids der Haushalte, dem der aktuellen User angehört
+    final userHouseholdIds = await Supabase.instance.client
+            .from('household_member')
+            .select('household_id')
+            .eq('member_uid', Supabase.instance.client.auth.currentUser!.id)
+        as List;
+
+    /// Erhalte alle Haushalte
+    final households =
+        await Supabase.instance.client.from('households').select() as List;
+
+    /// Wähle die Haushalte aus, die dem aktuellen User gehören und konvertiere das Ergebnis in eine Liste
+    final userHouseholds = households
+        .where((household) => userHouseholdIds.any((userHousehold) =>
+            userHousehold['household_id'] == household['id']))
+        .toList();
+
+    return userHouseholds;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -127,7 +148,48 @@ class _HomeScreenState extends State<HomeScreen> {
               'Haushalte',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            // TODO: Cards pro Haushalt der von dem aktuellen User erstellt wurde
+
+            /// Cards pro Haushalt der von _fetchUserHouseholds übergeben wird
+            FutureBuilder<List<dynamic>>(
+              future: _fetchUserHouseholds(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const CircularProgressIndicator();
+                } else if (snapshot.hasError) {
+                  return Text('Error: ${snapshot.error}');
+                } else {
+                  final households = snapshot.data ?? [];
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 8.0,
+                          mainAxisSpacing: 8.0,
+                        ),
+                        itemCount: households.length,
+                        itemBuilder: (context, index) {
+                          /// Anzeige der Haushaltskacheln
+                          return Card(
+                            child: Center(
+                              child: Text(
+                                households[index]['name'],
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 20.0,
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                }
+              },
+            ),
           ],
         ),
       ),
