@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../routes/app_router.gr.dart';
 import 'bottom_nav_bar_item.dart';
 
-enum PageType { home , shoppingList , planner }
+enum PageType { home , shoppingList , planner, homeDetail }
 
 /// {@category Widgets}
 /// Widget für die Bottom Navigation Bar
@@ -22,12 +22,11 @@ class BottomNavBarCustom extends StatefulWidget implements PreferredSizeWidget {
   State<BottomNavBarCustom> createState() => _BottomNavBarCustomState();
 
   @override
-  // TODO: implement preferredSize
   Size get preferredSize => throw UnimplementedError();
 }
 
 class _BottomNavBarCustomState extends State<BottomNavBarCustom> {
-  Size get preferredSize => const Size.fromHeight(60.0);
+  Size get preferredSize => const Size.fromHeight(50.0);
 
   @override
   Widget build(BuildContext context) {
