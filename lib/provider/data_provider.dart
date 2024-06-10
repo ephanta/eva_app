@@ -1,6 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class DataProvider {
+class DataProvider with ChangeNotifier {
   final SupabaseClient _client;
 
   DataProvider(this._client);
@@ -20,6 +21,8 @@ class DataProvider {
         'household_id': householdId,
         'member_uid': userId,
       }).select();
+
+      notifyListeners();
 
       return householdId;
     } catch (e) {

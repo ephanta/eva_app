@@ -3,6 +3,7 @@ import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:eva_app/widgets/navigation/app_bar_custom.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// {@category Screens}
@@ -104,74 +105,72 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<List<dynamic>> _fetchUserHouseholds() async {
-    return await _dataProvider
-        .fetchUserHouseholds(Supabase.instance.client.auth.currentUser!.id);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppBarCustom(showArrow: false, showProfile: true),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Haushalte',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            FutureBuilder<List<dynamic>>(
-              future: _fetchUserHouseholds(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator();
-                } else if (snapshot.hasError) {
-                  return Text('Error: ${snapshot.error}');
-                } else {
-                  final households = snapshot.data ?? [];
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: GridView.builder(
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 8.0,
-                          mainAxisSpacing: 8.0,
-                        ),
-                        itemCount: households.length,
-                        itemBuilder: (context, index) {
-                          final household = households[index];
-                          print(household);
-                          return InkWell(
-                            onTap: () {
-                              AutoRouter.of(context).push(
-                                HomeDetailRoute(householdId: household['id']),
-                              );
-                            },
-                            child: Card(
-                              child: Center(
-                                child: Text(
-                                  household['name'],
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                    fontSize: 20.0,
+      body: Consumer<DataProvider>(builder: (context, dataProvider, child) {
+        return Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Text(
+                'Haushalte',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
+              FutureBuilder<List<dynamic>>(
+                future: dataProvider.fetchUserHouseholds(
+                    Supabase.instance.client.auth.currentUser!.id),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    final households = snapshot.data ?? [];
+                    return Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: GridView.builder(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 8.0,
+                            mainAxisSpacing: 8.0,
+                          ),
+                          itemCount: households.length,
+                          itemBuilder: (context, index) {
+                            final household = households[index];
+                            print(household);
+                            return InkWell(
+                              onTap: () {
+                                AutoRouter.of(context).push(
+                                  HomeDetailRoute(householdId: household['id']),
+                                );
+                              },
+                              child: Card(
+                                child: Center(
+                                  child: Text(
+                                    household['name'],
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                      fontSize: 20.0,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                }
-              },
-            ),
-          ],
-        ),
-      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           _showFullScreenDialog(context);
