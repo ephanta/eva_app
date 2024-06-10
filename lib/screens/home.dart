@@ -141,7 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: households.length,
                           itemBuilder: (context, index) {
                             final household = households[index];
-                            print(household);
                             return InkWell(
                               onTap: () {
                                 AutoRouter.of(context).push(
