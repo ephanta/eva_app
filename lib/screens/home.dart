@@ -1,5 +1,6 @@
-import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:eva_app/provider/data_provider.dart';
+import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:eva_app/widgets/navigation/app_bar_custom.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,7 +17,14 @@ class HomeScreen extends StatefulWidget {
 
 /// Der Zustand für die Home-Seite
 class _HomeScreenState extends State<HomeScreen> {
-  /// Methode zum Anzeigen eines Fullscreen-Dialogs, zum Erstellen eines neuen Haushalts
+  late DataProvider _dataProvider;
+
+  @override
+  void initState() {
+    super.initState();
+    _dataProvider = DataProvider(Supabase.instance.client);
+  }
+
   void _showFullScreenDialog(BuildContext context) {
     final TextEditingController _controller = TextEditingController();
 
@@ -48,43 +56,24 @@ class _HomeScreenState extends State<HomeScreen> {
                     final householdName = _controller.text;
                     if (householdName.isNotEmpty) {
                       try {
-                        final response = await Supabase.instance.client
-                            .from('households')
-                            .insert({
-                          'name': householdName,
-                          'color': '#FF0000'
-                        }).select();
+                        final householdId = await _dataProvider.createHousehold(
+                          householdName,
+                          Supabase.instance.client.auth.currentUser!.id,
+                        );
 
-                        final data = response as List<dynamic>;
-                        try {
-                          final householdId = data[0]['id'];
-                          print(householdId);
-                          await Supabase.instance.client
-                              .from('household_member')
-                              .insert({
-                            'household_id': householdId,
-                            'member_uid':
-                                Supabase.instance.client.auth.currentUser!.id,
-                          }).select();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content:
-                                    Text('Haushalt erfolgreich erstellt.')),
-                          );
-                          Navigator.of(context).pop();
-                        } catch (e) {
-                          print(e);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'Fehler beim Erstellen des Haushalts. Sie konnten Ihrem Haushalt nicht zugewiesen werden.')),
-                          );
-                        }
-                      } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                              content:
-                                  Text('Fehler beim Erstellen des Haushalts.')),
+                              content: Text('Haushalt erfolgreich erstellt.')),
+                        );
+                        AutoRouter.of(context).maybePop();
+                        AutoRouter.of(context).push(
+                          HomeDetailRoute(householdId: householdId),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Fehler beim Erstellen des Haushalts: $e')),
                         );
                       }
                     } else {
@@ -116,24 +105,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<List<dynamic>> _fetchUserHouseholds() async {
-    /// Erhalte alle Ids der Haushalte, dem der aktuellen User angehört
-    final userHouseholdIds = await Supabase.instance.client
-            .from('household_member')
-            .select('household_id')
-            .eq('member_uid', Supabase.instance.client.auth.currentUser!.id)
-        as List;
-
-    /// Erhalte alle Haushalte
-    final households =
-        await Supabase.instance.client.from('households').select() as List;
-
-    /// Wähle die Haushalte aus, die dem aktuellen User gehören und konvertiere das Ergebnis in eine Liste
-    final userHouseholds = households
-        .where((household) => userHouseholdIds.any((userHousehold) =>
-            userHousehold['household_id'] == household['id']))
-        .toList();
-
-    return userHouseholds;
+    return await _dataProvider
+        .fetchUserHouseholds(Supabase.instance.client.auth.currentUser!.id);
   }
 
   @override
@@ -148,8 +121,6 @@ class _HomeScreenState extends State<HomeScreen> {
               'Haushalte',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-
-            /// Cards pro Haushalt der von _fetchUserHouseholds übergeben wird
             FutureBuilder<List<dynamic>>(
               future: _fetchUserHouseholds(),
               builder: (context, snapshot) {
@@ -171,14 +142,22 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         itemCount: households.length,
                         itemBuilder: (context, index) {
-                          /// Anzeige der Haushaltskacheln
-                          return Card(
-                            child: Center(
-                              child: Text(
-                                households[index]['name'],
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 20.0,
+                          final household = households[index];
+                          print(household);
+                          return InkWell(
+                            onTap: () {
+                              AutoRouter.of(context).push(
+                                HomeDetailRoute(householdId: household['id']),
+                              );
+                            },
+                            child: Card(
+                              child: Center(
+                                child: Text(
+                                  household['name'],
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 20.0,
+                                  ),
                                 ),
                               ),
                             ),
@@ -193,11 +172,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-
-      /// Button zum Erstellen eines neuen Haushalts
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          /// Fullscreen Dialog zum Erstellen eines neuen Haushalts
           _showFullScreenDialog(context);
         },
         child: const Icon(Icons.add),
