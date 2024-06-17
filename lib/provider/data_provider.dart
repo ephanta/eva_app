@@ -55,6 +55,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Erhalte den aktuellen Haushalt
   Future<Map<String, dynamic>> getCurrentHousehold(String householdId) async {
     try {
       final response = await _client
@@ -69,9 +70,11 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Aktualisiere die Daten des Haushalts
   Future<void> updateHousehold(String householdId,
       {String? name, String? color}) async {
     try {
+      /// Erstelle ein leeres Objekt, um die zu aktualisierenden Daten zu speichern
       final updateData = <String, dynamic>{};
 
       if (name != null) {
@@ -80,6 +83,8 @@ class DataProvider with ChangeNotifier {
       if (color != null) {
         updateData['color'] = color;
       }
+
+      /// Aktualisiere die Daten des Haushalts
       try {
         await _client
             .from('households')

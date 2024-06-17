@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/data_provider.dart';
+import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 
@@ -14,6 +15,102 @@ class HomeDetailScreen extends StatelessWidget {
 
   const HomeDetailScreen({Key? key, required this.householdId})
       : super(key: key);
+
+  void _showEditHouseholdDialog(
+      BuildContext context, Map<String, dynamic> household) {
+    final TextEditingController _nameController =
+        TextEditingController(text: household['name']);
+    final TextEditingController _colorController =
+        TextEditingController(text: household['color']);
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+      pageBuilder: (BuildContext buildContext, Animation animation,
+          Animation secondaryAnimation) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Haushalt bearbeiten'),
+          ),
+          body: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                TextField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Name des Haushalts',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _colorController,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Farbe des Haushalts',
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: () async {
+                    final householdName = _nameController.text;
+                    final householdColor = _colorController.text;
+                    if (householdName.isNotEmpty && householdColor.isNotEmpty) {
+                      try {
+                        final dataProvider =
+                            Provider.of<DataProvider>(context, listen: false);
+                        await dataProvider.updateHousehold(
+                          household['id'].toString(),
+                          name: householdName,
+                          color: householdColor,
+                        );
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('Haushalt erfolgreich bearbeitet.')),
+                        );
+                        AutoRouter.of(context).maybePop();
+                        AutoRouter.of(context).push(
+                          HomeDetailRoute(householdId: household['id']),
+                        );
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Fehler beim Bearbeiten des Haushalts: $e')),
+                        );
+                      }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Bitte alle Felder ausfüllen')),
+                      );
+                    }
+                  },
+                  child: const Text('Speichern'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 300),
+      transitionBuilder: (BuildContext context, Animation<double> animation,
+          Animation<double> secondaryAnimation, Widget child) {
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 1),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +144,15 @@ class HomeDetailScreen extends StatelessWidget {
                     Text('Farbe: ${household['color']}'),
                     const Spacer(),
                     ElevatedButton.icon(
-                      icon: Icon(Icons.delete),
-                      label: Text('Haushalt löschen'),
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Haushalt bearbeiten'),
+                      onPressed: () {
+                        _showEditHouseholdDialog(context, household);
+                      },
+                    ),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Haushalt löschen'),
                       onPressed: () async {
                         final dataProvider =
                             Provider.of<DataProvider>(context, listen: false);
@@ -71,7 +175,6 @@ class HomeDetailScreen extends StatelessWidget {
                         }
                       },
                     ),
-                    // TODO: Add edit household button
                     const SizedBox(height: 16),
                   ],
                 ),
