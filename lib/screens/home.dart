@@ -3,6 +3,7 @@ import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:eva_app/widgets/navigation/app_bar_custom.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Color picker package
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -26,8 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
     _dataProvider = DataProvider(Supabase.instance.client);
   }
 
-  void _showFullScreenDialog(BuildContext context) {
+  void _createHouseholdDialog(BuildContext context) {
     final TextEditingController _controller = TextEditingController();
+    Color _currentColor = Colors.blue; // Default color
 
     showGeneralDialog(
       context: context,
@@ -52,14 +54,57 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Wähle eine Farbe'),
+                          content: SingleChildScrollView(
+                            child: BlockPicker(
+                              pickerColor: _currentColor,
+                              onColorChanged: (color) {
+                                _currentColor = color;
+                              },
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Fertig'),
+                              onPressed: () {
+                                AutoRouter.of(context).maybePop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: Container(
+                    width: 100,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: _currentColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text('Farbe wählen',
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
                     final householdName = _controller.text;
+                    final householdColor =
+                        '#${_currentColor.value.toRadixString(16).substring(2, 8)}';
                     if (householdName.isNotEmpty) {
                       try {
                         final householdId = await _dataProvider.createHousehold(
                           householdName,
                           Supabase.instance.client.auth.currentUser!.id,
+                          householdColor,
                         );
 
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -141,6 +186,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: households.length,
                           itemBuilder: (context, index) {
                             final household = households[index];
+                            Color householdColor = Color(int.parse(
+                                    household['color'].substring(1, 7),
+                                    radix: 16) +
+                                0xFF000000);
                             return InkWell(
                               onTap: () {
                                 AutoRouter.of(context).push(
@@ -148,12 +197,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               },
                               child: Card(
+                                color: householdColor,
                                 child: Center(
                                   child: Text(
                                     household['name'],
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
                                       fontSize: 20.0,
+                                      color: Colors.white,
                                     ),
                                   ),
                                 ),
@@ -172,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          _showFullScreenDialog(context);
+          _createHouseholdDialog(context);
         },
         child: const Icon(Icons.add),
       ),

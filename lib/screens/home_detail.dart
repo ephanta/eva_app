@@ -1,9 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Color picker package
 import 'package:provider/provider.dart';
 
 import '../provider/data_provider.dart';
-import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 
@@ -20,8 +20,8 @@ class HomeDetailScreen extends StatelessWidget {
       BuildContext context, Map<String, dynamic> household) {
     final TextEditingController _nameController =
         TextEditingController(text: household['name']);
-    final TextEditingController _colorController =
-        TextEditingController(text: household['color']);
+    Color _currentColor = Color(
+        int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
 
     showGeneralDialog(
       context: context,
@@ -46,18 +46,51 @@ class HomeDetailScreen extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                TextField(
-                  controller: _colorController,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Farbe des Haushalts',
+                GestureDetector(
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: const Text('Wähle eine Farbe'),
+                          content: SingleChildScrollView(
+                            child: BlockPicker(
+                              pickerColor: _currentColor,
+                              onColorChanged: (color) {
+                                _currentColor = color;
+                              },
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Fertig'),
+                              onPressed: () {
+                                AutoRouter.of(context).maybePop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: Container(
+                    width: 100,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: _currentColor,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Text('Farbe wählen',
+                        style: TextStyle(color: Colors.white)),
                   ),
                 ),
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
                     final householdName = _nameController.text;
-                    final householdColor = _colorController.text;
+                    final householdColor =
+                        '#${_currentColor.value.toRadixString(16).substring(2, 8)}';
                     if (householdName.isNotEmpty && householdColor.isNotEmpty) {
                       try {
                         final dataProvider =
@@ -73,10 +106,8 @@ class HomeDetailScreen extends StatelessWidget {
                               content:
                                   Text('Haushalt erfolgreich bearbeitet.')),
                         );
+
                         AutoRouter.of(context).maybePop();
-                        AutoRouter.of(context).push(
-                          HomeDetailRoute(householdId: household['id']),
-                        );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -131,6 +162,9 @@ class HomeDetailScreen extends StatelessWidget {
               return const Text('Keine Daten gefunden.');
             } else {
               final household = snapshot.data!;
+              Color householdColor = Color(
+                  int.parse(household['color'].substring(1, 7), radix: 16) +
+                      0xFF000000);
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -142,6 +176,10 @@ class HomeDetailScreen extends StatelessWidget {
                     Text('Haushalt ID: $householdId'),
                     Text('Name: ${household['name']}'),
                     Text('Farbe: ${household['color']}'),
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: householdColor,
+                    ),
                     const Spacer(),
                     ElevatedButton.icon(
                       icon: const Icon(Icons.edit),

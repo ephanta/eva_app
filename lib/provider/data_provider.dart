@@ -7,12 +7,13 @@ class DataProvider with ChangeNotifier {
   DataProvider(this._client);
 
   /// Erstelle einen neuen Haushalt
-  Future createHousehold(String householdName, String userId) async {
+  Future createHousehold(
+      String householdName, String userId, String color) async {
     try {
       /// Füge den Haushalt in die Datenbank ein
       final households = await _client
           .from('households')
-          .insert({'name': householdName, 'color': '#FF0000'}).select();
+          .insert({'name': householdName, 'color': color}).select();
 
       final data = households as List<dynamic>;
       final householdId = data[0]['id'];
