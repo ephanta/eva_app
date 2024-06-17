@@ -65,7 +65,7 @@ class DataProvider with ChangeNotifier {
           .eq('id', householdId)
           .single();
 
-      return response as Map<String, dynamic>;
+      return response;
     } catch (e) {
       throw Exception('Fehler beim Laden des Haushalts: $e');
     }

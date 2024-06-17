@@ -1,8 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
-import '../widgets/navigation/app_bar_custom.dart';
+
 import '../routes/app_router.gr.dart';
+import '../widgets/navigation/app_bar_custom.dart';
 
 /// {@category Screens}
 /// Ansicht für das Anmelden oder Registrieren eines Nutzers
@@ -16,7 +17,6 @@ class AuthScreen extends StatefulWidget {
 
 /// Der Zustand für die Authentifizierungsseite
 class _AuthScreenState extends State<AuthScreen> {
-
   @override
   void initState() {
     super.initState();
@@ -27,14 +27,14 @@ class _AuthScreenState extends State<AuthScreen> {
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
       AutoRouter.of(context).push(const HomeRoute());
-
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarCustom(showArrow: false, showProfile: false),
+      appBar: const AppBarCustom(
+          showArrow: false, showHome: false, showProfile: false),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -46,18 +46,23 @@ class _AuthScreenState extends State<AuthScreen> {
                   'Authentifizierung',
                   style: Theme.of(context).textTheme.headlineMedium,
                 ),
+
                 /// Email Auth
                 SupaEmailAuth(
                   localization: const SupaEmailAuthLocalization(
                     enterEmail: 'E-Mail eingeben',
-                    validEmailError: 'Bitte geben Sie eine gültige E-Mail-Adresse ein',
+                    validEmailError:
+                        'Bitte geben Sie eine gültige E-Mail-Adresse ein',
                     enterPassword: 'Passwort eingeben',
-                    passwordLengthError: 'Das Passwort muss mindestens 6 Zeichen lang sein',
+                    passwordLengthError:
+                        'Das Passwort muss mindestens 6 Zeichen lang sein',
                     forgotPassword: 'Passwort vergessen?',
                     signIn: 'Anmelden',
                     signUp: 'Registrieren',
-                    dontHaveAccount: 'Sie haben noch keinen Account? Registrieren Sie sich!',
-                    haveAccount: 'Sie haben bereits einen Account? Melden Sie sich an!',
+                    dontHaveAccount:
+                        'Sie haben noch keinen Account? Registrieren Sie sich!',
+                    haveAccount:
+                        'Sie haben bereits einen Account? Melden Sie sich an!',
                     sendPasswordReset: 'Passwort zurücksetzen',
                     backToSignIn: 'Zurück zur Anmeldung',
                     unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten',

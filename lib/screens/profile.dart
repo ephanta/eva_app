@@ -20,7 +20,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarCustom(showArrow: true, showProfile: true),
+      appBar: const AppBarCustom(
+          showArrow: true, showHome: true, showProfile: true),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

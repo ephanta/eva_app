@@ -3,7 +3,7 @@ import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:eva_app/widgets/navigation/app_bar_custom.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Color picker package
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -28,8 +28,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _createHouseholdDialog(BuildContext context) {
-    final TextEditingController _controller = TextEditingController();
-    Color _currentColor = Colors.blue; // Default color
+    final TextEditingController controller = TextEditingController();
+    Color currentColor = Colors.blue; // Default color
 
     showGeneralDialog(
       context: context,
@@ -47,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 TextField(
-                  controller: _controller,
+                  controller: controller,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Name des Haushalts',
@@ -63,9 +63,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           title: const Text('Wähle eine Farbe'),
                           content: SingleChildScrollView(
                             child: BlockPicker(
-                              pickerColor: _currentColor,
+                              pickerColor: currentColor,
                               onColorChanged: (color) {
-                                _currentColor = color;
+                                currentColor = color;
                               },
                             ),
                           ),
@@ -85,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 100,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: _currentColor,
+                      color: currentColor,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     alignment: Alignment.center,
@@ -96,9 +96,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    final householdName = _controller.text;
+                    final householdName = controller.text;
                     final householdColor =
-                        '#${_currentColor.value.toRadixString(16).substring(2, 8)}';
+                        '#${currentColor.value.toRadixString(16).substring(2, 8)}';
                     if (householdName.isNotEmpty) {
                       try {
                         final householdId = await _dataProvider.createHousehold(
@@ -153,7 +153,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarCustom(showArrow: false, showProfile: true),
+      appBar: const AppBarCustom(
+          showArrow: false, showHome: false, showProfile: true),
       body: Consumer<DataProvider>(builder: (context, dataProvider, child) {
         return Center(
           child: Column(

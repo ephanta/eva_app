@@ -18,9 +18,9 @@ class HomeDetailScreen extends StatelessWidget {
 
   void _showEditHouseholdDialog(
       BuildContext context, Map<String, dynamic> household) {
-    final TextEditingController _nameController =
+    final TextEditingController nameController =
         TextEditingController(text: household['name']);
-    Color _currentColor = Color(
+    Color currentColor = Color(
         int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
 
     showGeneralDialog(
@@ -39,7 +39,7 @@ class HomeDetailScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 TextField(
-                  controller: _nameController,
+                  controller: nameController,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
                     labelText: 'Name des Haushalts',
@@ -55,9 +55,9 @@ class HomeDetailScreen extends StatelessWidget {
                           title: const Text('Wähle eine Farbe'),
                           content: SingleChildScrollView(
                             child: BlockPicker(
-                              pickerColor: _currentColor,
+                              pickerColor: currentColor,
                               onColorChanged: (color) {
-                                _currentColor = color;
+                                currentColor = color;
                               },
                             ),
                           ),
@@ -74,15 +74,16 @@ class HomeDetailScreen extends StatelessWidget {
                     );
                   },
                   child: InputDecorator(
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
                       labelText: 'Farbe wählen',
                     ),
                     child: Container(
                       height: 50,
                       alignment: Alignment.centerLeft,
                       decoration: BoxDecoration(
-                        color: _currentColor,
+                        /// TODO: Update current Color on color change
+                        color: currentColor,
                         borderRadius: BorderRadius.circular(4.0),
                       ),
                     ),
@@ -91,9 +92,9 @@ class HomeDetailScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    final householdName = _nameController.text;
+                    final householdName = nameController.text;
                     final householdColor =
-                        '#${_currentColor.value.toRadixString(16).substring(2, 8)}';
+                        '#${currentColor.value.toRadixString(16).substring(2, 8)}';
                     if (householdName.isNotEmpty && householdColor.isNotEmpty) {
                       try {
                         final dataProvider =
@@ -151,6 +152,7 @@ class HomeDetailScreen extends StatelessWidget {
     return Scaffold(
       appBar: const AppBarCustom(
         showArrow: true,
+        showHome: true,
         showProfile: true,
       ),
       body: Consumer<DataProvider>(builder: (context, dataProvider, child) {
@@ -224,7 +226,7 @@ class HomeDetailScreen extends StatelessWidget {
           },
         );
       }),
-      bottomNavigationBar: BottomNavBarCustom(
+      bottomNavigationBar: const BottomNavBarCustom(
         pageType: PageType.homeDetail,
         showHome: true,
         showShoppingList: true,
