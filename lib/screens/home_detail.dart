@@ -73,16 +73,19 @@ class HomeDetailScreen extends StatelessWidget {
                       },
                     );
                   },
-                  child: Container(
-                    width: 100,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: _currentColor,
-                      borderRadius: BorderRadius.circular(10),
+                  child: InputDecorator(
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      labelText: 'Farbe wählen',
                     ),
-                    alignment: Alignment.center,
-                    child: const Text('Farbe wählen',
-                        style: TextStyle(color: Colors.white)),
+                    child: Container(
+                      height: 50,
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        color: _currentColor,
+                        borderRadius: BorderRadius.circular(4.0),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
