@@ -1,6 +1,8 @@
+import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Die Hauptmethode für die Flutter-Anwendung.
@@ -12,7 +14,16 @@ Future<void> main() async {
     print('Fehler beim Laden der .env Datei: $e');
   }
   await initializeSupabase();
-  runApp(FamilyFeastApp());
+  runApp(
+    /// Initialisieren der Provider für die Datenverwaltung
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+            create: (_) => DataProvider(Supabase.instance.client)),
+      ],
+      child: FamilyFeastApp(),
+    ),
+  );
 }
 
 /// Initialisierung Supabase
@@ -38,7 +49,6 @@ class FamilyFeastApp extends StatefulWidget {
 
 /// Der Zustand der FamilyFeastApp
 class _FamilyFeastAppState extends State<FamilyFeastApp> {
-
   /// AppRouter für das Verwenden von Routen
   final _appRouter = AppRouter();
 

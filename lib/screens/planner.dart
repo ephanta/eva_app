@@ -1,7 +1,8 @@
 import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import '../components/app_bar_custom.dart';
+
+import '../widgets/navigation/app_bar_custom.dart';
 
 /// {@category Screens}
 /// Ansicht für den Wochenplaner
@@ -18,7 +19,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarCustom(showArrow: true, showProfile: true),
+      appBar: const AppBarCustom(
+          showArrow: true, showHome: true, showProfile: true),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -27,7 +29,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
               'Wochenplaner',
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-
           ],
         ),
       ),
