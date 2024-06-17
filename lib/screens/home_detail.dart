@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Color picker package
 import 'package:provider/provider.dart';
@@ -10,12 +11,17 @@ import '../widgets/navigation/bottom_navigation_bar.dart';
 /// {@category Screens}
 /// Ansicht für die Detailseite eines Haushalts
 @RoutePage()
-class HomeDetailScreen extends StatelessWidget {
+class HomeDetailScreen extends StatefulWidget {
   final int householdId;
 
   const HomeDetailScreen({Key? key, required this.householdId})
       : super(key: key);
 
+  @override
+  State<HomeDetailScreen> createState() => _HomeDetailScreenState();
+}
+
+class _HomeDetailScreenState extends State<HomeDetailScreen> {
   void _showEditHouseholdDialog(
       BuildContext context, Map<String, dynamic> household) {
     final TextEditingController nameController =
@@ -57,7 +63,9 @@ class HomeDetailScreen extends StatelessWidget {
                             child: BlockPicker(
                               pickerColor: currentColor,
                               onColorChanged: (color) {
-                                currentColor = color;
+                                setState(() {
+                                  currentColor = color;
+                                });
                               },
                             ),
                           ),
@@ -66,6 +74,8 @@ class HomeDetailScreen extends StatelessWidget {
                               child: const Text('Fertig'),
                               onPressed: () {
                                 AutoRouter.of(context).maybePop();
+                                AutoRouter.of(context).replace(HomeDetailRoute(
+                                    householdId: widget.householdId));
                               },
                             ),
                           ],
@@ -82,7 +92,6 @@ class HomeDetailScreen extends StatelessWidget {
                       height: 50,
                       alignment: Alignment.centerLeft,
                       decoration: BoxDecoration(
-                        /// TODO: Update current Color on color change
                         color: currentColor,
                         borderRadius: BorderRadius.circular(4.0),
                       ),
@@ -157,10 +166,11 @@ class HomeDetailScreen extends StatelessWidget {
       ),
       body: Consumer<DataProvider>(builder: (context, dataProvider, child) {
         return FutureBuilder<Map<String, dynamic>>(
-          future: dataProvider.getCurrentHousehold(householdId.toString()),
+          future:
+              dataProvider.getCurrentHousehold(widget.householdId.toString()),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
+              return const Center(child: CircularProgressIndicator());
             } else if (snapshot.hasError) {
               return Text('Error: ${snapshot.error}');
             } else if (!snapshot.hasData) {
@@ -178,7 +188,7 @@ class HomeDetailScreen extends StatelessWidget {
                       'Haushalt Details',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                    Text('Haushalt ID: $householdId'),
+                    Text('Haushalt ID: ${widget.householdId}'),
                     Text('Name: ${household['name']}'),
                     Text('Farbe: ${household['color']}'),
                     CircleAvatar(
@@ -201,7 +211,7 @@ class HomeDetailScreen extends StatelessWidget {
                             Provider.of<DataProvider>(context, listen: false);
                         try {
                           await dataProvider
-                              .deleteHousehold(householdId.toString());
+                              .deleteHousehold(widget.householdId.toString());
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                                 content:
