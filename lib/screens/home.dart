@@ -251,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       TextButton(
                         child: const Text('Abbrechen'),
                         onPressed: () {
-                          Navigator.of(context).pop();
+                          AutoRouter.of(context).maybePop();
                         },
                       ),
                       TextButton(

@@ -49,6 +49,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                     border: OutlineInputBorder(),
                     labelText: 'Name des Haushalts',
                   ),
+                  maxLength: 25,
                 ),
                 const SizedBox(height: 20),
                 GestureDetector(
@@ -201,13 +202,19 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    Text(
-                      '${household['name']}',
-                      style: Theme.of(context).textTheme.headlineMedium,
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        '${household['name']}',
+                        style: Theme.of(context).textTheme.headlineMedium,
+                      ),
                     ),
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: householdColor,
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundColor: householdColor,
+                      ),
                     ),
                     //TODO: Wochenplanübersicht hier bzw. tägliche Rezepte
                     const Text(
