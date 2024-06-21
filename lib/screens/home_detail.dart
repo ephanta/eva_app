@@ -1,15 +1,14 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart'; // Color picker package
+import 'package:flutter/services.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/data_provider.dart';
+import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 
-/// {@category Screens}
-/// Ansicht für die Detailseite eines Haushalts
 @RoutePage()
 class HomeDetailScreen extends StatefulWidget {
   final int householdId;
@@ -99,6 +98,24 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
+                TextField(
+                  controller:
+                      TextEditingController(text: household['invite_code']),
+                  readOnly: true,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Einladungscode',
+                    suffixIcon: Icon(Icons.copy),
+                  ),
+                  onTap: () {
+                    Clipboard.setData(
+                        ClipboardData(text: household['invite_code']));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Einladungscode kopiert')),
+                    );
+                  },
+                ),
+                const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
                     final householdName = nameController.text;
@@ -185,15 +202,41 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      'Haushalt Details',
+                      '${household['name']}',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                    Text('Haushalt ID: ${widget.householdId}'),
-                    Text('Name: ${household['name']}'),
-                    Text('Farbe: ${household['color']}'),
                     CircleAvatar(
                       radius: 30,
                       backgroundColor: householdColor,
+                    ),
+                    //TODO: Wochenplanübersicht hier bzw. tägliche Rezepte
+                    const Text(
+                      'Mitglieder:',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    FutureBuilder<List<Map<String, dynamic>>>(
+                      future: dataProvider
+                          .getHouseholdMembers(widget.householdId.toString()),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                              child: CircularProgressIndicator());
+                        } else if (snapshot.hasError) {
+                          return Text('Fehler: ${snapshot.error}');
+                        } else if (!snapshot.hasData ||
+                            snapshot.data!.isEmpty) {
+                          return const Text('Keine Mitglieder gefunden.');
+                        } else {
+                          final List<Map<String, dynamic>> members =
+                              snapshot.data!;
+                          return Column(
+                            children: members
+                                .map((member) => Text(member['username']))
+                                .toList(),
+                          );
+                        }
+                      },
                     ),
                     const Spacer(),
                     ElevatedButton.icon(
@@ -238,8 +281,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       }),
       bottomNavigationBar: const BottomNavBarCustom(
         pageType: PageType.homeDetail,
-        showHome: true,
-        showShoppingList: true,
+        showHome: false,
+        showShoppingList: false,
         showPlanner: true,
       ),
     );

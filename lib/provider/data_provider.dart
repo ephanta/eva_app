@@ -10,10 +10,15 @@ class DataProvider with ChangeNotifier {
   Future createHousehold(
       String householdName, String userId, String color) async {
     try {
+      /// Erstelle einen Einladungscode für den Haushalt
+      final inviteCode = DateTime.now().millisecondsSinceEpoch.toString();
+
       /// Füge den Haushalt in die Datenbank ein
-      final households = await _client
-          .from('households')
-          .insert({'name': householdName, 'color': color}).select();
+      final households = await _client.from('households').insert({
+        'name': householdName,
+        'color': color,
+        'invite_code': inviteCode
+      }).select();
 
       final data = households as List<dynamic>;
       final householdId = data[0]['id'];
@@ -113,6 +118,73 @@ class DataProvider with ChangeNotifier {
       notifyListeners();
     } catch (e) {
       throw Exception('Fehler beim Löschen des Haushalts: $e');
+    }
+  }
+
+  /// Trete einem Haushalt bei
+  Future joinHousehold(String inviteCode, String userId) async {
+    try {
+      /// Finde den Haushalt basierend auf dem Einladungscode
+      final response = await _client
+          .from('households')
+          .select()
+          .eq('invite_code', inviteCode)
+          .single();
+
+      final householdId = response['id'];
+
+      /// Prüfe ob der Benutzer bereits Mitglied des Haushalts ist
+      final memberResponse = await _client
+          .from('household_member')
+          .select()
+          .eq('household_id', householdId)
+          .eq('member_uid', userId)
+          .maybeSingle();
+
+      if (memberResponse == null) {
+        /// Füge den Benutzer als Mitglied des Haushalts hinzu
+        await _client.from('household_member').insert({
+          'household_id': householdId,
+          'member_uid': userId,
+        }).select();
+      }
+      notifyListeners();
+
+      return householdId;
+    } catch (e) {
+      throw Exception('Fehler beim Beitreten des Haushalts: $e');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getHouseholdMembers(
+      String householdId) async {
+    try {
+      /// Erhalte alle Mitglieder des Haushalts
+      final memberIdsResponse = await _client
+          .from('household_member')
+          .select('member_uid')
+          .eq('household_id', householdId)
+          .select();
+
+      final List<dynamic> memberIds = memberIdsResponse;
+
+      /// Erhalte alle Profile
+      final profilesResponse =
+          await _client.from('profiles').select('id, username, email').select();
+
+      final List<dynamic> profiles = profilesResponse;
+
+      /// Wähle die Profile aus, die Mitglieder des Haushalts sind
+      final userHouseholds = profiles
+          .where((profile) =>
+              memberIds.any((member) => member['member_uid'] == profile['id']))
+          .map((profile) =>
+              {'username': profile['username'], 'email': profile['email']})
+          .toList();
+
+      return userHouseholds;
+    } catch (e) {
+      throw Exception('Fehler beim Laden der Haushaltsmitglieder: $e');
     }
   }
 }

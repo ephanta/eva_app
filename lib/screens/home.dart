@@ -65,7 +65,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: BlockPicker(
                               pickerColor: currentColor,
                               onColorChanged: (color) {
-                                currentColor = color;
+                                setState(() {
+                                  currentColor = color;
+                                });
                               },
                             ),
                           ),
@@ -81,16 +83,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     );
                   },
-                  child: Container(
-                    width: 100,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      color: currentColor,
-                      borderRadius: BorderRadius.circular(10),
+                  child: InputDecorator(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      labelText: 'Farbe wählen',
                     ),
-                    alignment: Alignment.center,
-                    child: const Text('Farbe wählen',
-                        style: TextStyle(color: Colors.white)),
+                    child: Container(
+                      height: 50,
+                      alignment: Alignment.centerLeft,
+                      decoration: BoxDecoration(
+                        color: currentColor,
+                        borderRadius: BorderRadius.circular(4.0),
+                      ),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
@@ -222,11 +227,84 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         );
       }),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          _createHouseholdDialog(context);
-        },
-        child: const Icon(Icons.add),
+      floatingActionButton: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            heroTag: 'joinHousehold',
+            onPressed: () {
+              final TextEditingController inviteCodeController =
+                  TextEditingController();
+
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Haushalt beitreten'),
+                    content: TextField(
+                      controller: inviteCodeController,
+                      decoration: const InputDecoration(
+                        labelText: 'Einladungscode',
+                      ),
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        child: const Text('Abbrechen'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                      TextButton(
+                        child: const Text('Beitreten'),
+                        onPressed: () async {
+                          final inviteCode = inviteCodeController.text;
+
+                          if (inviteCode.isNotEmpty) {
+                            try {
+                              final householdId =
+                                  await _dataProvider.joinHousehold(
+                                      inviteCode,
+                                      Supabase.instance.client.auth.currentUser!
+                                          .id);
+                              AutoRouter.of(context).maybePop();
+                              AutoRouter.of(context).push(
+                                HomeDetailRoute(householdId: householdId),
+                              );
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content: Text(
+                                        'Erfolgreich dem Haushalt beigetreten.')),
+                              );
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text(
+                                        'Fehler beim Beitreten des Haushalts: $e')),
+                              );
+                            }
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text(
+                                      'Bitte geben Sie einen Einladungscode ein')),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            child: const Icon(Icons.group_add),
+          ),
+          const SizedBox(height: 10),
+          FloatingActionButton(
+            heroTag: 'createHousehold',
+            onPressed: () => _createHouseholdDialog(context),
+            child: const Icon(Icons.add),
+          ),
+        ],
       ),
     );
   }
