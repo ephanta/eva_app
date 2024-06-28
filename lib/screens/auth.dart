@@ -30,6 +30,18 @@ class _AuthScreenState extends State<AuthScreen> {
     }
   }
 
+  void _showConfirmationSnackbar(BuildContext context) {
+    SnackBar(
+      content: const Text('Bitte bestätigen Sie Ihre E-Mail-Adresse.'),
+      action: SnackBarAction(
+        label: 'Ok',
+        onPressed: () {
+          //TODO: Show Login
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,10 +81,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   redirectTo: '/',
                   onSignInComplete: (response) {
-                    _checkAuthStatus(); // Check authentication status after sign in
+                    _checkAuthStatus();
                   },
                   onSignUpComplete: (response) {
-                    _checkAuthStatus(); // Check authentication status after sign up
+                    _showConfirmationSnackbar(context);
                   },
                   metadataFields: [
                     MetaDataField(
@@ -88,24 +100,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ],
                 ),
-                // TODO: Fix provider in supabase setup
-                // /// Social Auth
-                // SupaSocialsAuth(
-                //   localization: const SupaSocialsAuthLocalization(
-                //     continueWith: 'Weiter mit',
-                //     unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten',
-                //     updatePassword: 'Bitte aktualisieren Sie Ihr Passwort',
-                //     successSignInMessage: 'Erfolgreich angemeldet',
-                //   ),
-                //   socialProviders: const [
-                //     OAuthProvider.google,
-                //   ],
-                //   colored: true,
-                //   onSuccess: (response) {
-                //     _checkAuthStatus(); // Check authentication status after sign in
-                //   },
-                //   onError: (error) {},
-                // ),
               ],
             ),
           ],
