@@ -27,6 +27,7 @@ class DataProvider with ChangeNotifier {
       await _client.from('household_member').insert({
         'household_id': householdId,
         'member_uid': userId,
+        'role': 'admin'
       }).select();
 
       notifyListeners();
@@ -146,6 +147,7 @@ class DataProvider with ChangeNotifier {
         await _client.from('household_member').insert({
           'household_id': householdId,
           'member_uid': userId,
+          'role': 'member'
         }).select();
       }
       notifyListeners();
