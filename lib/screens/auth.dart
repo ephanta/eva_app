@@ -24,22 +24,15 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _checkAuthStatus() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      AutoRouter.of(context).push(const HomeRoute());
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        AutoRouter.of(context).push(const HomeRoute());
+      }
+    } catch (e) {
+      print('Error checking auth status: $e');
+      // Handle error appropriately
     }
-  }
-
-  void _showConfirmationSnackbar(BuildContext context) {
-    SnackBar(
-      content: const Text('Bitte bestätigen Sie Ihre E-Mail-Adresse.'),
-      action: SnackBarAction(
-        label: 'Ok',
-        onPressed: () {
-          //TODO: Show Login
-        },
-      ),
-    );
   }
 
   @override
@@ -84,7 +77,7 @@ class _AuthScreenState extends State<AuthScreen> {
                     _checkAuthStatus();
                   },
                   onSignUpComplete: (response) {
-                    _showConfirmationSnackbar(context);
+                    _checkAuthStatus();
                   },
                   metadataFields: [
                     MetaDataField(
