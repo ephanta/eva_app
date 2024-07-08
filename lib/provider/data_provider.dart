@@ -171,15 +171,17 @@ class DataProvider with ChangeNotifier {
       final List<dynamic> memberIds = memberIdsResponse;
 
       /// Erhalte alle Profile
-      final profilesResponse =
-          await _client.from('profiles').select('id, username, email').select();
+      final profilesResponse = await _client
+          .from('profiles')
+          .select('user_id, username, email')
+          .select();
 
       final List<dynamic> profiles = profilesResponse;
 
       /// Wähle die Profile aus, die Mitglieder des Haushalts sind
       final userHouseholds = profiles
-          .where((profile) =>
-              memberIds.any((member) => member['member_uid'] == profile['id']))
+          .where((profile) => memberIds
+              .any((member) => member['member_uid'] == profile['user_id']))
           .map((profile) =>
               {'username': profile['username'], 'email': profile['email']})
           .toList();

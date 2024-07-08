@@ -41,7 +41,7 @@ Future<void> initializeSupabase() async {
 
 /// Das Root-Widget der Anwendung
 class FamilyFeastApp extends StatefulWidget {
-  const FamilyFeastApp({super.key});
+  FamilyFeastApp({super.key});
 
   @override
   _FamilyFeastAppState createState() => _FamilyFeastAppState();
