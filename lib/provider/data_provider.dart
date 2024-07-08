@@ -27,6 +27,7 @@ class DataProvider with ChangeNotifier {
       await _client.from('household_member').insert({
         'household_id': householdId,
         'member_uid': userId,
+        'role': 'admin'
       }).select();
 
       notifyListeners();
@@ -146,6 +147,7 @@ class DataProvider with ChangeNotifier {
         await _client.from('household_member').insert({
           'household_id': householdId,
           'member_uid': userId,
+          'role': 'member'
         }).select();
       }
       notifyListeners();
@@ -156,6 +158,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Erhalte alle Haushaltsmitglieder
   Future<List<Map<String, dynamic>>> getHouseholdMembers(
       String householdId) async {
     try {
@@ -169,15 +172,17 @@ class DataProvider with ChangeNotifier {
       final List<dynamic> memberIds = memberIdsResponse;
 
       /// Erhalte alle Profile
-      final profilesResponse =
-          await _client.from('profiles').select('id, username, email').select();
+      final profilesResponse = await _client
+          .from('profiles')
+          .select('user_id, username, email')
+          .select();
 
       final List<dynamic> profiles = profilesResponse;
 
       /// Wähle die Profile aus, die Mitglieder des Haushalts sind
       final userHouseholds = profiles
-          .where((profile) =>
-              memberIds.any((member) => member['member_uid'] == profile['id']))
+          .where((profile) => memberIds
+              .any((member) => member['member_uid'] == profile['user_id']))
           .map((profile) =>
               {'username': profile['username'], 'email': profile['email']})
           .toList();
@@ -185,6 +190,41 @@ class DataProvider with ChangeNotifier {
       return userHouseholds;
     } catch (e) {
       throw Exception('Fehler beim Laden der Haushaltsmitglieder: $e');
+    }
+  }
+
+  /// Erhalte die Benutzerrolle im Haushalt
+  Future<String> getUserRoleInHousehold(
+      String householdId, String userId) async {
+    try {
+      final response = await _client
+          .from('household_member')
+          .select('role')
+          .eq('household_id', householdId)
+          .eq('member_uid', userId)
+          .single();
+      return response['role'];
+    } catch (e) {
+      throw Exception('Fehler beim Abrufen der Benutzerrolle: $e');
+    }
+  }
+
+  /// Verlasse den Haushalt
+  Future<void> leaveHousehold(
+    String householdId,
+    String userId,
+  ) async {
+    try {
+      /// Lösche den Benutzer aus dem Haushalt
+      await _client
+          .from('household_member')
+          .delete()
+          .eq('household_id', householdId)
+          .eq('member_uid', userId);
+
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Fehler beim Löschen des Haushalts: $e');
     }
   }
 }

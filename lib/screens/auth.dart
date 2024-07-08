@@ -24,9 +24,14 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _checkAuthStatus() async {
-    final session = Supabase.instance.client.auth.currentSession;
-    if (session != null) {
-      AutoRouter.of(context).push(const HomeRoute());
+    try {
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        AutoRouter.of(context).push(const HomeRoute());
+      }
+    } catch (e) {
+      print('Error checking auth status: $e');
+      // Handle error appropriately
     }
   }
 
@@ -69,10 +74,10 @@ class _AuthScreenState extends State<AuthScreen> {
                   ),
                   redirectTo: '/',
                   onSignInComplete: (response) {
-                    _checkAuthStatus(); // Check authentication status after sign in
+                    _checkAuthStatus();
                   },
                   onSignUpComplete: (response) {
-                    _checkAuthStatus(); // Check authentication status after sign up
+                    _checkAuthStatus();
                   },
                   metadataFields: [
                     MetaDataField(
@@ -88,24 +93,6 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                   ],
                 ),
-                // TODO: Fix provider in supabase setup
-                // /// Social Auth
-                // SupaSocialsAuth(
-                //   localization: const SupaSocialsAuthLocalization(
-                //     continueWith: 'Weiter mit',
-                //     unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten',
-                //     updatePassword: 'Bitte aktualisieren Sie Ihr Passwort',
-                //     successSignInMessage: 'Erfolgreich angemeldet',
-                //   ),
-                //   socialProviders: const [
-                //     OAuthProvider.google,
-                //   ],
-                //   colored: true,
-                //   onSuccess: (response) {
-                //     _checkAuthStatus(); // Check authentication status after sign in
-                //   },
-                //   onError: (error) {},
-                // ),
               ],
             ),
           ],
