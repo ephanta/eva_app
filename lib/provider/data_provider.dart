@@ -158,6 +158,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Erhalte alle Haushaltsmitglieder
   Future<List<Map<String, dynamic>>> getHouseholdMembers(
       String householdId) async {
     try {
@@ -192,6 +193,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Erhalte die Benutzerrolle im Haushalt
   Future<String> getUserRoleInHousehold(
       String householdId, String userId) async {
     try {
@@ -204,6 +206,25 @@ class DataProvider with ChangeNotifier {
       return response['role'];
     } catch (e) {
       throw Exception('Fehler beim Abrufen der Benutzerrolle: $e');
+    }
+  }
+
+  /// Verlasse den Haushalt
+  Future<void> leaveHousehold(
+    String householdId,
+    String userId,
+  ) async {
+    try {
+      /// Lösche den Benutzer aus dem Haushalt
+      await _client
+          .from('household_member')
+          .delete()
+          .eq('household_id', householdId)
+          .eq('member_uid', userId);
+
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Fehler beim Löschen des Haushalts: $e');
     }
   }
 }

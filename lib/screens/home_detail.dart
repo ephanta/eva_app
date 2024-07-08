@@ -199,6 +199,108 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
     );
   }
 
+  Future<void> _showDeleteConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Haushalt löschen'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                    'Sind Sie sicher, dass Sie diesen Haushalt löschen möchten?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                AutoRouter.of(context).maybePop();
+              },
+            ),
+            TextButton(
+              child: const Text('Löschen'),
+              onPressed: () async {
+                final dataProvider =
+                    Provider.of<DataProvider>(context, listen: false);
+                try {
+                  await dataProvider
+                      .deleteHousehold(widget.householdId.toString());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text('Haushalt erfolgreich gelöscht.')),
+                  );
+                  AutoRouter.of(context).maybePop();
+                  AutoRouter.of(context).push(const HomeRoute());
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content: Text('Fehler beim Löschen des Haushalts: $e')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showLeaveConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Haushalt verlassen'),
+          content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text(
+                    'Sind Sie sicher, dass Sie diesen Haushalt verlassen möchten?'),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                AutoRouter.of(context).maybePop();
+              },
+            ),
+            TextButton(
+              child: const Text('Verlassen'),
+              onPressed: () async {
+                final dataProvider =
+                    Provider.of<DataProvider>(context, listen: false);
+                final userId = Supabase.instance.client.auth.currentUser!.id;
+                try {
+                  await dataProvider.leaveHousehold(
+                      widget.householdId.toString(), userId);
+                  // Fügen Sie hier den Code hinzu, um den Haushalt zu verlassen
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Haushalt verlassen')),
+                  );
+                  AutoRouter.of(context).maybePop();
+                  AutoRouter.of(context).push(const HomeRoute());
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content:
+                            Text('Fehler beim Verlassen des Haushalts: $e')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -281,26 +383,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                       ElevatedButton.icon(
                         icon: const Icon(Icons.delete),
                         label: const Text('Haushalt löschen'),
-                        onPressed: () async {
-                          final dataProvider =
-                              Provider.of<DataProvider>(context, listen: false);
-                          try {
-                            await dataProvider
-                                .deleteHousehold(widget.householdId.toString());
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content:
-                                      Text('Haushalt erfolgreich gelöscht.')),
-                            );
-                            AutoRouter.of(context)
-                                .popUntilRouteWithName('HomeRoute');
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                      'Fehler beim Löschen des Haushalts: $e')),
-                            );
-                          }
+                        onPressed: () {
+                          _showDeleteConfirmationDialog(context);
                         },
                       ),
                     ],
@@ -320,22 +404,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                       ElevatedButton.icon(
                         icon: const Icon(Icons.exit_to_app),
                         label: const Text('Haushalt verlassen'),
-                        onPressed: () async {
-                          final dataProvider =
-                              Provider.of<DataProvider>(context, listen: false);
-                          try {
-                            // Fügen Sie hier den Code hinzu, um den Haushalt zu verlassen
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('Haushalt verlassen')),
-                            );
-                          } catch (e) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                  content: Text(
-                                      'Fehler beim Verlassen des Haushalts: $e')),
-                            );
-                          }
+                        onPressed: () {
+                          _showLeaveConfirmationDialog(context);
                         },
                       ),
                     ],
