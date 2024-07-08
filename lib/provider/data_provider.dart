@@ -191,4 +191,19 @@ class DataProvider with ChangeNotifier {
       throw Exception('Fehler beim Laden der Haushaltsmitglieder: $e');
     }
   }
+
+  Future<String> getUserRoleInHousehold(
+      String householdId, String userId) async {
+    try {
+      final response = await _client
+          .from('household_member')
+          .select('role')
+          .eq('household_id', householdId)
+          .eq('member_uid', userId)
+          .single();
+      return response['role'];
+    } catch (e) {
+      throw Exception('Fehler beim Abrufen der Benutzerrolle: $e');
+    }
+  }
 }

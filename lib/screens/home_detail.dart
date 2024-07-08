@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
@@ -21,6 +22,30 @@ class HomeDetailScreen extends StatefulWidget {
 }
 
 class _HomeDetailScreenState extends State<HomeDetailScreen> {
+  String? userRole;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserRole();
+  }
+
+  Future<void> _fetchUserRole() async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    final userId = Supabase.instance.client.auth.currentUser!.id;
+    try {
+      final role = await dataProvider.getUserRoleInHousehold(
+          widget.householdId.toString(), userId);
+      setState(() {
+        userRole = role;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Abrufen der Benutzerrolle: $e')),
+      );
+    }
+  }
+
   void _showEditHouseholdDialog(
       BuildContext context, Map<String, dynamic> household) {
     final TextEditingController nameController =
@@ -216,7 +241,6 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         backgroundColor: householdColor,
                       ),
                     ),
-                    //TODO: Wochenplanübersicht hier bzw. tägliche Rezepte
                     const Text(
                       'Mitglieder:',
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -246,38 +270,75 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                       },
                     ),
                     const Spacer(),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.edit),
-                      label: const Text('Haushalt bearbeiten'),
-                      onPressed: () {
-                        _showEditHouseholdDialog(context, household);
-                      },
-                    ),
-                    ElevatedButton.icon(
-                      icon: const Icon(Icons.delete),
-                      label: const Text('Haushalt löschen'),
-                      onPressed: () async {
-                        final dataProvider =
-                            Provider.of<DataProvider>(context, listen: false);
-                        try {
-                          await dataProvider
-                              .deleteHousehold(widget.householdId.toString());
+                    if (userRole == 'admin') ...[
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.edit),
+                        label: const Text('Haushalt bearbeiten'),
+                        onPressed: () {
+                          _showEditHouseholdDialog(context, household);
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.delete),
+                        label: const Text('Haushalt löschen'),
+                        onPressed: () async {
+                          final dataProvider =
+                              Provider.of<DataProvider>(context, listen: false);
+                          try {
+                            await dataProvider
+                                .deleteHousehold(widget.householdId.toString());
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content:
+                                      Text('Haushalt erfolgreich gelöscht.')),
+                            );
+                            AutoRouter.of(context)
+                                .popUntilRouteWithName('HomeRoute');
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      'Fehler beim Löschen des Haushalts: $e')),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                    if (userRole == 'member') ...[
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.copy),
+                        label: const Text('Einladungscode kopieren'),
+                        onPressed: () {
+                          Clipboard.setData(
+                              ClipboardData(text: household['invite_code']));
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content:
-                                    Text('Haushalt erfolgreich gelöscht.')),
+                                content: Text('Einladungscode kopiert')),
                           );
-                          AutoRouter.of(context)
-                              .popUntilRouteWithName('HomeRoute');
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(
-                                    'Fehler beim Löschen des Haushalts: $e')),
-                          );
-                        }
-                      },
-                    ),
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.exit_to_app),
+                        label: const Text('Haushalt verlassen'),
+                        onPressed: () async {
+                          final dataProvider =
+                              Provider.of<DataProvider>(context, listen: false);
+                          try {
+                            // Fügen Sie hier den Code hinzu, um den Haushalt zu verlassen
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('Haushalt verlassen')),
+                            );
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                  content: Text(
+                                      'Fehler beim Verlassen des Haushalts: $e')),
+                            );
+                          }
+                        },
+                      ),
+                    ],
                     const SizedBox(height: 16),
                   ],
                 ),
