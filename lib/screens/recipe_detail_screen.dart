@@ -1,5 +1,3 @@
-// lib/screens/recipe_detail_screen.dart
-
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -45,17 +43,17 @@ class RecipeDetailScreen extends StatelessWidget {
                 children: [
                   Text(
                     recipe.name,
-                    style: Theme.of(context).textTheme.headline4,
+                    style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     recipe.description,
-                    style: Theme.of(context).textTheme.bodyText1,
+                    style: Theme.of(context).textTheme.bodyLarge,
                   ),
                   const SizedBox(height: 24),
                   Text(
                     'Ingredients:',
-                    style: Theme.of(context).textTheme.headline6,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   ...recipe.ingredients.map((ingredient) => Padding(
@@ -65,7 +63,7 @@ class RecipeDetailScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   Text(
                     'Steps:',
-                    style: Theme.of(context).textTheme.headline6,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   ...recipe.steps.asMap().entries.map((entry) => Padding(
@@ -85,8 +83,7 @@ class RecipeDetailScreen extends StatelessWidget {
 
   Future<Recipe> _fetchRecipe(BuildContext context) async {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    final recipes = await dataProvider.fetchRecipes('dummy_household_id'); // Replace with actual household ID
-    final recipe = recipes.firstWhere((r) => r.id == recipeId, orElse: () => throw Exception('Recipe not found'));
+    final recipe = await dataProvider.fetchRecipeById(recipeId);
     return recipe;
   }
 

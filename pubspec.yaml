@@ -33,7 +33,7 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
-  supabase_flutter: ^2.5.2
+  supabase_flutter: ^0.2.5
   flutter_dotenv: ^5.1.0
   dartdoc: ^6.3.0
   supabase_auth_ui: ^0.4.4
@@ -49,7 +49,6 @@ dev_dependencies:
 
   auto_route_generator: ^8.0.0
   build_runner: ^2.4.10
-
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
