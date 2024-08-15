@@ -21,7 +21,7 @@ Future<void> main() async {
         ChangeNotifierProvider(
             create: (_) => DataProvider(Supabase.instance.client)),
       ],
-      child: FamilyFeastApp(),
+      child: const FamilyFeastApp(),
     ),
   );
 }
@@ -41,7 +41,7 @@ Future<void> initializeSupabase() async {
 
 /// Das Root-Widget der Anwendung
 class FamilyFeastApp extends StatefulWidget {
-  FamilyFeastApp({super.key});
+  const FamilyFeastApp({super.key});
 
   @override
   _FamilyFeastAppState createState() => _FamilyFeastAppState();
