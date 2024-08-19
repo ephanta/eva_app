@@ -7,6 +7,7 @@ import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
+import '../widgets/dialogs/show_delete_confirmation_dialog.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 
@@ -199,56 +200,6 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
     );
   }
 
-  Future<void> _showDeleteConfirmationDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Haushalt löschen'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(
-                    'Sind Sie sicher, dass Sie diesen Haushalt löschen möchten?'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () {
-                AutoRouter.of(context).maybePop();
-              },
-            ),
-            TextButton(
-              child: const Text('Löschen'),
-              onPressed: () async {
-                final dataProvider =
-                    Provider.of<DataProvider>(context, listen: false);
-                try {
-                  await dataProvider
-                      .deleteHousehold(widget.householdId.toString());
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Haushalt erfolgreich gelöscht.')),
-                  );
-                  AutoRouter.of(context).maybePop();
-                  AutoRouter.of(context).push(const HomeRoute());
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text('Fehler beim Löschen des Haushalts: $e')),
-                  );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   Future<void> _showLeaveConfirmationDialog(BuildContext context) async {
     return showDialog<void>(
       context: context,
@@ -384,7 +335,17 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         icon: const Icon(Icons.delete),
                         label: const Text('Haushalt löschen'),
                         onPressed: () {
-                          _showDeleteConfirmationDialog(context);
+                          showDeleteConfirmationDialog(
+                            context,
+                            widget.householdId,
+                            null,
+                            'Haushalt',
+                            'Sind Sie sicher, dass Sie diesen Haushalt löschen möchten?',
+                            'household',
+                            onDeleted: () {
+                              AutoRouter.of(context).replace(const HomeRoute());
+                            },
+                          );
                         },
                       ),
                     ],
@@ -417,11 +378,12 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
           },
         );
       }),
-      bottomNavigationBar: const BottomNavBarCustom(
+      bottomNavigationBar: BottomNavBarCustom(
         pageType: PageType.homeDetail,
         showHome: false,
-        showShoppingList: false,
+        showShoppingList: true,
         showPlanner: true,
+        householdId: widget.householdId,
       ),
     );
   }

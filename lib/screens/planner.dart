@@ -8,7 +8,9 @@ import '../widgets/navigation/app_bar_custom.dart';
 /// Ansicht für den Wochenplaner
 @RoutePage()
 class PlannerScreen extends StatefulWidget {
-  const PlannerScreen({super.key});
+  final int householdId;
+
+  const PlannerScreen({Key? key, required this.householdId}) : super(key: key);
 
   @override
   State<PlannerScreen> createState() => _PlannerScreenState();

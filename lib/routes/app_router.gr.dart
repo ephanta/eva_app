@@ -45,9 +45,13 @@ abstract class $AppRouter extends _i7.RootStackRouter {
       );
     },
     PlannerRoute.name: (routeData) {
+      final args = routeData.argsAs<PlannerRouteArgs>();
       return _i7.AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: const _i4.PlannerScreen(),
+        child: _i4.PlannerScreen(
+          key: args.key,
+          householdId: args.householdId,
+        ),
       );
     },
     ProfileRoute.name: (routeData) {
@@ -57,9 +61,13 @@ abstract class $AppRouter extends _i7.RootStackRouter {
       );
     },
     ShoppingListRoute.name: (routeData) {
+      final args = routeData.argsAs<ShoppingListRouteArgs>();
       return _i7.AutoRoutePage<dynamic>(
         routeData: routeData,
-        child: const _i6.ShoppingListScreen(),
+        child: _i6.ShoppingListScreen(
+          key: args.key,
+          householdId: args.householdId,
+        ),
       );
     },
   };
@@ -133,16 +141,40 @@ class HomeRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i4.PlannerScreen]
-class PlannerRoute extends _i7.PageRouteInfo<void> {
-  const PlannerRoute({List<_i7.PageRouteInfo>? children})
-      : super(
+class PlannerRoute extends _i7.PageRouteInfo<PlannerRouteArgs> {
+  PlannerRoute({
+    _i8.Key? key,
+    required int householdId,
+    List<_i7.PageRouteInfo>? children,
+  }) : super(
           PlannerRoute.name,
+          args: PlannerRouteArgs(
+            key: key,
+            householdId: householdId,
+          ),
           initialChildren: children,
         );
 
   static const String name = 'PlannerRoute';
 
-  static const _i7.PageInfo<void> page = _i7.PageInfo<void>(name);
+  static const _i7.PageInfo<PlannerRouteArgs> page =
+      _i7.PageInfo<PlannerRouteArgs>(name);
+}
+
+class PlannerRouteArgs {
+  const PlannerRouteArgs({
+    this.key,
+    required this.householdId,
+  });
+
+  final _i8.Key? key;
+
+  final int householdId;
+
+  @override
+  String toString() {
+    return 'PlannerRouteArgs{key: $key, householdId: $householdId}';
+  }
 }
 
 /// generated route for
@@ -161,14 +193,38 @@ class ProfileRoute extends _i7.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.ShoppingListScreen]
-class ShoppingListRoute extends _i7.PageRouteInfo<void> {
-  const ShoppingListRoute({List<_i7.PageRouteInfo>? children})
-      : super(
+class ShoppingListRoute extends _i7.PageRouteInfo<ShoppingListRouteArgs> {
+  ShoppingListRoute({
+    _i8.Key? key,
+    required int householdId,
+    List<_i7.PageRouteInfo>? children,
+  }) : super(
           ShoppingListRoute.name,
+          args: ShoppingListRouteArgs(
+            key: key,
+            householdId: householdId,
+          ),
           initialChildren: children,
         );
 
   static const String name = 'ShoppingListRoute';
 
-  static const _i7.PageInfo<void> page = _i7.PageInfo<void>(name);
+  static const _i7.PageInfo<ShoppingListRouteArgs> page =
+      _i7.PageInfo<ShoppingListRouteArgs>(name);
+}
+
+class ShoppingListRouteArgs {
+  const ShoppingListRouteArgs({
+    this.key,
+    required this.householdId,
+  });
+
+  final _i8.Key? key;
+
+  final int householdId;
+
+  @override
+  String toString() {
+    return 'ShoppingListRouteArgs{key: $key, householdId: $householdId}';
+  }
 }
