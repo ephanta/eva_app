@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../routes/app_router.gr.dart';
 import 'bottom_nav_bar_item.dart';
 
-enum PageType { home, shoppingList, planner, homeDetail }
+enum PageType { home, shoppingList, shoppingHistory, planner, homeDetail }
 
 /// {@category Widgets}
 /// Widget für die Bottom Navigation Bar
@@ -15,6 +15,7 @@ class BottomNavBarCustom extends StatefulWidget implements PreferredSizeWidget {
     required this.showHome,
     required this.showShoppingList,
     required this.showPlanner,
+    required this.showShoppingHistory,
     required this.householdId,
   });
 
@@ -22,6 +23,7 @@ class BottomNavBarCustom extends StatefulWidget implements PreferredSizeWidget {
   final PageType pageType;
   final bool showHome;
   final bool showShoppingList;
+  final bool showShoppingHistory;
   final bool showPlanner;
 
   @override
@@ -61,15 +63,26 @@ class _BottomNavBarCustomState extends State<BottomNavBarCustom> {
                     .push(ShoppingListRoute(householdId: widget.householdId));
               },
             ),
+          if (widget.showShoppingHistory)
+            BottomNavBarItem(
+              icon: Icons.history,
+              label: 'Einkaufshistorie',
+              selected:
+                  widget.pageType == PageType.shoppingHistory ? true : false,
+              onPressed: () {
+                AutoRouter.of(context).push(
+                    ShoppingHistoryRoute(householdId: widget.householdId));
+              },
+            ),
           if (widget.showHome)
             BottomNavBarItem(
               icon: Icons.home,
               label: 'Haushalt',
               selected: widget.pageType == PageType.home ? true : false,
               onPressed: () {
-                AutoRouter.of(context).maybePop();
-                // AutoRouter.of(context)
-                //     .push(HomeDetailRoute(householdId: widget.householdId));
+                AutoRouter.of(context).popUntilRouteWithName('HomeRoute');
+                AutoRouter.of(context)
+                    .push(HomeDetailRoute(householdId: widget.householdId));
               },
             ),
           if (widget.showPlanner)

@@ -1,7 +1,6 @@
 import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 
@@ -27,7 +26,6 @@ class ShoppingListScreen extends StatefulWidget {
 /// Der Zustand für die Einkaufslisten-Seite
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   List<Map<String, dynamic>>? _shoppingList;
-  List<Map<String, dynamic>>? _purchasedList;
 
   @override
   void initState() {
@@ -43,8 +41,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       setState(() {
         _shoppingList =
             list.where((item) => item['status'] == 'pending').toList();
-        _purchasedList =
-            list.where((item) => item['status'] == 'purchased').toList();
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -73,12 +69,44 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     }
   }
 
+  Future<void> _deleteItem(int itemId) async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    try {
+      await dataProvider.removeItemFromShoppingList(
+          widget.householdId.toString(), itemId.toString());
+      _loadShoppingList();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fehler beim Löschen des Eintrags: $e'),
+        ),
+      );
+    }
+  }
+
+  Future<void> _clearShoppingList() async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    try {
+      for (var item in _shoppingList!) {
+        await dataProvider.removeItemFromShoppingList(
+            widget.householdId.toString(), item['id'].toString());
+      }
+      _loadShoppingList();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Fehler beim Löschen der Einkaufsliste: $e'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppBarCustom(
           showArrow: true, showHome: true, showProfile: true),
-      body: _shoppingList == null || _purchasedList == null
+      body: _shoppingList == null
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
@@ -87,66 +115,50 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   child: Text('Einkaufsliste', style: TextStyle(fontSize: 24)),
                 ),
                 Expanded(
-                  child: _shoppingList!.isEmpty
-                      ? const Center(child: Text('Die Einkaufsliste ist leer.'))
-                      : ListView.builder(
-                          itemCount: _shoppingList!.length,
-                          itemBuilder: (context, index) {
-                            final item = _shoppingList![index];
-                            return CheckboxListTile(
-                              title: Text(item['item_name']),
-                              subtitle: Text('Menge: ${item['amount']}'),
-                              value: false,
-                              onChanged: (bool? value) {
-                                if (value != null) {
-                                  _updateItemStatus(item['id'], value);
-                                }
-                              },
-                              secondary: IconButton(
-                                icon: Icon(Icons.delete),
-                                onPressed: () {
-                                  showDeleteConfirmationDialog(
-                                    context,
-                                    widget.householdId,
-                                    item['id'],
-                                    'Eintrag',
-                                    'Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?',
-                                    'shoppinglist',
-                                    onDeleted: _loadShoppingList,
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
+                  child: Container(
+                    color: Colors.orange[50],
+                    child: _shoppingList!.isEmpty
+                        ? const Center(
+                            child: Text('Die Einkaufsliste ist leer.'))
+                        : ListView.builder(
+                            itemCount: _shoppingList!.length,
+                            itemBuilder: (context, index) {
+                              final item = _shoppingList![index];
+                              return ListTile(
+                                title: Text(item['item_name']),
+                                subtitle: Text('Menge: ${item['amount']}'),
+                                leading: IconButton(
+                                  icon: Icon(Icons.delete),
+                                  onPressed: () {
+                                    showDeleteConfirmationDialog(
+                                      context,
+                                      widget.householdId,
+                                      item['id'],
+                                      'Eintrag',
+                                      'Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?',
+                                      'shoppinglist',
+                                      onDeleted: _loadShoppingList,
+                                    );
+                                  },
+                                ),
+                                trailing: IconButton(
+                                  icon: Icon(Icons.shopping_cart),
+                                  onPressed: () {
+                                    _updateItemStatus(item['id'], true);
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                  ),
                 ),
-                const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: Text('Es wurde eingekauft:',
-                      style: TextStyle(fontSize: 24)),
-                ),
-                Expanded(
-                  child: _purchasedList!.isEmpty
-                      ? const Center(child: Text('Keine gekauften Artikel.'))
-                      : ListView.builder(
-                          itemCount: _purchasedList!.length,
-                          itemBuilder: (context, index) {
-                            final item = _purchasedList![index];
-
-                            final DateTime checkedAt =
-                                DateTime.parse(item['checked_at']);
-                            final String formattedDateDate =
-                                DateFormat('dd.MM.yyyy').format(checkedAt);
-                            final String formattedDateTime =
-                                DateFormat('HH:mm').format(checkedAt);
-
-                            return ListTile(
-                              title: Text(item['item_name']),
-                              subtitle: Text(
-                                  'Menge: ${item['amount']} - Gekauft am $formattedDateDate um $formattedDateTime Uhr'),
-                            );
-                          },
-                        ),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton.icon(
+                    icon: Icon(Icons.delete_sweep),
+                    label: Text('Einkaufsliste leeren'),
+                    onPressed: _clearShoppingList,
+                  ),
                 ),
               ],
             ),
@@ -160,6 +172,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
         showHome: true,
         showShoppingList: false,
         showPlanner: false,
+        showShoppingHistory: true,
         householdId: widget.householdId,
       ),
     );

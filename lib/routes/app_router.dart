@@ -35,5 +35,9 @@ class AppRouter extends $AppRouter {
             page: ShoppingListRoute.page,
             path: '/detail/:id/shopping-list',
             guards: [AuthGuard()]),
+        AutoRoute(
+            page: ShoppingHistoryRoute.page,
+            path: '/detail/:id/shopping-list/history',
+            guards: [AuthGuard()]),
       ];
 }

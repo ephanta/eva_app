@@ -183,6 +183,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
         showHome: false,
         showShoppingList: true,
         showPlanner: true,
+        showShoppingHistory: false,
         householdId: widget.householdId,
       ),
     );

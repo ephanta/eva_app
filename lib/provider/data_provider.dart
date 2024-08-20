@@ -293,15 +293,14 @@ class DataProvider with ChangeNotifier {
 
     final updateData = <String, dynamic>{};
 
-    if (status != null) {
-      updateData['status'] = status;
-    }
-    if (userId != null) {
+    updateData['status'] = status;
+
+    if (status == 'pending') {
+      updateData['checked_by'] = null;
+      updateData['checked_at'] = null;
+    } else {
       updateData['checked_by'] = userId;
-    }
-    if (timestamp != null) {
       updateData['checked_at'] = timestamp.toIso8601String();
-      ;
     }
 
     try {
