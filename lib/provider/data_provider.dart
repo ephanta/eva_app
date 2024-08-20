@@ -256,6 +256,7 @@ class DataProvider with ChangeNotifier {
         'household_id': householdId,
         'item_name': itemName,
         'amount': amount,
+        'status': 'pending',
       }).select();
 
       notifyListeners();
@@ -282,6 +283,33 @@ class DataProvider with ChangeNotifier {
     } catch (e) {
       throw Exception(
           'Fehler beim Entfernen des Elements aus der Einkaufsliste: $e');
+    }
+  }
+
+  /// Status des Elements in der Einkaufsliste aktualisieren
+  Future<void> updateShoppingItemStatus(
+      int itemId, String userId, DateTime timestamp, bool isChecked) async {
+    final String status = isChecked ? 'purchased' : 'pending';
+
+    final updateData = <String, dynamic>{};
+
+    if (status != null) {
+      updateData['status'] = status;
+    }
+    if (userId != null) {
+      updateData['checked_by'] = userId;
+    }
+    if (timestamp != null) {
+      updateData['checked_at'] = timestamp.toIso8601String();
+      ;
+    }
+
+    try {
+      await _client.from('shopping_list').update(updateData).eq('id', itemId);
+    } catch (e) {
+      print(e);
+      throw Exception(
+          'Fehler beim Aktualisieren des Elements in der Einkaufsliste: $e');
     }
   }
 }
