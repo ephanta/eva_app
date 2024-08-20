@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 
 import '../../provider/data_provider.dart';
 
+/// {@category Widgets}
+/// Dialog zum Bestätigen des Löschens eines Haushalts oder eines Eintrags aus der Einkaufsliste
 Future<void> showDeleteConfirmationDialog(
   BuildContext context,
   int householdId,

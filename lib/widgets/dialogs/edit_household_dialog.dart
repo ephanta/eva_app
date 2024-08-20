@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
@@ -5,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import '../../provider/data_provider.dart';
 
+/// {@category Widgets}
+/// Dialog zum Bearbeiten eines Haushalts
 Future<Future<Object?>> showEditHouseholdDialog(
     BuildContext context, Map<String, dynamic> household) async {
   final TextEditingController nameController =
@@ -55,7 +58,7 @@ Future<Future<Object?>> showEditHouseholdDialog(
                           TextButton(
                             child: const Text('Fertig'),
                             onPressed: () {
-                              Navigator.of(context).pop();
+                              AutoRouter.of(context).maybePop();
                             },
                           ),
                         ],
@@ -117,8 +120,7 @@ Future<Future<Object?>> showEditHouseholdDialog(
                             content: Text('Haushalt erfolgreich bearbeitet.')),
                       );
 
-                      Navigator.of(context)
-                          .pop(); // Close the dialog after saving
+                      AutoRouter.of(context).maybePop();
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

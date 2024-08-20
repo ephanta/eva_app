@@ -12,6 +12,8 @@ import '../widgets/dialogs/show_delete_confirmation_dialog.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 
+/// {@category Screens}
+/// Ansicht für die Haushalt-Detail-Seite
 @RoutePage()
 class HomeDetailScreen extends StatefulWidget {
   final int householdId;
@@ -23,6 +25,7 @@ class HomeDetailScreen extends StatefulWidget {
   State<HomeDetailScreen> createState() => _HomeDetailScreenState();
 }
 
+/// Der Zustand für die Haushalt-Detail-Seite
 class _HomeDetailScreenState extends State<HomeDetailScreen> {
   String? userRole;
 

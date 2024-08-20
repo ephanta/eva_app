@@ -6,6 +6,8 @@ import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 import '../../provider/data_provider.dart';
 import '../../routes/app_router.gr.dart';
 
+/// {@category Widgets}
+/// Dialog zum Bestätigen des Verlassens eines Haushalts
 Future<void> showLeaveConfirmationDialog(
     BuildContext context, int householdId) async {
   return showDialog<void>(

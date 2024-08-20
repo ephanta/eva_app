@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/data_provider.dart';
+import '../widgets/dialogs/show_add_item_dialog.dart';
 import '../widgets/dialogs/show_delete_confirmation_dialog.dart';
 import '../widgets/navigation/app_bar_custom.dart';
+import '../widgets/navigation/bottom_navigation_bar.dart';
 
 /// {@category Screens}
 /// Ansicht für die Einkaufsliste
@@ -47,14 +49,6 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     }
   }
 
-  void _addItem() async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    //TODO: Benutzerinput hier noch hinzufügen
-    await dataProvider.addItemToShoppingList(
-        widget.householdId.toString(), 'ItemName', 'Amount');
-    _loadShoppingList(); // Aktualisiere die Liste nach dem Hinzufügen
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -93,8 +87,16 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   },
                 ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _addItem,
+        heroTag: 'addItem',
+        onPressed: () => showAddItemDialog(context, widget.householdId),
         child: Icon(Icons.add),
+      ),
+      bottomNavigationBar: BottomNavBarCustom(
+        pageType: PageType.shoppingList,
+        showHome: true,
+        showShoppingList: false,
+        showPlanner: false,
+        householdId: widget.householdId,
       ),
     );
   }

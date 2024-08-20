@@ -64,10 +64,12 @@ class _BottomNavBarCustomState extends State<BottomNavBarCustom> {
           if (widget.showHome)
             BottomNavBarItem(
               icon: Icons.home,
-              label: 'Haushaltsübersicht',
+              label: 'Haushalt',
               selected: widget.pageType == PageType.home ? true : false,
               onPressed: () {
-                AutoRouter.of(context).push(const HomeRoute());
+                AutoRouter.of(context).maybePop();
+                // AutoRouter.of(context)
+                //     .push(HomeDetailRoute(householdId: widget.householdId));
               },
             ),
           if (widget.showPlanner)

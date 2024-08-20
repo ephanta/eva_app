@@ -7,6 +7,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../routes/app_router.gr.dart';
 
+/// {@category Widgets}
+/// Dialog zum Erstellen eines neuen Haushalts
 Future<Future<Object?>> showCreateHouseholdDialog(BuildContext context) async {
   final TextEditingController controller = TextEditingController();
   Color currentColor = Colors.orange; // Default color
@@ -53,7 +55,7 @@ Future<Future<Object?>> showCreateHouseholdDialog(BuildContext context) async {
                           TextButton(
                             child: const Text('Fertig'),
                             onPressed: () {
-                              Navigator.of(context).pop();
+                              AutoRouter.of(context).maybePop();
                             },
                           ),
                         ],
@@ -96,7 +98,7 @@ Future<Future<Object?>> showCreateHouseholdDialog(BuildContext context) async {
                         const SnackBar(
                             content: Text('Haushalt erfolgreich erstellt.')),
                       );
-                      Navigator.of(context).pop(); // Close the dialog
+                      AutoRouter.of(context).maybePop();
                       AutoRouter.of(context).push(
                         HomeDetailRoute(householdId: householdId),
                       );
