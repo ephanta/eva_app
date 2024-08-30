@@ -28,17 +28,6 @@ Future<Future<Object?>> showAddItemDialog(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               TextField(
-                controller: controllerItemName,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Was brauchst du?',
-                ),
-                onChanged: (value) {
-                  itemName = value;
-                },
-              ),
-              const SizedBox(height: 20),
-              TextField(
                 controller: controllerAmount,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
@@ -46,6 +35,17 @@ Future<Future<Object?>> showAddItemDialog(
                 ),
                 onChanged: (value) {
                   amount = value;
+                },
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: controllerItemName,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: 'Was brauchst du?',
+                ),
+                onChanged: (value) {
+                  itemName = value;
                 },
               ),
               const SizedBox(height: 20),

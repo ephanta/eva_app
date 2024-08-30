@@ -237,8 +237,7 @@ class DataProvider with ChangeNotifier {
           .select()
           .eq('household_id', householdId)
           .select();
-
-      return response as List<Map<String, dynamic>>;
+      return response;
     } catch (e) {
       throw Exception('Fehler beim Laden der Einkaufsliste: $e');
     }
@@ -305,6 +304,7 @@ class DataProvider with ChangeNotifier {
 
     try {
       await _client.from('shopping_list').update(updateData).eq('id', itemId);
+      notifyListeners();
     } catch (e) {
       print(e);
       throw Exception(
