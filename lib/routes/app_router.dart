@@ -26,6 +26,10 @@ class AppRouter extends $AppRouter {
             path: '/detail/:id',
             guards: [AuthGuard()]),
         AutoRoute(
+            page: HomeDetailRoute.page,
+            path: '/detail/:id/planner',
+            guards: [AuthGuard()]),
+        AutoRoute(
             page: ProfileRoute.page, path: '/profile', guards: [AuthGuard()]),
         AutoRoute(
             page: PlannerRoute.page,

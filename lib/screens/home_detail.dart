@@ -417,11 +417,13 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
           },
         );
       }),
-      bottomNavigationBar: const BottomNavBarCustom(
+      bottomNavigationBar: BottomNavBarCustom(
         pageType: PageType.homeDetail,
         showHome: false,
-        showShoppingList: false,
+        showShoppingList: true,
         showPlanner: true,
+        showShoppingHistory: false,
+        householdId: widget.householdId,
       ),
     );
   }

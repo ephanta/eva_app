@@ -1,21 +1,29 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+
 import '../../routes/app_router.gr.dart';
 import 'bottom_nav_bar_item.dart';
 
-enum PageType { home , shoppingList , planner, homeDetail }
+enum PageType { home, shoppingList, shoppingHistory, planner, homeDetail }
 
 /// {@category Widgets}
 /// Widget für die Bottom Navigation Bar
 class BottomNavBarCustom extends StatefulWidget implements PreferredSizeWidget {
-
   const BottomNavBarCustom({
-    super.key, required this.pageType, required this.showHome, required this.showShoppingList, required this.showPlanner,
+    super.key,
+    required this.pageType,
+    required this.showHome,
+    required this.showShoppingList,
+    required this.showPlanner,
+    required this.showShoppingHistory,
+    required this.householdId,
   });
 
+  final int householdId;
   final PageType pageType;
   final bool showHome;
   final bool showShoppingList;
+  final bool showShoppingHistory;
   final bool showPlanner;
 
   @override
@@ -45,7 +53,7 @@ class _BottomNavBarCustomState extends State<BottomNavBarCustom> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          if(widget.showShoppingList)
+          if (widget.showShoppingList)
             BottomNavBarItem(
               icon: Icons.shopping_basket,
               label: 'Einkaufsliste',
@@ -54,14 +62,15 @@ class _BottomNavBarCustomState extends State<BottomNavBarCustom> {
                 AutoRouter.of(context).push(const ShoppingListRoute());
               },
             ),
-          if(widget.showHome)
+          if (widget.showHome)
             BottomNavBarItem(
               icon: Icons.home,
-
-              label: 'Haushaltsübersicht',
+              label: 'Haushalt',
               selected: widget.pageType == PageType.home ? true : false,
               onPressed: () {
-                AutoRouter.of(context).push(const HomeRoute());
+                AutoRouter.of(context).popUntilRouteWithName('HomeRoute');
+                AutoRouter.of(context)
+                    .push(HomeDetailRoute(householdId: widget.householdId));
               },
             ),
           if (widget.showPlanner)
@@ -70,10 +79,10 @@ class _BottomNavBarCustomState extends State<BottomNavBarCustom> {
               label: 'Wochenplan',
               selected: widget.pageType == PageType.planner ? true : false,
               onPressed: () {
-                AutoRouter.of(context).push(const PlannerRoute());
+                AutoRouter.of(context)
+                    .push(PlannerRoute(householdId: widget.householdId));
               },
             ),
-
         ],
       ),
     );
