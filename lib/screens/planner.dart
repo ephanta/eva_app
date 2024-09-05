@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../widgets/navigation/app_bar_custom.dart';
+import '../model/recipe.dart';
 
 /// {@category Screens}
 /// Ansicht für den Wochenplaner
@@ -25,6 +26,12 @@ class _PlannerScreenState extends State<PlannerScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
+  Rezept rezept1 = Rezept(
+      name: 'Spaghetti Carbonara',
+      beschreibung: 'Ein klassisches italienisches Gericht mit Speck und Ei.',
+      zutaten: ['Spaghetti', 'Speck', 'Eier', 'Parmesan', 'Pfeffer']
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -42,10 +49,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
             } else if (!snapshot.hasData) {
               return const Text('Keine Daten gefunden.');
             } else {
-              final household = snapshot.data!;
-              Color householdColor = Color(
-                  int.parse(household['color'].substring(1, 7), radix: 16) +
-                      0xFF000000);
               return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.start,
