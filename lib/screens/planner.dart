@@ -22,6 +22,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
   DateTime? _selectedDay;
 
   Map<DateTime, Rezept> wochenplan = {};
+  List<Rezept> rezepte = [];
 
   @override
   void initState() {
@@ -30,45 +31,67 @@ class _PlannerScreenState extends State<PlannerScreen> {
     DateTime heute = DateTime.now();
 
     // Beispiel-Rezepte hinzufügen
-    wochenplan[heute] = Rezept(
-      name: 'Spaghetti Carbonara',
-      beschreibung: 'Ein klassisches italienisches Gericht mit Speck und Ei.',
-      zutaten: ['Spaghetti', 'Speck', 'Eier', 'Parmesan', 'Pfeffer'],
-    );
+    rezepte = [
+      Rezept(
+        rezeptID: '1',
+        name: 'Spaghetti Carbonara',
+        beschreibung: 'Ein klassisches italienisches Gericht mit Speck und Ei.',
+        zutaten: ['Spaghetti', 'Speck', 'Eier', 'Parmesan', 'Pfeffer'],
+      ),
+      Rezept(
+        rezeptID: '2',
+        name: 'Hähnchensalat',
+        beschreibung: 'Ein leichter Salat mit Hähnchenbrust und Gemüse.',
+        zutaten: ['Hähnchenbrust', 'Salat', 'Tomaten', 'Gurken', 'Dressing'],
+      ),
+      Rezept(
+        rezeptID: '3',
+        name: 'Lasagne',
+        beschreibung: 'Ein reichhaltiges Gericht mit Fleisch, Käse und Pasta.',
+        zutaten: ['Hackfleisch', 'Tomaten', 'Lasagneblätter', 'Käse', 'Béchamelsoße'],
+      ),
+      Rezept(
+        rezeptID: '4',
+        name: 'Gemüsepfanne',
+        beschreibung: 'Eine bunte Gemüsepfanne mit verschiedenen Gewürzen.',
+        zutaten: ['Paprika', 'Zucchini', 'Aubergine', 'Zwiebeln', 'Knoblauch'],
+      ),
+      Rezept(
+        rezeptID: '5',
+        name: 'Pizza Margherita',
+        beschreibung: 'Eine klassische Pizza mit Tomaten, Basilikum und Mozzarella.',
+        zutaten: ['Pizzateig', 'Tomaten', 'Mozzarella', 'Basilikum', 'Olivenöl'],
+      ),
+    ];
 
-    wochenplan[heute.add(Duration(days: 1))] = Rezept(
-      name: 'Hähnchensalat',
-      beschreibung: 'Ein leichter Salat mit Hähnchenbrust und Gemüse.',
-      zutaten: ['Hähnchenbrust', 'Salat', 'Tomaten', 'Gurken', 'Dressing'],
-    );
+    // Beispiel-Rezepte für den Wochenplan
+    wochenplan[heute] = rezepte[0];
+    wochenplan[heute.add(Duration(days: 1))] = rezepte[1];
   }
 
   void _addRecipeDialog(BuildContext context) {
-    final _nameController = TextEditingController();
-    final _descriptionController = TextEditingController();
-    final _ingredientsController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text("Rezept hinzufügen"),
+          title: Text("Rezept auswählen"),
           content: SingleChildScrollView(
             child: Column(
-              children: [
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(labelText: 'Rezeptname'),
-                ),
-                TextField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(labelText: 'Beschreibung'),
-                ),
-                TextField(
-                  controller: _ingredientsController,
-                  decoration: InputDecoration(labelText: 'Zutaten (kommagetrennt)'),
-                ),
-              ],
+              mainAxisSize: MainAxisSize.min,
+              children: rezepte.map((rezept) {
+                return ListTile(
+                  title: Text(rezept.name),
+                  subtitle: Text(rezept.beschreibung),
+                  onTap: () {
+                    if (_selectedDay != null) {
+                      setState(() {
+                        wochenplan[_selectedDay!] = rezept;
+                      });
+                    }
+                    Navigator.of(context).pop();
+                  },
+                );
+              }).toList(),
             ),
           ),
           actions: [
@@ -77,21 +100,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 Navigator.of(context).pop();
               },
               child: Text("Abbrechen"),
-            ),
-            TextButton(
-              onPressed: () {
-                if (_selectedDay != null) {
-                  setState(() {
-                    wochenplan[_selectedDay!] = Rezept(
-                      name: _nameController.text,
-                      beschreibung: _descriptionController.text,
-                      zutaten: _ingredientsController.text.split(','),
-                    );
-                  });
-                }
-                Navigator.of(context).pop();
-              },
-              child: Text("Hinzufügen"),
             ),
           ],
         );
