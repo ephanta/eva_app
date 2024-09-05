@@ -147,7 +147,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 CalendarFormat.week: 'Woche',
               },
             ),
-            SizedBox(height: 20),
+            SizedBox(height: 30),
             if (_selectedDay != null && wochenplan[_selectedDay!] != null)
               _zeigeRezept(wochenplan[_selectedDay!]!),
             if (_selectedDay != null && wochenplan[_selectedDay!] == null)
