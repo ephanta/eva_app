@@ -107,6 +107,22 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Erstelle einen Eintrag im Wochenplan
+  Future<void> createPlannerEntry(
+      String householdId, DateTime day, String recipeId) async {
+    try {
+      await _client.from('planner').insert({
+        'household_id': householdId,
+        'day': day,
+        'recipe_id': recipeId
+      }).select();
+
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Fehler beim Erstellen des Wochenplaneintrags: $e');
+    }
+  }
+
   /// Lösche den Haushalt und alle Mitglieder
   Future<void> deleteHousehold(String householdId) async {
     try {
