@@ -30,6 +30,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
     DateTime heute = DateTime.now();
 
+    /// Standardmäßig den aktuellen Tag auswählen
+    _selectedDay = _focusedDay;
+
     // Beispiel-Rezepte hinzufügen
     rezepte = [
       Rezept(
@@ -68,7 +71,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
     wochenplan[heute] = rezepte[0];
     wochenplan[heute.add(Duration(days: 1))] = rezepte[1];
   }
-
+  /// Öffnet ein Dialogfenster, um ein Rezept auszuwählen
   void _addRecipeDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -143,6 +146,16 @@ class _PlannerScreenState extends State<PlannerScreen> {
               onPageChanged: (focusedDay) {
                 _focusedDay = focusedDay;
               },
+              calendarStyle: CalendarStyle(
+                selectedDecoration: BoxDecoration(
+                  color: Colors.orange, /// Farbe des ausgewählten Tages
+                  shape: BoxShape.circle,
+                ),
+                todayDecoration: BoxDecoration(
+                  color: Colors.orange.shade200, /// Farbe des heutigen Tages
+                  shape: BoxShape.circle,
+                ),
+              ),
               availableCalendarFormats: const {
                 CalendarFormat.week: 'Woche',
               },
@@ -160,10 +173,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
         onPressed: () => _addRecipeDialog(context),
         child: const Icon(Icons.add),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat, // Verlagerung nach unten rechts
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
-
+/// Zeigt ein Rezept an und gibt die Zutaten aus
   Widget _zeigeRezept(Rezept rezept) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,7 +192,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
           "Zutaten:",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        for (String zutat in rezept.zutaten) Text("- $zutat"),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: rezept.zutaten.map((zutat) => Text("- $zutat")).toList(),
+        ),
       ],
     );
   }
