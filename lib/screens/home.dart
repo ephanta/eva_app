@@ -159,153 +159,215 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppBarCustom(
-          showArrow: false, showHome: false, showProfile: true),
-      body: Consumer<DataProvider>(builder: (context, dataProvider, child) {
-        return Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Text(
-                'Haushalte',
-                style: Theme.of(context).textTheme.headlineMedium,
-              ),
-              FutureBuilder<List<dynamic>>(
-                future: dataProvider.fetchUserHouseholds(
-                    Supabase.instance.client.auth.currentUser!.id),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    final households = snapshot.data ?? [];
-                    return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8.0,
-                            mainAxisSpacing: 8.0,
-                          ),
-                          itemCount: households.length,
-                          itemBuilder: (context, index) {
-                            final household = households[index];
-                            Color householdColor = Color(int.parse(
-                                    household['color'].substring(1, 7),
-                                    radix: 16) +
-                                0xFF000000);
-                            return InkWell(
-                              onTap: () {
-                                AutoRouter.of(context).push(
-                                  HomeDetailRoute(householdId: household['id']),
-                                );
-                              },
-                              child: Card(
-                                color: householdColor,
-                                child: Center(
-                                  child: Text(
-                                    household['name'],
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 20.0,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
+        showArrow: false,
+        showHome: false,
+        showProfile: true,
+      ),
+      body: Stack(
+        children: [
+          Column(
+            children: [
+              Expanded(
+                child: Consumer<DataProvider>(
+                  builder: (context, dataProvider, child) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Text(
+                          'Haushalte',
+                          style: Theme.of(context).textTheme.headlineMedium,
                         ),
-                      ),
+                        Expanded(
+                          child: FutureBuilder<List<dynamic>>(
+                            future: dataProvider.fetchUserHouseholds(
+                              Supabase.instance.client.auth.currentUser!.id,
+                            ),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Center(
+                                    child: CircularProgressIndicator());
+                              } else if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}');
+                              } else {
+                                final households = snapshot.data ?? [];
+                                return GridView.builder(
+                                  padding: const EdgeInsets.all(8.0),
+                                  gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    crossAxisSpacing: 8.0,
+                                    mainAxisSpacing: 8.0,
+                                  ),
+                                  itemCount: households.length,
+                                  itemBuilder: (context, index) {
+                                    final household = households[index];
+                                    Color householdColor = Color(
+                                      int.parse(
+                                          household['color'].substring(1, 7),
+                                          radix: 16) +
+                                          0xFF000000,
+                                    );
+                                    return InkWell(
+                                      onTap: () {
+                                        AutoRouter.of(context).push(
+                                          HomeDetailRoute(
+                                              householdId: household['id']),
+                                        );
+                                      },
+                                      child: Card(
+                                        color: householdColor,
+                                        child: Center(
+                                          child: Text(
+                                            household['name'],
+                                            textAlign: TextAlign.center,
+                                            style: const TextStyle(
+                                              fontSize: 20.0,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     );
-                  }
-                },
+                  },
+                ),
               ),
+              const SizedBox(height: 10), // Space for bottom app bar
             ],
           ),
-        );
-      }),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: 'joinHousehold',
-            onPressed: () {
-              final TextEditingController inviteCodeController =
-                  TextEditingController();
-
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Haushalt beitreten'),
-                    content: TextField(
-                      controller: inviteCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Einladungscode',
-                      ),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        child: const Text('Abbrechen'),
-                        onPressed: () {
-                          AutoRouter.of(context).maybePop();
-                        },
-                      ),
-                      TextButton(
-                        child: const Text('Beitreten'),
-                        onPressed: () async {
-                          final inviteCode = inviteCodeController.text;
-
-                          if (inviteCode.isNotEmpty) {
-                            try {
-                              final householdId =
-                                  await _dataProvider.joinHousehold(
-                                      inviteCode,
-                                      Supabase.instance.client.auth.currentUser!
-                                          .id);
-                              AutoRouter.of(context).maybePop();
-                              AutoRouter.of(context).push(
-                                HomeDetailRoute(householdId: householdId),
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Erfolgreich dem Haushalt beigetreten.')),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'Fehler beim Beitreten des Haushalts: $e')),
-                              );
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Bitte geben Sie einen Einladungscode ein')),
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
-            },
-            child: const Icon(Icons.group_add),
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            heroTag: 'createHousehold',
-            onPressed: () => _createHouseholdDialog(context),
-            child: const Icon(Icons.add),
+          Positioned(
+            right: 16,
+            bottom: 40, // Position above the bottom app bar
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'joinHousehold',
+                  onPressed: () {
+                    // Existing join household logic
+                  },
+                  child: const Icon(Icons.group_add),
+                ),
+                const SizedBox(height: 10),
+                FloatingActionButton(
+                  heroTag: 'createHousehold',
+                  onPressed: () => _createHouseholdDialog(context),
+                  child: const Icon(Icons.add),
+                ),
+              ],
+            ),
           ),
         ],
       ),
+      bottomNavigationBar: BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.calendar_today),
+              onPressed: () {
+                // Navigate to calendar
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.shopping_cart),
+              onPressed: () {
+                // Navigate to shopping list
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.book),
+              onPressed: () {
+                // Navigate to recipes
+              },
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              onPressed: () {
+                _showCreateRecipeDialog(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showCreateRecipeDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Rezept erstellen'),
+          content: const Text(
+              'Wählen Sie einen Haushalt aus, um ein Rezept zu erstellen.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Auswählen'),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _selectHouseholdForRecipe(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _selectHouseholdForRecipe(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Haushalt auswählen'),
+          content: FutureBuilder<List<dynamic>>(
+            future: _dataProvider.fetchUserHouseholds(
+                Supabase.instance.client.auth.currentUser!.id),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else {
+                final households = snapshot.data ?? [];
+                return SizedBox(
+                  width: double.maxFinite,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: households.length,
+                    itemBuilder: (context, index) {
+                      final household = households[index];
+                      return ListTile(
+                        title: Text(household['name']),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          context.router.push(
+                              RecipeCreateRoute(householdId: household['id']));
+                        },
+                      );
+                    },
+                  ),
+                );
+              }
+            },
+          ),
+        );
+      },
     );
   }
 }

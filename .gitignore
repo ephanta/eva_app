@@ -44,3 +44,4 @@ app.*.map.json
 
 # ENV
 .env
+/.run/Template Flutter.run.xml
