@@ -371,6 +371,16 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         }
                       },
                     ),
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.copy),
+                      label: const Text('Haushalts-ID kopieren'),
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(text: household['invite_code']));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Haushalts-ID kopiert')),
+                        );
+                      },
+                    ),
                     const Spacer(),
                     if (userRole == 'admin') ...[
                       ElevatedButton.icon(
