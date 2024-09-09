@@ -42,7 +42,8 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
   // Neues Rezept zu Supabase hinzufügen
   void _addNewRecipe() async {
     final userId = Supabase.instance.client.auth.currentUser!.id;
-    Map<String, dynamic>? newRecipe = await _showRecipeForm(context, isEditing: false);
+    Map<String, dynamic>? newRecipe = await _showRecipeForm(
+        context, isEditing: false);
 
     if (newRecipe != null) {
       final response = await Supabase.instance.client
@@ -51,8 +52,8 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
         'benutzer_id': userId,
         'name': newRecipe['name'],
         'beschreibung': newRecipe['beschreibung'],
-        'zutaten': newRecipe['zutaten'],  // Zutaten als JSON-Feld
-        'kochanweisungen': newRecipe['kochanweisungen'],  // Kochanweisungen
+        'zutaten': newRecipe['zutaten'], // Zutaten als JSON-Feld
+        'kochanweisungen': newRecipe['kochanweisungen'], // Kochanweisungen
       });
 
       if (response != null) {
@@ -67,7 +68,8 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
 
   // Bestehendes Rezept in Supabase bearbeiten
   void _editRecipe(int index) async {
-    Map<String, dynamic>? updatedRecipe = await _showRecipeForm(context, recipe: _recipes[index], isEditing: true);
+    Map<String, dynamic>? updatedRecipe = await _showRecipeForm(
+        context, recipe: _recipes[index], isEditing: true);
 
     if (updatedRecipe != null) {
       final recipeId = _recipes[index]['id'];
@@ -108,11 +110,16 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
   }
 
   // Formular zum Hinzufügen oder Bearbeiten eines Rezepts anzeigen
-  Future<Map<String, dynamic>?> _showRecipeForm(BuildContext context, {Map<String, dynamic>? recipe, bool isEditing = false}) async {
-    TextEditingController nameController = TextEditingController(text: recipe?['name'] ?? '');
-    TextEditingController descriptionController = TextEditingController(text: recipe?['beschreibung'] ?? '');
-    TextEditingController instructionsController = TextEditingController(text: recipe?['kochanweisungen'] ?? '');
-    List<Map<String, String>> ingredients = List<Map<String, String>>.from(recipe?['zutaten'] ?? []);
+  Future<Map<String, dynamic>?> _showRecipeForm(BuildContext context,
+      {Map<String, dynamic>? recipe, bool isEditing = false}) async {
+    TextEditingController nameController = TextEditingController(
+        text: recipe?['name'] ?? '');
+    TextEditingController descriptionController = TextEditingController(
+        text: recipe?['beschreibung'] ?? '');
+    TextEditingController instructionsController = TextEditingController(
+        text: recipe?['kochanweisungen'] ?? '');
+    List<Map<String, String>> ingredients = List<Map<String, String>>.from(
+        recipe?['zutaten'] ?? []);
 
     return showDialog<Map<String, dynamic>>(
       context: context,
@@ -131,7 +138,8 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
                   decoration: const InputDecoration(labelText: 'Beschreibung'),
                 ),
                 const SizedBox(height: 10),
-                const Text('Zutaten', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                    'Zutaten', style: TextStyle(fontWeight: FontWeight.bold)),
                 Column(
                   children: ingredients.map((ingredient) {
                     return ListTile(
@@ -152,7 +160,8 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
                   icon: const Icon(Icons.add),
                   label: const Text('Zutat hinzufügen'),
                   onPressed: () async {
-                    Map<String, String>? newIngredient = await _showAddIngredientDialog();
+                    Map<String,
+                        String>? newIngredient = await _showAddIngredientDialog();
                     if (newIngredient != null) {
                       setState(() {
                         ingredients.add(newIngredient);
@@ -163,7 +172,8 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
                 const SizedBox(height: 10),
                 TextField(
                   controller: instructionsController,
-                  decoration: const InputDecoration(labelText: 'Kochanweisungen'),
+                  decoration: const InputDecoration(
+                      labelText: 'Kochanweisungen'),
                   maxLines: 5,
                 ),
               ],
@@ -282,23 +292,32 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: const Color(0xFFFDD9CF),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(
+            vertical: 12, horizontal: 16),
         title: Text(
           _recipes[index]['name'] ?? '',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3A0B01)),
+          style: const TextStyle(fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF3A0B01)),
         ),
-        subtitle: Column(ment.start,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          // Corrected crossAxisAlignment
           children: [
-            crossAxisAlignment: CrossAxisAlign
-            Text(_recipes[index]['beschreibung'] ?? '', style: const TextStyle(color: Color(0xFF3A0B01))),
+            Text(_recipes[index]['beschreibung'] ?? '',
+                style: const TextStyle(color: Color(0xFF3A0B01))),
             const SizedBox(height: 8),
-            const Text('Zutaten:', style: TextStyle(fontWeight: FontWeight.bold)),
+            const Text(
+                'Zutaten:', style: TextStyle(fontWeight: FontWeight.bold)),
             ...(_recipes[index]['zutaten'] as List).map((ingredient) {
-              return Text('${ingredient['name']} - ${ingredient['menge']}', style: const TextStyle(color: Color(0xFF3A0B01)));
+              return Text('${ingredient['name']} - ${ingredient['menge']}',
+                  style: const TextStyle(color: Color(0xFF3A0B01)));
             }).toList(),
             const SizedBox(height: 8),
-            const Text('Kochanweisungen:', style: TextStyle(fontWeight: FontWeight.bold)),
-            Text(_recipes[index]['kochanweisungen'] ?? '', style: const TextStyle(color: Color(0xFF3A0B01))),
+            const Text('Kochanweisungen:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            Text(_recipes[index]['kochanweisungen'] ?? '',
+                style: const TextStyle(color: Color(0xFF3A0B01))),
           ],
         ),
         trailing: Row(
