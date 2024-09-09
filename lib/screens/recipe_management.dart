@@ -24,26 +24,20 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
   Future<void> _loadUserRecipes() async {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     final userId = dataProvider.currentUserId;
-    try {
-      final recipes = await dataProvider.fetchUserRecipes(userId);
-      setState(() {
-        _recipes = recipes;
-      });
-    } catch (e) {
-      print('Error loading recipes: $e');
-    }
-  }
 
-  void _addNewRecipe() async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    Map<String, dynamic>? newRecipe = await _showRecipeForm(context, isEditing: false);
-    if (newRecipe != null) {
+    // Ensure that userId is not null before proceeding
+    if (userId != null && userId.isNotEmpty) {
       try {
-        await dataProvider.addNewRecipe(newRecipe);
-        _loadUserRecipes();  // Reload recipes after adding
+        final recipes = await dataProvider.fetchUserRecipes(userId);
+        setState(() {
+          _recipes = recipes;
+        });
       } catch (e) {
-        print('Error adding recipe: $e');
+        print('Error loading recipes: $e');
       }
+    } else {
+      print('Error: User ID is null or empty.');
+      // You can add some fallback behavior here, like redirecting the user to the login screen
     }
   }
 
@@ -67,6 +61,19 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
       _loadUserRecipes();  // Reload recipes after deleting
     } catch (e) {
       print('Error deleting recipe: $e');
+    }
+  }
+
+  void _addNewRecipe() async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    Map<String, dynamic>? newRecipe = await _showRecipeForm(context, isEditing: false);
+    if (newRecipe != null) {
+      try {
+        await dataProvider.addNewRecipe(newRecipe);
+        _loadUserRecipes();  // Reload recipes after adding
+      } catch (e) {
+        print('Error adding recipe: $e');
+      }
     }
   }
 

@@ -9,61 +9,38 @@ class DataProvider with ChangeNotifier {
 
   DataProvider(this._client);
 
-  String get currentUserId => _client.auth.currentUser!.id;
+  String? get currentUserId => _client.auth.currentUser?.id;
+
+  Future<Map<String, dynamic>> fetchUserProfile(String userId) async {
+    try {
+      final response = await _client
+          .from('profiles')
+          .select()
+          .eq('id', userId)
+          .single();
+      return response;
+    } catch (e) {
+      throw Exception('Failed to fetch user profile: $e');
+    }
+  }
 
   Future<Session?> getCurrentSession() async {
     return _client.auth.currentSession;
   }
 
-  /// Erstelle einen neuen Haushalt
-  Future createHousehold(
-      String householdName, String userId, String color) async {
+  Future<List<Map<String, dynamic>>> fetchUserHouseholds(String userId) async {
     try {
-      /// Erstelle einen Einladungscode für den Haushalt
-      final inviteCode = DateTime.now().millisecondsSinceEpoch.toString();
-
-      /// Füge den Haushalt in die Datenbank ein
-      final households = await _client.from('households').insert({
-        'name': householdName,
-        'color': color,
-        'invite_code': inviteCode
-      }).select();
-
-      final data = households as List<dynamic>;
-      final householdId = data[0]['id'];
-
-      /// Füge den aktuellen User als Mitglied des Haushalts hinzu
-      await _client.from('household_member').insert({
-        'household_id': householdId,
-        'member_uid': userId,
-        'role': 'admin'
-      }).select();
-
-      notifyListeners();
-
-      return householdId;
-    } catch (e) {
-      throw Exception('Fehler beim Erstellen des Haushalts: $e');
-    }
-  }
-
-  /// Erhalte alle Haushalte, denen der aktuelle User angehört
-  Future<List<dynamic>> fetchUserHouseholds(String userId) async {
-    try {
-      /// Erhalte alle Ids der Haushalte, dem der aktuellen User angehört
-      final userHouseholdIds = await _client
+      final response = await _client
           .from('household_member')
           .select('household_id')
-          .eq('member_uid', userId) as List;
+          .eq('member_uid', userId);
 
-      /// Erhalte alle Haushalte
-      final households = await _client.from('households').select() as List;
+      final List householdIds = response;
 
-      /// Wähle die Haushalte aus, die dem aktuellen User gehören und konvertiere das Ergebnis in eine Liste
-      final userHouseholds = households
-          .where((household) => userHouseholdIds.any((userHousehold) =>
-              userHousehold['household_id'] == household['id']))
-          .toList();
+      final households = await _client.from('households').select();
+      final List<Map<String, dynamic>> userHouseholds = households.where((household) {
+        return householdIds.any((householdMember) => householdMember['household_id'] == household['id']);
+      }).toList();
 
       return userHouseholds;
     } catch (e) {
@@ -71,8 +48,33 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  /// Erhalte den aktuellen Haushalt
-  Future<Map<String, dynamic>> getCurrentHousehold(String householdId) async {
+  Future<int> createHousehold(String householdName, String userId, String color) async {
+    try {
+      final inviteCode = DateTime.now().millisecondsSinceEpoch.toString();
+
+      final response = await _client.from('households').insert({
+        'name': householdName,
+        'color': color,
+        'invite_code': inviteCode,
+      }).select();
+
+      final List data = response;
+      final householdId = data[0]['id'] as int;
+
+      await _client.from('household_member').insert({
+        'household_id': householdId,
+        'member_uid': userId,
+        'role': 'admin',
+      });
+
+      notifyListeners();
+      return householdId;
+    } catch (e) {
+      throw Exception('Fehler beim Erstellen des Haushalts: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getCurrentHousehold(int householdId) async {
     try {
       final response = await _client
           .from('households')
@@ -86,43 +88,23 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  /// Aktualisiere die Daten des Haushalts
-  Future<void> updateHousehold(String householdId,
-      {String? name, String? color}) async {
+  Future<void> updateHousehold(int householdId, {String? name, String? color}) async {
     try {
-      /// Erstelle ein leeres Objekt, um die zu aktualisierenden Daten zu speichern
       final updateData = <String, dynamic>{};
 
-      if (name != null) {
-        updateData['name'] = name;
-      }
-      if (color != null) {
-        updateData['color'] = color;
-      }
+      if (name != null) updateData['name'] = name;
+      if (color != null) updateData['color'] = color;
 
-      /// Aktualisiere die Daten des Haushalts
-      try {
-        await _client
-            .from('households')
-            .update(updateData)
-            .eq('id', householdId);
-
-        notifyListeners();
-      } catch (e) {
-        throw Exception('Fehler beim Aktualisieren des Haushalts: $e');
-      }
+      await _client.from('households').update(updateData).eq('id', householdId);
+      notifyListeners();
     } catch (e) {
       throw Exception('Fehler beim Aktualisieren des Haushalts: $e');
     }
   }
 
-  /// Lösche den Haushalt und alle Mitglieder
-  Future<void> deleteHousehold(String householdId) async {
+  Future<void> deleteHousehold(int householdId) async {
     try {
-      await _client
-          .from('household_member')
-          .delete()
-          .eq('household_id', householdId);
+      await _client.from('household_member').delete().eq('household_id', householdId);
       await _client.from('households').delete().eq('id', householdId);
 
       notifyListeners();
@@ -131,19 +113,16 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  /// Trete einem Haushalt bei
-  Future joinHousehold(String inviteCode, String userId) async {
+  Future<int> joinHousehold(String inviteCode, String userId) async {
     try {
-      /// Finde den Haushalt basierend auf dem Einladungscode
       final response = await _client
           .from('households')
           .select()
           .eq('invite_code', inviteCode)
           .single();
 
-      final householdId = response['id'];
+      final householdId = response['id'] as int;
 
-      /// Prüfe ob der Benutzer bereits Mitglied des Haushalts ist
       final memberResponse = await _client
           .from('household_member')
           .select()
@@ -152,59 +131,49 @@ class DataProvider with ChangeNotifier {
           .maybeSingle();
 
       if (memberResponse == null) {
-        /// Füge den Benutzer als Mitglied des Haushalts hinzu
         await _client.from('household_member').insert({
           'household_id': householdId,
           'member_uid': userId,
-          'role': 'member'
-        }).select();
+          'role': 'member',
+        });
       }
-      notifyListeners();
 
+      notifyListeners();
       return householdId;
     } catch (e) {
       throw Exception('Fehler beim Beitreten des Haushalts: $e');
     }
   }
 
-  /// Erhalte alle Haushaltsmitglieder
-  Future<List<Map<String, dynamic>>> getHouseholdMembers(
-      String householdId) async {
+  Future<List<Map<String, dynamic>>> getHouseholdMembers(int householdId) async {
     try {
-      /// Erhalte alle Mitglieder des Haushalts
-      final memberIdsResponse = await _client
+      final memberResponse = await _client
           .from('household_member')
           .select('member_uid')
-          .eq('household_id', householdId)
-          .select();
+          .eq('household_id', householdId);
 
-      final List<dynamic> memberIds = memberIdsResponse;
+      final List<dynamic> memberIds = memberResponse;
 
-      /// Erhalte alle Profile
       final profilesResponse = await _client
           .from('profiles')
-          .select('user_id, username, email')
-          .select();
+          .select('user_id, username, email');
 
       final List<dynamic> profiles = profilesResponse;
 
-      /// Wähle die Profile aus, die Mitglieder des Haushalts sind
-      final userHouseholds = profiles
-          .where((profile) => memberIds
-              .any((member) => member['member_uid'] == profile['user_id']))
-          .map((profile) =>
-              {'username': profile['username'], 'email': profile['email']})
-          .toList();
+      final members = profiles.where((profile) {
+        return memberIds.any((member) => member['member_uid'] == profile['user_id']);
+      }).map((profile) => {
+        'username': profile['username'],
+        'email': profile['email'],
+      }).toList();
 
-      return userHouseholds;
+      return members;
     } catch (e) {
       throw Exception('Fehler beim Laden der Haushaltsmitglieder: $e');
     }
   }
 
-  /// Erhalte die Benutzerrolle im Haushalt
-  Future<String> getUserRoleInHousehold(
-      String householdId, String userId) async {
+  Future<String> getUserRoleInHousehold(int householdId, String userId) async {
     try {
       final response = await _client
           .from('household_member')
@@ -212,61 +181,55 @@ class DataProvider with ChangeNotifier {
           .eq('household_id', householdId)
           .eq('member_uid', userId)
           .single();
+
       return response['role'];
     } catch (e) {
       throw Exception('Fehler beim Abrufen der Benutzerrolle: $e');
     }
   }
 
-  /// Verlasse den Haushalt
-  Future<void> leaveHousehold(
-    String householdId,
-    String userId,
-  ) async {
+  Future<void> leaveHousehold(int householdId, String userId) async {
     try {
-      /// Lösche den Benutzer aus dem Haushalt
-      await _client
-          .from('household_member')
-          .delete()
-          .eq('household_id', householdId)
-          .eq('member_uid', userId);
-
+      await _client.from('household_member').delete().eq('household_id', householdId).eq('member_uid', userId);
       notifyListeners();
     } catch (e) {
-      throw Exception('Fehler beim Löschen des Haushalts: $e');
+      throw Exception('Fehler beim Verlassen des Haushalts: $e');
     }
   }
 
-  /// Erhalte Liste von Rezepten
   Future<List<Map<String, dynamic>>> fetchUserRecipes(String userId) async {
-    final response = await http.get(
-      Uri.parse('$_edgeFunctionUrl?user_id=$userId'),
-      headers: {
-        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$_edgeFunctionUrl?user_id=$userId'),
+        headers: {
+          'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      return List<Map<String, dynamic>>.from(data['data']);
-    } else {
-      throw Exception('Failed to load recipes');
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return List<Map<String, dynamic>>.from(data['data']);
+      } else {
+        throw Exception('Failed to load recipes');
+      }
+    } catch (e) {
+      throw Exception('Failed to load recipes: $e');
     }
   }
 
-  /// Füge ein neues Rezept hinzu
   Future<void> addNewRecipe(Map<String, dynamic> recipe) async {
-    final userId = _client.auth.currentUser!.id;
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('User not authenticated');
+    }
+
     final response = await http.post(
       Uri.parse(_edgeFunctionUrl),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
       },
-      body: json.encode({
-        'user_id': userId,
-        ...recipe,
-      }),
+      body: json.encode({'user_id': userId, ...recipe}),
     );
 
     if (response.statusCode != 200) {
@@ -275,7 +238,6 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Aktualisiere ein bestehendes Rezept
   Future<void> updateRecipe(String recipeId, Map<String, dynamic> recipe) async {
     final response = await http.put(
       Uri.parse('$_edgeFunctionUrl?id=$recipeId'),
@@ -292,7 +254,6 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  /// Lösche ein Rezept
   Future<void> deleteRecipe(String recipeId) async {
     final response = await http.delete(
       Uri.parse('$_edgeFunctionUrl?id=$recipeId'),

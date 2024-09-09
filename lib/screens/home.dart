@@ -7,8 +7,6 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// {@category Screens}
-/// Ansicht für die Home-Seite
 @RoutePage()
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,14 +15,13 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-/// Der Zustand für die Home-Seite
 class _HomeScreenState extends State<HomeScreen> {
   late DataProvider _dataProvider;
 
   @override
   void initState() {
     super.initState();
-    _dataProvider = DataProvider(Supabase.instance.client);
+    _dataProvider = Provider.of<DataProvider>(context, listen: false);
   }
 
   void _createHouseholdDialog(BuildContext context) {
@@ -118,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         );
                         AutoRouter.of(context).maybePop();
                         AutoRouter.of(context).push(
-                          HomeDetailRoute(householdId: householdId),
+                          HomeDetailRoute(householdId: householdId), // Using the correct householdId from creation
                         );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -169,9 +166,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Haushalte',
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
-              FutureBuilder<List<dynamic>>(
-                future: dataProvider.fetchUserHouseholds(
-                    Supabase.instance.client.auth.currentUser!.id),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: dataProvider.fetchUserHouseholds(Supabase.instance.client.auth.currentUser!.id),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -183,8 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 8.0,
                             mainAxisSpacing: 8.0,
@@ -192,37 +187,42 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: households.length,
                           itemBuilder: (context, index) {
                             final household = households[index];
-                            Color householdColor = Color(int.parse(
-                                    household['color'].substring(1, 7),
-                                    radix: 16) +
-                                0xFF000000);
-                            return InkWell(
-                              onTap: () {
-                                AutoRouter.of(context).push(
-                                  HomeDetailRoute(householdId: household['id']),
-                                );
-                              },
-                              child: Card(
-                                color: householdColor,
-                                child: Center(
-                                  child: Text(
-                                    household['name'],
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      fontSize: 20.0,
-                                      color: Colors.white,
+
+                            if (household['id'] != null && household['id'] is int) {
+                              Color householdColor = Color(
+                                  int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000
+                              );
+
+                              return InkWell(
+                                onTap: () {
+                                  AutoRouter.of(context).push(
+                                    HomeDetailRoute(householdId: household['id']),
+                                  );
+                                },
+                                child: Card(
+                                  color: householdColor,
+                                  child: Center(
+                                    child: Text(
+                                      household['name'],
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 20.0,
+                                        color: Colors.white,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
+                              );
+                            } else {
+                              return const SizedBox.shrink();
+                            }
                           },
                         ),
                       ),
                     );
                   }
                 },
-              ),
+              )
             ],
           ),
         );
@@ -234,7 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
             heroTag: 'joinHousehold',
             onPressed: () {
               final TextEditingController inviteCodeController =
-                  TextEditingController();
+              TextEditingController();
 
               showDialog(
                 context: context,
@@ -262,10 +262,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (inviteCode.isNotEmpty) {
                             try {
                               final householdId =
-                                  await _dataProvider.joinHousehold(
-                                      inviteCode,
-                                      Supabase.instance.client.auth.currentUser!
-                                          .id);
+                              await _dataProvider.joinHousehold(
+                                  inviteCode,
+                                  Supabase.instance.client.auth.currentUser!
+                                      .id);
                               AutoRouter.of(context).maybePop();
                               AutoRouter.of(context).push(
                                 HomeDetailRoute(householdId: householdId),
