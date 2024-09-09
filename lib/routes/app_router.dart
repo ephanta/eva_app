@@ -13,7 +13,9 @@ class AppRouter extends $AppRouter {
   @override
   List<AutoRoute> get routes => [
         /// Routen für die Authentifizierung
-        AutoRoute(page: AuthRoute.page, path: '/auth'),
+        AutoRoute(
+            page: AuthRoute.page,
+            path: '/auth'),
 
         /// Routen für die App
         AutoRoute(

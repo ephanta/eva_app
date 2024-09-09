@@ -1,10 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class DataProvider with ChangeNotifier {
   final SupabaseClient _client;
+  final String _edgeFunctionUrl = 'https://rzuydrppeuyrdycvmpbm.supabase.co/functions/v1/recipe-management';
 
   DataProvider(this._client);
+
+  String get currentUserId => _client.auth.currentUser!.id;
+
+  Future<Session?> getCurrentSession() async {
+    return _client.auth.currentSession;
+  }
 
   /// Erstelle einen neuen Haushalt
   Future createHousehold(
@@ -226,5 +235,75 @@ class DataProvider with ChangeNotifier {
     } catch (e) {
       throw Exception('Fehler beim Löschen des Haushalts: $e');
     }
+  }
+
+  /// Erhalte Liste von Rezepten
+  Future<List<Map<String, dynamic>>> fetchUserRecipes(String userId) async {
+    final response = await http.get(
+      Uri.parse('$_edgeFunctionUrl?user_id=$userId'),
+      headers: {
+        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return List<Map<String, dynamic>>.from(data['data']);
+    } else {
+      throw Exception('Failed to load recipes');
+    }
+  }
+
+  /// Füge ein neues Rezept hinzu
+  Future<void> addNewRecipe(Map<String, dynamic> recipe) async {
+    final userId = _client.auth.currentUser!.id;
+    final response = await http.post(
+      Uri.parse(_edgeFunctionUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
+      },
+      body: json.encode({
+        'user_id': userId,
+        ...recipe,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to add recipe');
+    }
+    notifyListeners();
+  }
+
+  /// Aktualisiere ein bestehendes Rezept
+  Future<void> updateRecipe(String recipeId, Map<String, dynamic> recipe) async {
+    final response = await http.put(
+      Uri.parse('$_edgeFunctionUrl?id=$recipeId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
+      },
+      body: json.encode(recipe),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update recipe');
+    }
+    notifyListeners();
+  }
+
+  /// Lösche ein Rezept
+  Future<void> deleteRecipe(String recipeId) async {
+    final response = await http.delete(
+      Uri.parse('$_edgeFunctionUrl?id=$recipeId'),
+      headers: {
+        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete recipe');
+    }
+    notifyListeners();
   }
 }

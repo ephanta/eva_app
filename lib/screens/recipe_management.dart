@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:provider/provider.dart';
 import '../widgets/navigation/app_bar_custom.dart';
-import '../main.dart'; // Import supabaseClientB from main.dart
+import '../provider/data_provider.dart';
 
-/// {@category Screens}
-/// Rezeptverwaltung, in der Nutzer ihre Rezepte hinzufügen, bearbeiten und löschen können
 @RoutePage()
 class RecipeManagementScreen extends StatefulWidget {
   const RecipeManagementScreen({super.key});
@@ -22,92 +21,55 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     _loadUserRecipes();
   }
 
-  // Lade Benutzerrezepte aus Supabase (Account B)
   Future<void> _loadUserRecipes() async {
-    final userId = supabaseClientA.auth.currentUser!.id; // Get user ID from Account A
-    final response = await supabaseClientB
-        .from('rezepte')
-        .select()
-        .eq('benutzer_id', userId);
-
-    if (response != null && response.isNotEmpty) {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    final userId = dataProvider.currentUserId;
+    try {
+      final recipes = await dataProvider.fetchUserRecipes(userId);
       setState(() {
-        _recipes = List<Map<String, dynamic>>.from(response);
+        _recipes = recipes;
       });
-    } else {
-      print('Fehler beim Laden der Rezepte oder keine Daten gefunden.');
+    } catch (e) {
+      print('Error loading recipes: $e');
     }
   }
 
-  // Neues Rezept zu Supabase (Account B) hinzufügen
   void _addNewRecipe() async {
-    final userId = supabaseClientA.auth.currentUser!.id;
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
     Map<String, dynamic>? newRecipe = await _showRecipeForm(context, isEditing: false);
-
     if (newRecipe != null) {
-      final response = await supabaseClientB
-          .from('rezepte')
-          .insert({
-        'benutzer_id': userId,
-        'name': newRecipe['name'],
-        'beschreibung': newRecipe['beschreibung'],
-        'zutaten': newRecipe['zutaten'],  // Zutaten als JSON-Feld
-        'kochanweisungen': newRecipe['kochanweisungen'],  // Kochanweisungen
-      });
-
-      if (response != null) {
-        setState(() {
-          _recipes.add(newRecipe);
-        });
-      } else {
-        print('Fehler beim Hinzufügen des Rezepts.');
+      try {
+        await dataProvider.addNewRecipe(newRecipe);
+        _loadUserRecipes();  // Reload recipes after adding
+      } catch (e) {
+        print('Error adding recipe: $e');
       }
     }
   }
 
-  // Bestehendes Rezept in Supabase (Account B) bearbeiten
   void _editRecipe(int index) async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
     Map<String, dynamic>? updatedRecipe = await _showRecipeForm(context, recipe: _recipes[index], isEditing: true);
-
     if (updatedRecipe != null) {
-      final recipeId = _recipes[index]['id'];
-      final response = await supabaseClientB
-          .from('rezepte')
-          .update({
-        'name': updatedRecipe['name'],
-        'beschreibung': updatedRecipe['beschreibung'],
-        'zutaten': updatedRecipe['zutaten'],
-        'kochanweisungen': updatedRecipe['kochanweisungen'],
-      }).eq('id', recipeId);
-
-      if (response != null) {
-        setState(() {
-          _recipes[index] = updatedRecipe;
-        });
-      } else {
-        print('Fehler beim Aktualisieren des Rezepts.');
+      try {
+        await dataProvider.updateRecipe(_recipes[index]['id'], updatedRecipe);
+        _loadUserRecipes();  // Reload recipes after updating
+      } catch (e) {
+        print('Error updating recipe: $e');
       }
     }
   }
 
-  // Rezept aus Supabase (Account B) löschen
   void _deleteRecipe(int index) async {
-    final recipeId = _recipes[index]['id'];
-    final response = await supabaseClientB
-        .from('rezepte')
-        .delete()
-        .eq('id', recipeId);
-
-    if (response != null) {
-      setState(() {
-        _recipes.removeAt(index);
-      });
-    } else {
-      print('Fehler beim Löschen des Rezepts.');
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    try {
+      await dataProvider.deleteRecipe(_recipes[index]['id']);
+      _loadUserRecipes();  // Reload recipes after deleting
+    } catch (e) {
+      print('Error deleting recipe: $e');
     }
   }
 
-  // Formular zum Hinzufügen oder Bearbeiten eines Rezepts anzeigen
   Future<Map<String, dynamic>?> _showRecipeForm(BuildContext context, {Map<String, dynamic>? recipe, bool isEditing = false}) async {
     TextEditingController nameController = TextEditingController(text: recipe?['name'] ?? '');
     TextEditingController descriptionController = TextEditingController(text: recipe?['beschreibung'] ?? '');
@@ -152,7 +114,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
                   icon: const Icon(Icons.add),
                   label: const Text('Zutat hinzufügen'),
                   onPressed: () async {
-                    Map<String, String>? newIngredient = await _showAddIngredientDialog();
+                    Map<String, String>? newIngredient = await _showAddIngredientDialog(context);
                     if (newIngredient != null) {
                       setState(() {
                         ingredients.add(newIngredient);
@@ -193,7 +155,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     );
   }
 
-  Future<Map<String, String>?> _showAddIngredientDialog() async {
+  Future<Map<String, String>?> _showAddIngredientDialog(BuildContext context) async {
     TextEditingController nameController = TextEditingController();
     TextEditingController quantityController = TextEditingController();
 
@@ -236,6 +198,8 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
       },
     );
   }
+
+  // Keep _showRecipeForm and _showAddIngredientDialog as they are
 
   @override
   Widget build(BuildContext context) {

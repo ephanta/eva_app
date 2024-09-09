@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_auth_ui/supabase_auth_ui.dart';
+import '../main.dart';
 
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
@@ -32,7 +32,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
 
   Future<void> _fetchUserRole() async {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    final userId = Supabase.instance.client.auth.currentUser!.id;
+    final userId = supabaseClientA.auth.currentUser!.id; // Use Account A for authentication
     try {
       final role = await dataProvider.getUserRoleInHousehold(
           widget.householdId.toString(), userId);
@@ -49,7 +49,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
   void _showEditHouseholdDialog(
       BuildContext context, Map<String, dynamic> household) {
     final TextEditingController nameController =
-        TextEditingController(text: household['name']);
+    TextEditingController(text: household['name']);
     Color currentColor = Color(
         int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
 
@@ -126,7 +126,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                 const SizedBox(height: 20),
                 TextField(
                   controller:
-                      TextEditingController(text: household['invite_code']),
+                  TextEditingController(text: household['invite_code']),
                   readOnly: true,
                   decoration: const InputDecoration(
                     border: OutlineInputBorder(),
@@ -150,7 +150,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                     if (householdName.isNotEmpty && householdColor.isNotEmpty) {
                       try {
                         final dataProvider =
-                            Provider.of<DataProvider>(context, listen: false);
+                        Provider.of<DataProvider>(context, listen: false);
                         await dataProvider.updateHousehold(
                           household['id'].toString(),
                           name: householdName,
@@ -160,7 +160,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                               content:
-                                  Text('Haushalt erfolgreich bearbeitet.')),
+                              Text('Haushalt erfolgreich bearbeitet.')),
                         );
 
                         AutoRouter.of(context).maybePop();
@@ -225,7 +225,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
               child: const Text('Löschen'),
               onPressed: () async {
                 final dataProvider =
-                    Provider.of<DataProvider>(context, listen: false);
+                Provider.of<DataProvider>(context, listen: false);
                 try {
                   await dataProvider
                       .deleteHousehold(widget.householdId.toString());
@@ -275,12 +275,11 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
               child: const Text('Verlassen'),
               onPressed: () async {
                 final dataProvider =
-                    Provider.of<DataProvider>(context, listen: false);
-                final userId = Supabase.instance.client.auth.currentUser!.id;
+                Provider.of<DataProvider>(context, listen: false);
+                final userId = supabaseClientA.auth.currentUser!.id;
                 try {
                   await dataProvider.leaveHousehold(
                       widget.householdId.toString(), userId);
-                  // Fügen Sie hier den Code hinzu, um den Haushalt zu verlassen
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Haushalt verlassen')),
                   );
@@ -290,7 +289,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                         content:
-                            Text('Fehler beim Verlassen des Haushalts: $e')),
+                        Text('Fehler beim Verlassen des Haushalts: $e')),
                   );
                 }
               },
@@ -312,7 +311,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       body: Consumer<DataProvider>(builder: (context, dataProvider, child) {
         return FutureBuilder<Map<String, dynamic>>(
           future:
-              dataProvider.getCurrentHousehold(widget.householdId.toString()),
+          dataProvider.getCurrentHousehold(widget.householdId.toString()),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
@@ -362,7 +361,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                           return const Text('Keine Mitglieder gefunden.');
                         } else {
                           final List<Map<String, dynamic>> members =
-                              snapshot.data!;
+                          snapshot.data!;
                           return Column(
                             children: members
                                 .map((member) => Text(member['username']))

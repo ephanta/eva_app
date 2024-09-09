@@ -8,7 +8,7 @@ class AuthGuard extends AutoRouteGuard {
   @override
   Future<void> onNavigation(NavigationResolver resolver, StackRouter router) async {
     /// Aktueller User
-    final user = Supabase.instance.client.auth.currentUser;
+    final user = Supabase.instance.client.auth.currentSession;
 
     /// Überprüft, ob der User angemeldet ist. Falls nicht, wird er auf die Auth-Seite weitergeleitet.
     if (user == null) {

@@ -5,12 +5,14 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Supabase Clients for both Account A and Account B
+/// Initialize both Supabase clients for Account A and Account B
 late SupabaseClient supabaseClientA;  // Account A: Authentication
 late SupabaseClient supabaseClientB;  // Account B: Recipe Management
 
 /// Die Hauptmethode für die Flutter-Anwendung.
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   try {
     await dotenv.load(fileName: '.env');
     print('.env Datei erfolgreich geladen');
@@ -18,7 +20,7 @@ Future<void> main() async {
     print('Fehler beim Laden der .env Datei: $e');
   }
 
-  // Initialize both Supabase accounts
+  // Initialize both Supabase clients
   await initializeSupabaseClients();
 
   runApp(
@@ -32,7 +34,7 @@ Future<void> main() async {
   );
 }
 
-/// Initialisierung Supabase Clients for both Account A and B
+/// Initialize both Supabase clients (Account A and Account B)
 Future<void> initializeSupabaseClients() async {
   try {
     // Initialize Account A (Authentication)
@@ -65,11 +67,6 @@ class FamilyFeastApp extends StatefulWidget {
 class _FamilyFeastAppState extends State<FamilyFeastApp> {
   /// AppRouter für das Verwenden von Routen
   final _appRouter = AppRouter();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   Widget build(BuildContext context) {
