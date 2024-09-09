@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:provider/provider.dart';
-import '../widgets/navigation/app_bar_custom.dart';
 import '../provider/data_provider.dart';
+import '../widgets/navigation/app_bar_custom.dart';
 
 @RoutePage()
 class RecipeManagementScreen extends StatefulWidget {
@@ -23,21 +23,13 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
 
   Future<void> _loadUserRecipes() async {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    final userId = dataProvider.currentUserId;
-
-    // Ensure that userId is not null before proceeding
-    if (userId != null && userId.isNotEmpty) {
-      try {
-        final recipes = await dataProvider.fetchUserRecipes(userId);
-        setState(() {
-          _recipes = recipes;
-        });
-      } catch (e) {
-        print('Error loading recipes: $e');
-      }
-    } else {
-      print('Error: User ID is null or empty.');
-      // You can add some fallback behavior here, like redirecting the user to the login screen
+    try {
+      final recipes = await dataProvider.fetchUserRecipes(dataProvider.currentUserId!);
+      setState(() {
+        _recipes = recipes;
+      });
+    } catch (e) {
+      print('Fehler beim Laden der Rezepte: $e');
     }
   }
 
@@ -47,7 +39,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     if (updatedRecipe != null) {
       try {
         await dataProvider.updateRecipe(_recipes[index]['id'], updatedRecipe);
-        _loadUserRecipes();  // Reload recipes after updating
+        _loadUserRecipes();
       } catch (e) {
         print('Error updating recipe: $e');
       }
@@ -58,7 +50,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     try {
       await dataProvider.deleteRecipe(_recipes[index]['id']);
-      _loadUserRecipes();  // Reload recipes after deleting
+      _loadUserRecipes();
     } catch (e) {
       print('Error deleting recipe: $e');
     }
@@ -70,7 +62,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     if (newRecipe != null) {
       try {
         await dataProvider.addNewRecipe(newRecipe);
-        _loadUserRecipes();  // Reload recipes after adding
+        _loadUserRecipes();
       } catch (e) {
         print('Error adding recipe: $e');
       }

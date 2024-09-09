@@ -1,8 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../provider/data_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 
 @RoutePage()
@@ -15,39 +14,80 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   String? _userName;
-  List<String> _userPreferences = [];  // Dynamic preferences such as allergies or diet
-  bool isLoading = true;  // To show a loading indicator
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadUserData(); // Load user data when the screen initializes
+    _loadUserData();
   }
 
   Future<void> _loadUserData() async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    final userId = dataProvider.currentUserId; // Get the current user ID
-
-    if (userId != null) {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
       try {
-        // Fetch user profile details through DataProvider
-        final response = await dataProvider.fetchUserProfile(userId);
+        final response = await Supabase.instance.client
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .single();
 
-        setState(() {
-          _userName = response['username'] ?? 'Benutzer';
-          _userPreferences = [
-            response['allergy'] ?? 'Keine Allergie',
-            response['diet'] ?? 'Keine Diät',
-            response['dislike'] ?? 'Keine Abneigung'
-          ];
-          isLoading = false;
-        });
+        if (response != null) {
+          setState(() {
+            _userName = response['username'] ?? 'Benutzer';
+            isLoading = false;
+          });
+        } else {
+          setState(() {
+            _userName = 'Benutzer';
+            isLoading = false;
+          });
+        }
       } catch (e) {
+        print('Error fetching user profile: $e');
         setState(() {
+          _userName = 'Benutzer';
           isLoading = false;
         });
       }
     }
+  }
+
+  Widget _buildActionButton(BuildContext context, String label, IconData icon, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFFDD9CF),
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black26,
+                offset: Offset(0, 2),
+                blurRadius: 6,
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: const Color(0xFF3A0B01)),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF3A0B01),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -78,36 +118,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 16),
             Text(
               _userName ?? 'Benutzer',
-              style: const TextStyle(
-                  fontSize: 24, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8.0,
-              runSpacing: 8.0,
-              children: _userPreferences
-                  .map((preference) => _buildTag(context, preference))
-                  .toList(),
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 32),
-            // The rest of the profile code stays the same.
+            _buildActionButton(context, 'Profil bearbeiten', Icons.edit, () {
+              // Navigate to Edit Profile
+            }),
+            _buildActionButton(context, 'Haushalte verwalten', Icons.home, () {
+              // Navigate to Manage Households
+            }),
+            _buildActionButton(context, 'Meine Bewertung', Icons.star, () {
+              // Navigate to Ratings
+            }),
+            _buildActionButton(context, 'Mein Rezeptbuch verwalten', Icons.book, () {
+              AutoRouter.of(context).push(const RecipeManagementRoute());
+            }),
+            const Spacer(),
+            ElevatedButton(
+              onPressed: () {
+                Supabase.instance.client.auth.signOut();
+                AutoRouter.of(context).popUntilRoot();
+                AutoRouter.of(context).replace(const AuthRoute());
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                minimumSize: const Size(double.infinity, 50),
+              ),
+              child: const Text(
+                'Log Out',
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+            ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildTag(BuildContext context, String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      decoration: BoxDecoration(
-        color: Colors.orange,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.white),
       ),
     );
   }

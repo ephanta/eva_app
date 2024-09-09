@@ -16,7 +16,7 @@ class AppRouter extends $AppRouter {
     AutoRoute(
       page: AuthRoute.page,
       path: '/auth',
-      initial: true, // Make this the initial route
+      initial: true,
     ),
 
     /// Routen für die App

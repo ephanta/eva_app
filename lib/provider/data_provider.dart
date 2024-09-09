@@ -16,7 +16,7 @@ class DataProvider with ChangeNotifier {
       final response = await _client
           .from('profiles')
           .select()
-          .eq('id', userId)
+          .eq('user_id', userId) // Make sure this is the correct column name
           .single();
       return response;
     } catch (e) {
@@ -27,6 +27,130 @@ class DataProvider with ChangeNotifier {
   Future<Session?> getCurrentSession() async {
     return _client.auth.currentSession;
   }
+
+  Future<String?> _getAuthToken() async {
+    final session = _client.auth.currentSession;
+
+    if (session != null) {
+      final accessToken = session.accessToken;
+
+      // Check if the session needs refreshing
+      if (session.expiresIn != null && session.expiresIn! < 60) {
+        final response = await _client.auth.refreshSession();
+        return response.session?.accessToken;
+      }
+
+      return accessToken;
+    }
+    return null;
+  }
+
+  // Recipe-related methods using edge function
+
+  Future<List<Map<String, dynamic>>> fetchUserRecipes(String userId) async {
+    try {
+      final jwtToken = await _getAuthToken();
+      if (jwtToken == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.get(
+        Uri.parse('$_edgeFunctionUrl?user_id=$userId'),
+        headers: {
+          'Authorization': 'Bearer $jwtToken',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        return List<Map<String, dynamic>>.from(data['data']);
+      } else {
+        throw Exception('Failed to load recipes: ${response.body}');
+      }
+    } catch (e) {
+      throw Exception('Failed to load recipes: $e');
+    }
+  }
+
+  Future<void> addNewRecipe(Map<String, dynamic> recipe) async {
+    try {
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final jwtToken = await _getAuthToken();
+      if (jwtToken == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.post(
+        Uri.parse(_edgeFunctionUrl),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $jwtToken',
+        },
+        body: json.encode({'user_id': userId, ...recipe}),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to add recipe: ${response.body}');
+      }
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to add recipe: $e');
+    }
+  }
+
+  Future<void> updateRecipe(String recipeId, Map<String, dynamic> recipe) async {
+    try {
+      final jwtToken = await _getAuthToken();
+      if (jwtToken == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.put(
+        Uri.parse('$_edgeFunctionUrl?id=$recipeId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $jwtToken',
+        },
+        body: json.encode(recipe),
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to update recipe: ${response.body}');
+      }
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to update recipe: $e');
+    }
+  }
+
+  Future<void> deleteRecipe(String recipeId) async {
+    try {
+      final jwtToken = await _getAuthToken();
+      if (jwtToken == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final response = await http.delete(
+        Uri.parse('$_edgeFunctionUrl?id=$recipeId'),
+        headers: {
+          'Authorization': 'Bearer $jwtToken',
+        },
+      );
+
+      if (response.statusCode != 200) {
+        throw Exception('Failed to delete recipe: ${response.body}');
+      }
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to delete recipe: $e');
+    }
+  }
+
+  // Household-related methods
 
   Future<List<Map<String, dynamic>>> fetchUserHouseholds(String userId) async {
     try {
@@ -70,46 +194,7 @@ class DataProvider with ChangeNotifier {
       notifyListeners();
       return householdId;
     } catch (e) {
-      throw Exception('Fehler beim Erstellen des Haushalts: $e');
-    }
-  }
-
-  Future<Map<String, dynamic>> getCurrentHousehold(int householdId) async {
-    try {
-      final response = await _client
-          .from('households')
-          .select()
-          .eq('id', householdId)
-          .single();
-
-      return response;
-    } catch (e) {
-      throw Exception('Fehler beim Laden des Haushalts: $e');
-    }
-  }
-
-  Future<void> updateHousehold(int householdId, {String? name, String? color}) async {
-    try {
-      final updateData = <String, dynamic>{};
-
-      if (name != null) updateData['name'] = name;
-      if (color != null) updateData['color'] = color;
-
-      await _client.from('households').update(updateData).eq('id', householdId);
-      notifyListeners();
-    } catch (e) {
-      throw Exception('Fehler beim Aktualisieren des Haushalts: $e');
-    }
-  }
-
-  Future<void> deleteHousehold(int householdId) async {
-    try {
-      await _client.from('household_member').delete().eq('household_id', householdId);
-      await _client.from('households').delete().eq('id', householdId);
-
-      notifyListeners();
-    } catch (e) {
-      throw Exception('Fehler beim Löschen des Haushalts: $e');
+      throw Exception('Failed to create household: $e');
     }
   }
 
@@ -141,35 +226,7 @@ class DataProvider with ChangeNotifier {
       notifyListeners();
       return householdId;
     } catch (e) {
-      throw Exception('Fehler beim Beitreten des Haushalts: $e');
-    }
-  }
-
-  Future<List<Map<String, dynamic>>> getHouseholdMembers(int householdId) async {
-    try {
-      final memberResponse = await _client
-          .from('household_member')
-          .select('member_uid')
-          .eq('household_id', householdId);
-
-      final List<dynamic> memberIds = memberResponse;
-
-      final profilesResponse = await _client
-          .from('profiles')
-          .select('user_id, username, email');
-
-      final List<dynamic> profiles = profilesResponse;
-
-      final members = profiles.where((profile) {
-        return memberIds.any((member) => member['member_uid'] == profile['user_id']);
-      }).map((profile) => {
-        'username': profile['username'],
-        'email': profile['email'],
-      }).toList();
-
-      return members;
-    } catch (e) {
-      throw Exception('Fehler beim Laden der Haushaltsmitglieder: $e');
+      throw Exception('Failed to join household: $e');
     }
   }
 
@@ -184,87 +241,69 @@ class DataProvider with ChangeNotifier {
 
       return response['role'];
     } catch (e) {
-      throw Exception('Fehler beim Abrufen der Benutzerrolle: $e');
+      throw Exception('Failed to retrieve user role in household: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> getCurrentHousehold(int householdId) async {
+    try {
+      final response = await _client
+          .from('households')
+          .select()
+          .eq('id', householdId)
+          .single();
+
+      return response;
+    } catch (e) {
+      throw Exception('Failed to load household: $e');
+    }
+  }
+
+  Future<void> updateHousehold(int householdId, {required String name, required String color}) async {
+    try {
+      await _client.from('households').update({
+        'name': name,
+        'color': color,
+      }).eq('id', householdId);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to update household: $e');
+    }
+  }
+
+  Future<void> deleteHousehold(int householdId) async {
+    try {
+      await _client.from('households').delete().eq('id', householdId);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to delete household: $e');
     }
   }
 
   Future<void> leaveHousehold(int householdId, String userId) async {
     try {
-      await _client.from('household_member').delete().eq('household_id', householdId).eq('member_uid', userId);
+      await _client
+          .from('household_member')
+          .delete()
+          .eq('household_id', householdId)
+          .eq('member_uid', userId);
       notifyListeners();
     } catch (e) {
-      throw Exception('Fehler beim Verlassen des Haushalts: $e');
+      throw Exception('Failed to leave household: $e');
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchUserRecipes(String userId) async {
+  // Fetch household members
+  Future<List<Map<String, dynamic>>> getHouseholdMembers(int householdId) async {
     try {
-      final response = await http.get(
-        Uri.parse('$_edgeFunctionUrl?user_id=$userId'),
-        headers: {
-          'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
-        },
-      );
+      final response = await _client
+          .from('household_member')
+          .select('username') // Assuming 'username' or another relevant field in the household_member table
+          .eq('household_id', householdId);
 
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        return List<Map<String, dynamic>>.from(data['data']);
-      } else {
-        throw Exception('Failed to load recipes');
-      }
+      return List<Map<String, dynamic>>.from(response);
     } catch (e) {
-      throw Exception('Failed to load recipes: $e');
+      throw Exception('Fehler beim Laden der Haushaltsmitglieder: $e');
     }
-  }
-
-  Future<void> addNewRecipe(Map<String, dynamic> recipe) async {
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) {
-      throw Exception('User not authenticated');
-    }
-
-    final response = await http.post(
-      Uri.parse(_edgeFunctionUrl),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
-      },
-      body: json.encode({'user_id': userId, ...recipe}),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to add recipe');
-    }
-    notifyListeners();
-  }
-
-  Future<void> updateRecipe(String recipeId, Map<String, dynamic> recipe) async {
-    final response = await http.put(
-      Uri.parse('$_edgeFunctionUrl?id=$recipeId'),
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
-      },
-      body: json.encode(recipe),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update recipe');
-    }
-    notifyListeners();
-  }
-
-  Future<void> deleteRecipe(String recipeId) async {
-    final response = await http.delete(
-      Uri.parse('$_edgeFunctionUrl?id=$recipeId'),
-      headers: {
-        'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken}',
-      },
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to delete recipe');
-    }
-    notifyListeners();
   }
 }
