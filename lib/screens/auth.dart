@@ -4,6 +4,7 @@ import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 
 import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
+import '../main.dart'; // Import supabaseClientA from main.dart;
 
 /// {@category Screens}
 /// Ansicht für das Anmelden oder Registrieren eines Nutzers
@@ -25,7 +26,7 @@ class _AuthScreenState extends State<AuthScreen> {
 
   Future<void> _checkAuthStatus() async {
     try {
-      final session = Supabase.instance.client.auth.currentSession;
+      final session = supabaseClientA.auth.currentSession;
       if (session != null) {
         AutoRouter.of(context).push(const HomeRoute());
       }

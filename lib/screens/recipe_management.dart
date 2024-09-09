@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../widgets/navigation/app_bar_custom.dart';
+import '../main.dart'; // Import supabaseClientB from main.dart
 
 /// {@category Screens}
 /// Rezeptverwaltung, in der Nutzer ihre Rezepte hinzufügen, bearbeiten und löschen können
@@ -22,10 +22,10 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     _loadUserRecipes();
   }
 
-  // Lade Benutzerrezepte aus Supabase
+  // Lade Benutzerrezepte aus Supabase (Account B)
   Future<void> _loadUserRecipes() async {
-    final userId = Supabase.instance.client.auth.currentUser!.id;
-    final response = await Supabase.instance.client
+    final userId = supabaseClientA.auth.currentUser!.id; // Get user ID from Account A
+    final response = await supabaseClientB
         .from('rezepte')
         .select()
         .eq('benutzer_id', userId);
@@ -39,13 +39,13 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     }
   }
 
-  // Neues Rezept zu Supabase hinzufügen
+  // Neues Rezept zu Supabase (Account B) hinzufügen
   void _addNewRecipe() async {
-    final userId = Supabase.instance.client.auth.currentUser!.id;
+    final userId = supabaseClientA.auth.currentUser!.id;
     Map<String, dynamic>? newRecipe = await _showRecipeForm(context, isEditing: false);
 
     if (newRecipe != null) {
-      final response = await Supabase.instance.client
+      final response = await supabaseClientB
           .from('rezepte')
           .insert({
         'benutzer_id': userId,
@@ -65,13 +65,13 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     }
   }
 
-  // Bestehendes Rezept in Supabase bearbeiten
+  // Bestehendes Rezept in Supabase (Account B) bearbeiten
   void _editRecipe(int index) async {
     Map<String, dynamic>? updatedRecipe = await _showRecipeForm(context, recipe: _recipes[index], isEditing: true);
 
     if (updatedRecipe != null) {
       final recipeId = _recipes[index]['id'];
-      final response = await Supabase.instance.client
+      final response = await supabaseClientB
           .from('rezepte')
           .update({
         'name': updatedRecipe['name'],
@@ -90,10 +90,10 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     }
   }
 
-  // Rezept aus Supabase löschen
+  // Rezept aus Supabase (Account B) löschen
   void _deleteRecipe(int index) async {
     final recipeId = _recipes[index]['id'];
-    final response = await Supabase.instance.client
+    final response = await supabaseClientB
         .from('rezepte')
         .delete()
         .eq('id', recipeId);
@@ -287,9 +287,9 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
           _recipes[index]['name'] ?? '',
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3A0B01)),
         ),
-        subtitle: Column(ment.start,
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            crossAxisAlignment: CrossAxisAlign
             Text(_recipes[index]['beschreibung'] ?? '', style: const TextStyle(color: Color(0xFF3A0B01))),
             const SizedBox(height: 8),
             const Text('Zutaten:', style: TextStyle(fontWeight: FontWeight.bold)),

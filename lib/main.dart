@@ -5,6 +5,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Supabase Clients for both Account A and Account B
+late SupabaseClient supabaseClientA;  // Account A: Authentication
+late SupabaseClient supabaseClientB;  // Account B: Recipe Management
+
 /// Die Hauptmethode für die Flutter-Anwendung.
 Future<void> main() async {
   try {
@@ -13,27 +17,37 @@ Future<void> main() async {
   } catch (e) {
     print('Fehler beim Laden der .env Datei: $e');
   }
-  await initializeSupabase();
+
+  // Initialize both Supabase accounts
+  await initializeSupabaseClients();
+
   runApp(
-    /// Initialisieren der Provider für die Datenverwaltung
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-            create: (_) => DataProvider(Supabase.instance.client)),
+            create: (_) => DataProvider(supabaseClientA)),  // Use Account A for data provider
       ],
       child: const FamilyFeastApp(),
     ),
   );
 }
 
-/// Initialisierung Supabase
-Future<void> initializeSupabase() async {
+/// Initialisierung Supabase Clients for both Account A and B
+Future<void> initializeSupabaseClients() async {
   try {
-    await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!,
-      anonKey: dotenv.env['SUPABASE_KEY']!,
+    // Initialize Account A (Authentication)
+    supabaseClientA = SupabaseClient(
+      dotenv.env['SUPABASE_URL_ACCOUNT_A']!,
+      dotenv.env['SUPABASE_ANON_KEY_ACCOUNT_A']!,
     );
-    print('Supabase erfolgreich initialisiert');
+    print('Supabase Account A erfolgreich initialisiert');
+
+    // Initialize Account B (Recipe Management)
+    supabaseClientB = SupabaseClient(
+      dotenv.env['SUPABASE_URL_ACCOUNT_B']!,
+      dotenv.env['SUPABASE_ANON_KEY_ACCOUNT_B']!,
+    );
+    print('Supabase Account B erfolgreich initialisiert');
   } catch (e) {
     print('Fehler bei der Initialisierung von Supabase: $e');
   }
