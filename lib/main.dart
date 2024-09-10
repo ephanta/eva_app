@@ -16,11 +16,21 @@ Future<void> main() async {
   }
 
   await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL_ACCOUNT_A']!,
-    anonKey: dotenv.env['SUPABASE_ANON_KEY_ACCOUNT_A']!,
+    url: dotenv.env['URL_ACCOUNT_A']!,
+    anonKey: dotenv.env['ANON_KEY_ACCOUNT_A']!,
   );
 
   final supabase = Supabase.instance.client;
+
+  // Fetch the current session and JWT token
+  final session = Supabase.instance.client.auth.currentSession;
+  final jwtToken = session?.accessToken;
+
+  if (jwtToken != null) {
+    print('JWT Token: $jwtToken');  // Print the JWT token to the console
+  } else {
+    print('No JWT token found. User may not be authenticated.');
+  }
 
   runApp(
     MultiProvider(

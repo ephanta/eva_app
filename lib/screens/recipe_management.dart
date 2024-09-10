@@ -73,7 +73,11 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     TextEditingController nameController = TextEditingController(text: recipe?['name'] ?? '');
     TextEditingController descriptionController = TextEditingController(text: recipe?['beschreibung'] ?? '');
     TextEditingController instructionsController = TextEditingController(text: recipe?['kochanweisungen'] ?? '');
-    List<Map<String, String>> ingredients = List<Map<String, String>>.from(recipe?['zutaten'] ?? []);
+
+    // Safely parsing the ingredients to handle any type issues
+    List<Map<String, String>> ingredients = (recipe?['zutaten'] as List?)
+        ?.map((ingredient) => Map<String, String>.from(ingredient))
+        .toList() ?? [];
 
     return showDialog<Map<String, dynamic>>(
       context: context,
@@ -198,8 +202,6 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     );
   }
 
-  // Keep _showRecipeForm and _showAddIngredientDialog as they are
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -240,6 +242,8 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
   }
 
   Widget _buildRecipeCard(int index) {
+    final zutaten = _recipes[index]['zutaten'] as List<dynamic>? ?? [];
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -256,8 +260,12 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
             Text(_recipes[index]['beschreibung'] ?? '', style: const TextStyle(color: Color(0xFF3A0B01))),
             const SizedBox(height: 8),
             const Text('Zutaten:', style: TextStyle(fontWeight: FontWeight.bold)),
-            ...(_recipes[index]['zutaten'] as List).map((ingredient) {
-              return Text('${ingredient['name']} - ${ingredient['menge']}', style: const TextStyle(color: Color(0xFF3A0B01)));
+            ...zutaten.map((ingredient) {
+              if (ingredient is Map<String, dynamic> && ingredient.containsKey('name') && ingredient.containsKey('menge')) {
+                return Text('${ingredient['name']} - ${ingredient['menge']}', style: const TextStyle(color: Color(0xFF3A0B01)));
+              } else {
+                return const SizedBox.shrink();  // Skip if not properly formatted
+              }
             }).toList(),
             const SizedBox(height: 8),
             const Text('Kochanweisungen:', style: TextStyle(fontWeight: FontWeight.bold)),

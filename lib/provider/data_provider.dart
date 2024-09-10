@@ -5,7 +5,7 @@ import 'dart:convert';
 
 class DataProvider with ChangeNotifier {
   final SupabaseClient _client;
-  final String _edgeFunctionUrl = 'https://rzuydrppeuyrdycvmpbm.supabase.co/functions/v1/recipe-management';
+  final String _edgeFunctionUrl = 'https://saxeplastjnaakcyifnn.supabase.co/functions/v1/recipe-management';
 
   DataProvider(this._client);
 
@@ -16,7 +16,7 @@ class DataProvider with ChangeNotifier {
       final response = await _client
           .from('profiles')
           .select()
-          .eq('user_id', userId) // Make sure this is the correct column name
+          .eq('user_id', userId)
           .single();
       return response;
     } catch (e) {
@@ -58,6 +58,7 @@ class DataProvider with ChangeNotifier {
         Uri.parse('$_edgeFunctionUrl?user_id=$userId'),
         headers: {
           'Authorization': 'Bearer $jwtToken',
+          'Content-Type': 'application/json; charset=UTF-8',
         },
       );
 
@@ -87,7 +88,7 @@ class DataProvider with ChangeNotifier {
       final response = await http.post(
         Uri.parse(_edgeFunctionUrl),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $jwtToken',
         },
         body: json.encode({'user_id': userId, ...recipe}),
@@ -112,7 +113,7 @@ class DataProvider with ChangeNotifier {
       final response = await http.put(
         Uri.parse('$_edgeFunctionUrl?id=$recipeId'),
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json; charset=UTF-8',
           'Authorization': 'Bearer $jwtToken',
         },
         body: json.encode(recipe),
@@ -150,7 +151,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  // Household-related methods
+// Household-related methods
 
   Future<List<Map<String, dynamic>>> fetchUserHouseholds(String userId) async {
     try {
@@ -273,7 +274,18 @@ class DataProvider with ChangeNotifier {
 
   Future<void> deleteHousehold(int householdId) async {
     try {
-      await _client.from('households').delete().eq('id', householdId);
+      // First, delete all the members related to the household
+      await _client
+          .from('household_member')
+          .delete()
+          .eq('household_id', householdId);
+
+      // Then, delete the household
+      await _client
+          .from('households')
+          .delete()
+          .eq('id', householdId);
+
       notifyListeners();
     } catch (e) {
       throw Exception('Failed to delete household: $e');
@@ -293,15 +305,33 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  // Fetch household members
+  // Fetch household members using separate queries for member IDs and profile info
   Future<List<Map<String, dynamic>>> getHouseholdMembers(int householdId) async {
     try {
-      final response = await _client
+      // Fetch the member IDs from the household_member table
+      final memberIdsResponse = await _client
           .from('household_member')
-          .select('username') // Assuming 'username' or another relevant field in the household_member table
+          .select('member_uid')
           .eq('household_id', householdId);
 
-      return List<Map<String, dynamic>>.from(response);
+      final List<dynamic> memberIds = memberIdsResponse;
+
+      // Fetch the profiles from the profiles table
+      final profilesResponse = await _client
+          .from('profiles')
+          .select('user_id, username, email');
+
+      final List<dynamic> profiles = profilesResponse;
+
+      // Match the member IDs with profiles and return the list
+      final householdMembers = profiles
+          .where((profile) => memberIds
+          .any((member) => member['member_uid'] == profile['user_id']))
+          .map((profile) =>
+      {'username': profile['username'], 'email': profile['email']})
+          .toList();
+
+      return householdMembers;
     } catch (e) {
       throw Exception('Fehler beim Laden der Haushaltsmitglieder: $e');
     }
