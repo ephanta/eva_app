@@ -3,9 +3,10 @@ import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.gr.dart';
 import 'package:eva_app/widgets/navigation/app_bar_custom.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../widgets/dialogs/create_household_dialog.dart';
 
 /// {@category Screens}
 /// Ansicht für die Home-Seite
@@ -25,134 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _dataProvider = DataProvider(Supabase.instance.client);
-  }
-
-  void _createHouseholdDialog(BuildContext context) {
-    final TextEditingController controller = TextEditingController();
-    Color currentColor = Colors.blue; // Default color
-
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: true,
-      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      pageBuilder: (BuildContext buildContext, Animation animation,
-          Animation secondaryAnimation) {
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text('Neuen Haushalt erstellen'),
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                TextField(
-                  controller: controller,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    labelText: 'Name des Haushalts',
-                  ),
-                ),
-                const SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Wähle eine Farbe'),
-                          content: SingleChildScrollView(
-                            child: BlockPicker(
-                              pickerColor: currentColor,
-                              onColorChanged: (color) {
-                                setState(() {
-                                  currentColor = color;
-                                });
-                              },
-                            ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: const Text('Fertig'),
-                              onPressed: () {
-                                AutoRouter.of(context).maybePop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  child: InputDecorator(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Farbe wählen',
-                    ),
-                    child: Container(
-                      height: 50,
-                      alignment: Alignment.centerLeft,
-                      decoration: BoxDecoration(
-                        color: currentColor,
-                        borderRadius: BorderRadius.circular(4.0),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () async {
-                    final householdName = controller.text;
-                    final householdColor =
-                        '#${currentColor.value.toRadixString(16).substring(2, 8)}';
-                    if (householdName.isNotEmpty) {
-                      try {
-                        final householdId = await _dataProvider.createHousehold(
-                          householdName,
-                          Supabase.instance.client.auth.currentUser!.id,
-                          householdColor,
-                        );
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text('Haushalt erfolgreich erstellt.')),
-                        );
-                        AutoRouter.of(context).maybePop();
-                        AutoRouter.of(context).push(
-                          HomeDetailRoute(householdId: householdId),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(
-                                  'Fehler beim Erstellen des Haushalts: $e')),
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Bitte geben Sie einen Namen ein')),
-                      );
-                    }
-                  },
-                  child: const Text('Erstellen'),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-      transitionDuration: const Duration(milliseconds: 300),
-      transitionBuilder: (BuildContext context, Animation<double> animation,
-          Animation<double> secondaryAnimation, Widget child) {
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 1),
-            end: Offset.zero,
-          ).animate(animation),
-          child: child,
-        );
-      },
-    );
   }
 
   @override
@@ -301,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 10),
           FloatingActionButton(
             heroTag: 'createHousehold',
-            onPressed: () => _createHouseholdDialog(context),
+            onPressed: () => showCreateHouseholdDialog(context),
             child: const Icon(Icons.add),
           ),
         ],
