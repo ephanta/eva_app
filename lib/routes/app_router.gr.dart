@@ -91,7 +91,7 @@ class AuthRoute extends _i8.PageRouteInfo<void> {
 class HomeDetailRoute extends _i8.PageRouteInfo<HomeDetailRouteArgs> {
   HomeDetailRoute({
     _i9.Key? key,
-    required int householdId,
+    required String householdId,
     List<_i8.PageRouteInfo>? children,
   }) : super(
           HomeDetailRoute.name,
@@ -116,7 +116,7 @@ class HomeDetailRouteArgs {
 
   final _i9.Key? key;
 
-  final int householdId;
+  final String householdId;
 
   @override
   String toString() {

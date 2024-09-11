@@ -5,7 +5,6 @@ import 'package:eva_app/widgets/navigation/app_bar_custom.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 @RoutePage()
 class HomeScreen extends StatefulWidget {
@@ -53,32 +52,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 20),
                 GestureDetector(
                   onTap: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: const Text('Wähle eine Farbe'),
-                          content: SingleChildScrollView(
-                            child: BlockPicker(
-                              pickerColor: currentColor,
-                              onColorChanged: (color) {
-                                setState(() {
-                                  currentColor = color;
-                                });
-                              },
-                            ),
-                          ),
-                          actions: <Widget>[
-                            TextButton(
-                              child: const Text('Fertig'),
-                              onPressed: () {
-                                AutoRouter.of(context).maybePop();
-                              },
-                            ),
-                          ],
-                        );
-                      },
-                    );
+                    _pickColorDialog(context, currentColor, (color) {
+                      setState(() {
+                        currentColor = color;
+                      });
+                    });
                   },
                   child: InputDecorator(
                     decoration: const InputDecoration(
@@ -105,7 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       try {
                         final householdId = await _dataProvider.createHousehold(
                           householdName,
-                          Supabase.instance.client.auth.currentUser!.id,
                           householdColor,
                         );
 
@@ -113,9 +90,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           const SnackBar(
                               content: Text('Haushalt erfolgreich erstellt.')),
                         );
-                        AutoRouter.of(context).maybePop();
+                        Navigator.pop(context);
                         AutoRouter.of(context).push(
-                          HomeDetailRoute(householdId: householdId), // Using the correct householdId from creation
+                          HomeDetailRoute(householdId: householdId),
                         );
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -152,6 +129,32 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Helper function to open the color picker dialog
+  void _pickColorDialog(BuildContext context, Color initialColor, ValueChanged<Color> onColorChanged) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Wähle eine Farbe'),
+          content: SingleChildScrollView(
+            child: BlockPicker(
+              pickerColor: initialColor,
+              onColorChanged: onColorChanged,
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Fertig'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -167,14 +170,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: Theme.of(context).textTheme.headlineMedium,
               ),
               FutureBuilder<List<Map<String, dynamic>>>(
-                future: dataProvider.fetchUserHouseholds(Supabase.instance.client.auth.currentUser!.id),
+                future: dataProvider.fetchUserHouseholds(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
+                    return Center(
+                      child: Text('Fehler beim Laden der Haushalte: ${snapshot.error}'),
+                    );
                   } else {
                     final households = snapshot.data ?? [];
+                    if (households.isEmpty) {
+                      return const Center(
+                        child: Text('Keine Haushalte gefunden'),
+                      );
+                    }
                     return Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -188,10 +198,17 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemBuilder: (context, index) {
                             final household = households[index];
 
-                            if (household['id'] != null && household['id'] is int) {
-                              Color householdColor = Color(
-                                  int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000
-                              );
+                            if (household['id'] != null && household['id'] is String) {
+                              String colorString = household['color'] ?? '#ffffff';
+                              Color householdColor;
+
+                              try {
+                                householdColor = Color(
+                                    int.parse(colorString.substring(1, 7), radix: 16) + 0xFF000000
+                                );
+                              } catch (e) {
+                                householdColor = Colors.grey; // Fallback color
+                              }
 
                               return InkWell(
                                 onTap: () {
@@ -203,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   color: householdColor,
                                   child: Center(
                                     child: Text(
-                                      household['name'],
+                                      household['name'] ?? 'Unbenannter Haushalt',
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
                                         fontSize: 20.0,
@@ -233,68 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
           FloatingActionButton(
             heroTag: 'joinHousehold',
             onPressed: () {
-              final TextEditingController inviteCodeController =
-              TextEditingController();
-
-              showDialog(
-                context: context,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: const Text('Haushalt beitreten'),
-                    content: TextField(
-                      controller: inviteCodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Einladungscode',
-                      ),
-                    ),
-                    actions: <Widget>[
-                      TextButton(
-                        child: const Text('Abbrechen'),
-                        onPressed: () {
-                          AutoRouter.of(context).maybePop();
-                        },
-                      ),
-                      TextButton(
-                        child: const Text('Beitreten'),
-                        onPressed: () async {
-                          final inviteCode = inviteCodeController.text;
-
-                          if (inviteCode.isNotEmpty) {
-                            try {
-                              final householdId =
-                              await _dataProvider.joinHousehold(
-                                  inviteCode,
-                                  Supabase.instance.client.auth.currentUser!
-                                      .id);
-                              AutoRouter.of(context).maybePop();
-                              AutoRouter.of(context).push(
-                                HomeDetailRoute(householdId: householdId),
-                              );
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'Erfolgreich dem Haushalt beigetreten.')),
-                              );
-                            } catch (e) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        'Fehler beim Beitreten des Haushalts: $e')),
-                              );
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text(
-                                      'Bitte geben Sie einen Einladungscode ein')),
-                            );
-                          }
-                        },
-                      ),
-                    ],
-                  );
-                },
-              );
+              _joinHouseholdDialog(context);
             },
             child: const Icon(Icons.group_add),
           ),
@@ -306,6 +262,60 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _joinHouseholdDialog(BuildContext context) {
+    final TextEditingController inviteCodeController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Haushalt beitreten'),
+          content: TextField(
+            controller: inviteCodeController,
+            decoration: const InputDecoration(
+              labelText: 'Einladungscode',
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            TextButton(
+              child: const Text('Beitreten'),
+              onPressed: () async {
+                final inviteCode = inviteCodeController.text;
+
+                if (inviteCode.isNotEmpty) {
+                  try {
+                    final householdId = await _dataProvider.joinHousehold(inviteCode);
+                    Navigator.pop(context);
+                    AutoRouter.of(context).push(
+                      HomeDetailRoute(householdId: householdId),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Erfolgreich dem Haushalt beigetreten.')),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Fehler beim Beitreten des Haushalts: $e')),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Bitte geben Sie einen Einladungscode ein')),
+                  );
+                }
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

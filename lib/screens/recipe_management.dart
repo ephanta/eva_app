@@ -14,6 +14,7 @@ class RecipeManagementScreen extends StatefulWidget {
 
 class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
   List<Map<String, dynamic>> _recipes = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -24,12 +25,18 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
   Future<void> _loadUserRecipes() async {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     try {
-      final recipes = await dataProvider.fetchUserRecipes(dataProvider.currentUserId!);
+      final recipes = await dataProvider.fetchUserRecipes();
       setState(() {
         _recipes = recipes;
+        _isLoading = false;
       });
     } catch (e) {
-      print('Fehler beim Laden der Rezepte: $e');
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Laden der Rezepte: $e')),
+      );
     }
   }
 
@@ -41,7 +48,9 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
         await dataProvider.updateRecipe(_recipes[index]['id'], updatedRecipe);
         _loadUserRecipes();
       } catch (e) {
-        print('Error updating recipe: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Aktualisieren des Rezepts: $e')),
+        );
       }
     }
   }
@@ -52,7 +61,9 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
       await dataProvider.deleteRecipe(_recipes[index]['id']);
       _loadUserRecipes();
     } catch (e) {
-      print('Error deleting recipe: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Löschen des Rezepts: $e')),
+      );
     }
   }
 
@@ -64,7 +75,9 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
         await dataProvider.addNewRecipe(newRecipe);
         _loadUserRecipes();
       } catch (e) {
-        print('Error adding recipe: $e');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Hinzufügen des Rezepts: $e')),
+        );
       }
     }
   }
@@ -74,7 +87,6 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     TextEditingController descriptionController = TextEditingController(text: recipe?['beschreibung'] ?? '');
     TextEditingController instructionsController = TextEditingController(text: recipe?['kochanweisungen'] ?? '');
 
-    // Safely parsing the ingredients to handle any type issues
     List<Map<String, String>> ingredients = (recipe?['zutaten'] as List?)
         ?.map((ingredient) => Map<String, String>.from(ingredient))
         .toList() ?? [];
@@ -82,77 +94,87 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     return showDialog<Map<String, dynamic>>(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(isEditing ? 'Rezept bearbeiten' : 'Rezept hinzufügen'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Rezeptname'),
-                ),
-                TextField(
-                  controller: descriptionController,
-                  decoration: const InputDecoration(labelText: 'Beschreibung'),
-                ),
-                const SizedBox(height: 10),
-                const Text('Zutaten', style: TextStyle(fontWeight: FontWeight.bold)),
-                Column(
-                  children: ingredients.map((ingredient) {
-                    return ListTile(
-                      title: Text(ingredient['name'] ?? ''),
-                      subtitle: Text('Menge: ${ingredient['menge']}'),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Text(isEditing ? 'Rezept bearbeiten' : 'Rezept hinzufügen'),
+              content: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Rezeptname'),
+                    ),
+                    TextField(
+                      controller: descriptionController,
+                      decoration: const InputDecoration(labelText: 'Beschreibung'),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text('Zutaten', style: TextStyle(fontWeight: FontWeight.bold)),
+                    Column(
+                      children: ingredients.map((ingredient) {
+                        return ListTile(
+                          title: Text(ingredient['name'] ?? ''),
+                          subtitle: Text('Menge: ${ingredient['menge']}'),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                ingredients.remove(ingredient);
+                              });
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    TextButton.icon(
+                      icon: const Icon(Icons.add),
+                      label: const Text('Zutat hinzufügen'),
+                      onPressed: () async {
+                        Map<String, String>? newIngredient = await _showAddIngredientDialog(context);
+                        if (newIngredient != null) {
                           setState(() {
-                            ingredients.remove(ingredient);
+                            ingredients.add(newIngredient);
                           });
-                        },
-                      ),
-                    );
-                  }).toList(),
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: instructionsController,
+                      decoration: const InputDecoration(labelText: 'Kochanweisungen'),
+                      maxLines: 5,
+                    ),
+                  ],
                 ),
-                TextButton.icon(
-                  icon: const Icon(Icons.add),
-                  label: const Text('Zutat hinzufügen'),
-                  onPressed: () async {
-                    Map<String, String>? newIngredient = await _showAddIngredientDialog(context);
-                    if (newIngredient != null) {
-                      setState(() {
-                        ingredients.add(newIngredient);
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Abbrechen'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.isNotEmpty && descriptionController.text.isNotEmpty) {
+                      Navigator.pop(context, {
+                        'name': nameController.text,
+                        'beschreibung': descriptionController.text,
+                        'zutaten': ingredients,
+                        'kochanweisungen': instructionsController.text,
                       });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Bitte füllen Sie alle Felder aus.')),
+                      );
                     }
                   },
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: instructionsController,
-                  decoration: const InputDecoration(labelText: 'Kochanweisungen'),
-                  maxLines: 5,
+                  child: Text(isEditing ? 'Aktualisieren' : 'Hinzufügen'),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Abbrechen'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context, {
-                  'name': nameController.text,
-                  'beschreibung': descriptionController.text,
-                  'zutaten': ingredients,
-                  'kochanweisungen': instructionsController.text,
-                });
-              },
-              child: Text(isEditing ? 'Aktualisieren' : 'Hinzufügen'),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -189,10 +211,16 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                Navigator.pop(context, {
-                  'name': nameController.text,
-                  'menge': quantityController.text,
-                });
+                if (nameController.text.isNotEmpty && quantityController.text.isNotEmpty) {
+                  Navigator.pop(context, {
+                    'name': nameController.text,
+                    'menge': quantityController.text,
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Bitte füllen Sie alle Felder aus.')),
+                  );
+                }
               },
               child: const Text('Hinzufügen'),
             ),
@@ -212,7 +240,9 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
