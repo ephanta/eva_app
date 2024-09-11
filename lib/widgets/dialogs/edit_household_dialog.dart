@@ -23,7 +23,7 @@ Future<Future<Object?>> showEditHouseholdDialog(
         Animation secondaryAnimation) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Haushalt bearbeiten'),
+          title: const Text('Haushalt verwalten'),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),

@@ -243,6 +243,22 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Erhalte die Einkaufshistorie des Haushalts
+  Future<PostgrestMap?> getShoppingItemById(int itemId) async {
+    try {
+      final response = await _client
+          .from('shopping_list')
+          .select()
+          .eq('id', itemId)
+          .single();
+
+      return response;
+    } catch (error) {
+      print('Fehler beim Abrufen des Eintrags mit der ID $itemId: $error');
+      return null;
+    }
+  }
+
   /// Element der Einkaufsliste des Haushalts hinzufügen
   Future<void> addItemToShoppingList(
     String householdId,
@@ -290,25 +306,18 @@ class DataProvider with ChangeNotifier {
       int itemId, String userId, DateTime timestamp, bool isChecked) async {
     final String status = isChecked ? 'purchased' : 'pending';
 
-    final updateData = <String, dynamic>{};
-
-    updateData['status'] = status;
-
-    if (status == 'pending') {
-      updateData['checked_by'] = null;
-      updateData['checked_at'] = null;
-    } else {
-      updateData['checked_by'] = userId;
-      updateData['checked_at'] = timestamp.toIso8601String();
-    }
+    final updateData = {
+      'status': status,
+      'checked_by': isChecked ? userId : null,
+      'checked_at': isChecked ? timestamp.toIso8601String() : null,
+    };
 
     try {
       await _client.from('shopping_list').update(updateData).eq('id', itemId);
       notifyListeners();
     } catch (e) {
-      print(e);
       throw Exception(
-          'Fehler beim Aktualisieren des Elements in der Einkaufsliste: $e');
+          'Fehler beim Aktualisieren des Status des Elements in der Einkaufsliste: $e');
     }
   }
 }

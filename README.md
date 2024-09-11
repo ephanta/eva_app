@@ -6,7 +6,6 @@ erleichtern sowie Rezepte anzulegen und miteinander zu teilen.
 ## Gruppenmitglieder
 
 - Robert Gehrmann
-- Sandra Heller
 - Eva-Maria Maurer
 - Alexander Paul
 - Dennis Roukis

@@ -51,8 +51,8 @@ Future<Future<Object?>> showAddItemDialog(
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () async {
-                  final itemName = controllerItemName.text;
-                  final amount = controllerAmount.text;
+                  itemName = controllerItemName.text;
+                  amount = controllerAmount.text;
                   if (itemName.isNotEmpty) {
                     try {
                       final dataProvider =

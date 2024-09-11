@@ -125,7 +125,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                     if (userRole == 'admin') ...[
                       ElevatedButton.icon(
                         icon: const Icon(Icons.edit),
-                        label: const Text('Haushalt bearbeiten'),
+                        label: const Text('Haushalt verwalten'),
                         onPressed: () {
                           showEditHouseholdDialog(context, household);
                         },
