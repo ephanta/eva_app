@@ -129,9 +129,10 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
   Future<void> _deleteItem(int itemId) async {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     try {
+      /// Löschen des Artikels aus der Historie
       await dataProvider.removeItemFromShoppingList(
           widget.householdId.toString(), itemId.toString());
-      setState(() {}); // Aktualisierung der UI nach dem Löschen
+      setState(() {});
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -149,6 +150,7 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
       /// Artikel aus der Historie finden
       final item = await dataProvider.getShoppingItemById(itemId);
 
+      /// Artikel zur Einkaufsliste hinzufügen
       await dataProvider.addItemToShoppingList(
         widget.householdId.toString(),
         item?['item_name'],
@@ -175,6 +177,7 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
       List<Map<String, dynamic>> purchasedList) async {
     try {
       for (var item in purchasedList) {
+        /// Löschen der Artikel aus der Historie
         await dataProvider.removeItemFromShoppingList(
             widget.householdId.toString(), item['id'].toString());
       }

@@ -35,6 +35,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
     _fetchUserRole();
   }
 
+  /// Holt die Benutzerrolle im Haushalt
   Future<void> _fetchUserRole() async {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     final userId = Supabase.instance.client.auth.currentUser!.id;

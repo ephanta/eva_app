@@ -23,6 +23,7 @@ class _AuthScreenState extends State<AuthScreen> {
     _checkAuthStatus(); // Check authentication status when the screen initializes
   }
 
+  /// Überprüft den Authentifizierungsstatus
   Future<void> _checkAuthStatus() async {
     try {
       final session = Supabase.instance.client.auth.currentSession;

@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// {@category Provider}
+/// Klasse, die die Daten für die Anwendung bereitstellt
 class DataProvider with ChangeNotifier {
   final SupabaseClient _client;
 

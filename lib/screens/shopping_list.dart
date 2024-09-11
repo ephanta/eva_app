@@ -145,6 +145,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     final timestamp = DateTime.now();
 
     try {
+      /// Aktualisieren des Status des Eintrags
       await dataProvider.updateShoppingItemStatus(
           itemId, userId, timestamp, isChecked);
       setState(() {});
@@ -162,6 +163,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       List<Map<String, dynamic>> shoppingList) async {
     try {
       for (var item in shoppingList) {
+        /// Löschen des Eintrags aus der Einkaufsliste
         await dataProvider.removeItemFromShoppingList(
             widget.householdId.toString(), item['id'].toString());
       }
