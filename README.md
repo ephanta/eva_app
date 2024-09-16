@@ -67,7 +67,7 @@ Die App ist für Android und iOS verfügbar, wurde jedoch nur auf Android getest
 
 ## Dokumentation
 
-Die Dokumentation des Codes erfolgt über `dart doc`. Die Dokumentation kann über den
+Die Dokumentation des Codes erfolgt über das Package `dart doc`. Die Dokumentation kann über den
 Befehl `dart doc`
 generiert werden und ist dann im Ordner `doc/api` zu finden. Anschließend kann die Dokumentation
 über die `index.html` im Browser geöffnet werden. 

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the showCreateHouseholdDialog function from the create_household_dialog library, for the Dart programming language.">
+  <title>showCreateHouseholdDialog function - create_household_dialog library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">eva_app</a></li>
+    <li><a href="../widgets_dialogs_create_household_dialog/widgets_dialogs_create_household_dialog-library.html">widgets\dialogs\create_household_dialog.dart</a></li>
+    <li class="self-crumb">showCreateHouseholdDialog function</li>
+  </ol>
+  <div class="self-name">showCreateHouseholdDialog</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="widgets_dialogs_create_household_dialog&#47;widgets_dialogs_create_household_dialog-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-function">showCreateHouseholdDialog</span> function 
+ 
+    <span class="category widgets cp-3 linked" title="This is part of the Widgets topic."><a href="../topics/Widgets-topic.html">Widgets</a></span>
+</h1></div>
+
+    <section class="multi-line-signature">
+        
+
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Object-class.html">Object</a>?</span>&gt;</span></span>&gt;</span></span>
+<span class="name ">showCreateHouseholdDialog</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="showCreateHouseholdDialog-param-context"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/widgets/BuildContext-class.html">BuildContext</a></span> <span class="parameter-name">context</span></span></li>
+</ol>)
+
+        
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Dialog zum Erstellen eines neuen Haushalts</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Future&lt;Future&lt;Object?&gt;&gt; showCreateHouseholdDialog(BuildContext context) async {
+  final TextEditingController controller = TextEditingController();
+  Color currentColor = Colors.orange; &#47;&#47; Default color
+
+  return showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
+    pageBuilder: (BuildContext buildContext, Animation animation,
+        Animation secondaryAnimation) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text(&#39;Neuen Haushalt erstellen&#39;),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: &lt;Widget&gt;[
+              TextField(
+                controller: controller,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: &#39;Name des Haushalts&#39;,
+                ),
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text(&#39;Wähle eine Farbe&#39;),
+                        content: SingleChildScrollView(
+                          child: BlockPicker(
+                            pickerColor: currentColor,
+                            onColorChanged: (color) {
+                              currentColor = color;
+                            },
+                          ),
+                        ),
+                        actions: &lt;Widget&gt;[
+                          TextButton(
+                            child: const Text(&#39;Fertig&#39;),
+                            onPressed: () {
+                              AutoRouter.of(context).maybePop();
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: InputDecorator(
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: &#39;Farbe wählen&#39;,
+                  ),
+                  child: Container(
+                    height: 50,
+                    alignment: Alignment.centerLeft,
+                    decoration: BoxDecoration(
+                      color: currentColor,
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () async {
+                  final householdName = controller.text;
+                  final householdColor =
+                      &#39;#${currentColor.value.toRadixString(16).substring(2, 8)}&#39;;
+                  if (householdName.isNotEmpty) {
+                    try {
+                      final dataProvider =
+                          Provider.of&lt;DataProvider&gt;(context, listen: false);
+                      final householdId = await dataProvider.createHousehold(
+                        householdName,
+                        Supabase.instance.client.auth.currentUser!.id,
+                        householdColor,
+                      );
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text(&#39;Haushalt erfolgreich erstellt.&#39;)),
+                      );
+                      AutoRouter.of(context).maybePop();
+                      AutoRouter.of(context).push(
+                        HomeDetailRoute(householdId: householdId),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                &#39;Fehler beim Erstellen des Haushalts: $e&#39;)),
+                      );
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text(&#39;Bitte geben Sie einen Namen ein&#39;)),
+                    );
+                  }
+                },
+                child: const Text(&#39;Erstellen&#39;),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+    transitionDuration: const Duration(milliseconds: 300),
+    transitionBuilder: (BuildContext context, Animation&lt;double&gt; animation,
+        Animation&lt;double&gt; secondaryAnimation, Widget child) {
+      return SlideTransition(
+        position: Tween&lt;Offset&gt;(
+          begin: const Offset(0, 1),
+          end: Offset.zero,
+        ).animate(animation),
+        child: child,
+      );
+    },
+  );
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">eva_app</a></li>
+    <li><a href="../widgets_dialogs_create_household_dialog/widgets_dialogs_create_household_dialog-library.html">create_household_dialog</a></li>
+    <li class="self-crumb">showCreateHouseholdDialog function</li>
+</ol>
+
+
+    <h5>create_household_dialog library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    eva_app
+      1.0.0+1
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+
+
+</body>
+
+</html>
+
