@@ -18,8 +18,8 @@ class AuthScreen extends StatefulWidget {
 class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _usernameController = TextEditingController();
   bool _isSignUp = false;
+  bool _loading = false;
 
   @override
   void initState() {
@@ -32,7 +32,7 @@ class _AuthScreenState extends State<AuthScreen> {
       final dataProvider = Provider.of<DataProvider>(context, listen: false);
       final session = await dataProvider.getCurrentSession();
       if (session != null) {
-        AutoRouter.of(context).push(const HomeRoute());
+        AutoRouter.of(context).replace(const HomeRoute());
       }
     } catch (e) {
       print('Error checking auth status: $e');
@@ -41,25 +41,43 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Future<void> _signInOrSignUp() async {
+    setState(() {
+      _loading = true; // Show loading spinner while processing
+    });
     try {
       final dataProvider = Provider.of<DataProvider>(context, listen: false);
       if (_isSignUp) {
-        await Supabase.instance.client.auth.signUp(
+        // Sign up and include username in user metadata
+        final response = await Supabase.instance.client.auth.signUp(
           email: _emailController.text,
           password: _passwordController.text,
-          data: {'username': _usernameController.text},
         );
+
+        if (response.user != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Erfolgreich registriert! Bitte bestätigen Sie Ihre E-Mail.')),
+          );
+        }
       } else {
-        await Supabase.instance.client.auth.signInWithPassword(
+        // Sign in with email and password
+        final response = await Supabase.instance.client.auth.signInWithPassword(
           email: _emailController.text,
           password: _passwordController.text,
         );
+
+        if (response.session != null) {
+          _checkAuthStatus(); // Proceed to Home if sign-in is successful
+        }
       }
-      _checkAuthStatus();
     } catch (e) {
+      // Handle exceptions
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+        SnackBar(content: Text('Fehler: ${e.toString()}')),
       );
+    } finally {
+      setState(() {
+        _loading = false; // Hide loading spinner when done
+      });
     }
   }
 
@@ -89,12 +107,10 @@ class _AuthScreenState extends State<AuthScreen> {
               obscureText: true,
             ),
             if (_isSignUp)
-              TextField(
-                controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Nutzername'),
-              ),
-            const SizedBox(height: 20),
-            ElevatedButton(
+                    const SizedBox(height: 20),
+            _loading
+                ? const CircularProgressIndicator()  // Show a spinner while loading
+                : ElevatedButton(
               onPressed: _signInOrSignUp,
               child: Text(_isSignUp ? 'Registrieren' : 'Anmelden'),
             ),
@@ -118,7 +134,6 @@ class _AuthScreenState extends State<AuthScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _usernameController.dispose();
     super.dispose();
   }
 }

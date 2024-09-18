@@ -42,6 +42,8 @@ dependencies:
   intl: ^0.18.0
   uuid: ^4.0.0
   http: ^1.1.0
+  image_picker: ^0.8.5+3
+  table_calendar: ^3.0.9
 
 dev_dependencies:
   flutter_test:

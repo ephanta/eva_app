@@ -45,6 +45,82 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
     }
   }
 
+  Future<void> _showDeleteConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Haushalt löschen'),
+          content: const Text('Sind Sie sicher, dass Sie diesen Haushalt löschen möchten?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Löschen'),
+              onPressed: () async {
+                final dataProvider = Provider.of<DataProvider>(context, listen: false);
+                try {
+                  await dataProvider.deleteHousehold(widget.householdId);
+                  Navigator.of(context).pop();
+                  AutoRouter.of(context).replace(const HomeRoute());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Haushalt erfolgreich gelöscht.')),
+                  );
+                } catch (e) {
+                  Navigator.of(context).pop();
+                  _showErrorSnackBar('Fehler beim Löschen des Haushalts: $e');
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _showLeaveConfirmationDialog(BuildContext context) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Haushalt verlassen'),
+          content: const Text('Sind Sie sicher, dass Sie diesen Haushalt verlassen möchten?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Abbrechen'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('Verlassen'),
+              onPressed: () async {
+                final dataProvider = Provider.of<DataProvider>(context, listen: false);
+                try {
+                  await dataProvider.leaveHousehold(widget.householdId);
+                  Navigator.of(context).pop();
+                  AutoRouter.of(context).replace(const HomeRoute());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Haushalt erfolgreich verlassen.')),
+                  );
+                } catch (e) {
+                  Navigator.of(context).pop();
+                  _showErrorSnackBar('Fehler beim Verlassen des Haushalts: $e');
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message), backgroundColor: Colors.red),
@@ -52,12 +128,13 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
   }
 
   void _showEditHouseholdDialog(BuildContext context, Map<String, dynamic> household) {
-    final TextEditingController nameController = TextEditingController(text: household['name']);
+    final TextEditingController nameController = TextEditingController(text: household['name'] ?? '');
+    final TextEditingController inviteCodeController = TextEditingController(text: household['invite_code'] ?? '');
     Color currentColor;
     try {
-      currentColor = Color(int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
+      currentColor = Color(int.parse(household['color']?.substring(1, 7) ?? 'FFFFFF', radix: 16) + 0xFF000000);
     } catch (e) {
-      currentColor = Colors.grey; // Fallback color in case of error
+      currentColor = Colors.grey;
     }
 
     showGeneralDialog(
@@ -91,24 +168,28 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                           });
                         });
                       },
-                      child: InputDecorator(
-                        decoration: const InputDecoration(
-                          border: OutlineInputBorder(),
-                          labelText: 'Farbe wählen',
+                      child: Container(
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: currentColor,
+                          borderRadius: BorderRadius.circular(8.0),
+                          border: Border.all(color: Colors.grey),
                         ),
-                        child: Container(
-                          height: 50,
-                          alignment: Alignment.centerLeft,
-                          decoration: BoxDecoration(
-                            color: currentColor,
-                            borderRadius: BorderRadius.circular(4.0),
+                        child: Center(
+                          child: Text(
+                            'Farbe wählen',
+                            style: TextStyle(
+                              color: ThemeData.estimateBrightnessForColor(currentColor) == Brightness.dark
+                                  ? Colors.white
+                                  : Colors.black,
+                            ),
                           ),
                         ),
                       ),
                     ),
                     const SizedBox(height: 20),
                     TextField(
-                      controller: TextEditingController(text: household['invite_code']),
+                      controller: inviteCodeController,
                       readOnly: true,
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
@@ -116,7 +197,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         suffixIcon: Icon(Icons.copy),
                       ),
                       onTap: () {
-                        Clipboard.setData(ClipboardData(text: household['invite_code']));
+                        Clipboard.setData(ClipboardData(text: inviteCodeController.text));
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Einladungscode kopiert')),
                         );
@@ -130,7 +211,11 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         if (householdName.isNotEmpty && householdColor.isNotEmpty) {
                           try {
                             final dataProvider = Provider.of<DataProvider>(context, listen: false);
-                            await dataProvider.updateHousehold(household['id'], name: householdName, color: householdColor);
+                            await dataProvider.updateHousehold(
+                              widget.householdId,
+                              name: householdName,
+                              color: householdColor,
+                            );
                             Navigator.pop(context);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('Haushalt erfolgreich bearbeitet.')),
@@ -171,102 +256,17 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
         return AlertDialog(
           title: const Text('Wähle eine Farbe'),
           content: SingleChildScrollView(
-            child: BlockPicker(
+            child: ColorPicker(
               pickerColor: currentColor,
               onColorChanged: onColorChanged,
+              pickerAreaHeightPercent: 0.8,
             ),
           ),
           actions: <Widget>[
             TextButton(
               child: const Text('Fertig'),
               onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _showDeleteConfirmationDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Haushalt löschen'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Sind Sie sicher, dass Sie diesen Haushalt löschen möchten?'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            TextButton(
-              child: const Text('Löschen'),
-              onPressed: () async {
-                final dataProvider = Provider.of<DataProvider>(context, listen: false);
-                try {
-                  await dataProvider.deleteHousehold(widget.householdId);
-                  Navigator.pop(context);
-                  AutoRouter.of(context).push(const HomeRoute());
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Haushalt erfolgreich gelöscht.')),
-                  );
-                } catch (e) {
-                  _showErrorSnackBar('Fehler beim Löschen des Haushalts: $e');
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _showLeaveConfirmationDialog(BuildContext context) async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Haushalt verlassen'),
-          content: const SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text('Sind Sie sicher, dass Sie diesen Haushalt verlassen möchten?'),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-            TextButton(
-              child: const Text('Verlassen'),
-              onPressed: () async {
-                final dataProvider = Provider.of<DataProvider>(context, listen: false);
-                try {
-                  await dataProvider.leaveHousehold(widget.householdId);
-                  Navigator.pop(context);
-                  AutoRouter.of(context).push(const HomeRoute());
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Haushalt verlassen')),
-                  );
-                } catch (e) {
-                  _showErrorSnackBar('Fehler beim Verlassen des Haushalts: $e');
-                }
+                Navigator.of(context).pop();
               },
             ),
           ],
@@ -300,86 +300,112 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                 final household = snapshot.data!;
                 Color householdColor;
                 try {
-                  householdColor = Color(int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
+                  householdColor = Color(
+                    int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000,
+                  );
                 } catch (e) {
-                  householdColor = Colors.grey; // Fallback color in case of error
+                  householdColor = Colors.grey;
                 }
-                return SingleChildScrollView(
-                  child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Text('${household['name']}', style: Theme.of(context).textTheme.headlineMedium),
+
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          '${household['name'] ?? 'Unbenannter Haushalt'}',
+                          style: Theme.of(context).textTheme.headlineMedium,
+                          textAlign: TextAlign.center,
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: CircleAvatar(
-                            radius: 30,
-                            backgroundColor: householdColor,
-                          ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: CircleAvatar(
+                          radius: 30,
+                          backgroundColor: householdColor,
                         ),
-                        const Text(
-                          'Mitglieder:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        FutureBuilder<List<Map<String, dynamic>>>(
-                          future: dataProvider.getHouseholdMembers(widget.householdId),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const CircularProgressIndicator();
-                            } else if (snapshot.hasError) {
-                              return Text('Fehler: ${snapshot.error}');
-                            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                              return const Text('Keine Mitglieder gefunden.');
-                            } else {
-                              final List<Map<String, dynamic>> members = snapshot.data!;
-                              return Column(
-                                children: members.map((member) => Text(member['username'] ?? 'Unbekanntes Mitglied')).toList(),
-                              );
-                            }
+                      ),
+                      const SizedBox(height: 20),
+                      const Text(
+                        'Mitglieder:',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                      FutureBuilder<List<Map<String, dynamic>>>(
+                        future: dataProvider.getHouseholdMembers(widget.householdId),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return const CircularProgressIndicator();
+                          } else if (snapshot.hasError) {
+                            return Text('Fehler: ${snapshot.error}');
+                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                            return const Text('Keine Mitglieder gefunden.');
+                          } else {
+                            final List<Map<String, dynamic>> members = snapshot.data!;
+                            return Column(
+                              children: members
+                                  .map(
+                                    (member) => ListTile(
+                                  title: Center(
+                                    child: Text(
+                                      member['username'] ?? 'Unbekanntes Mitglied',
+                                      style: const TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                  subtitle: Center(
+                                    child: Text(
+                                      member['role'] ?? '',
+                                      style: const TextStyle(color: Colors.black),
+                                    ),
+                                  ),
+                                ),
+                              )
+                                  .toList(),
+                            );
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.copy),
+                        label: const Text('Einladungscode kopieren'),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: household['invite_code'] ?? ''));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Einladungscode kopiert')),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      if (userRole == 'admin') ...[
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.edit),
+                          label: const Text('Haushalt bearbeiten'),
+                          onPressed: () {
+                            _showEditHouseholdDialog(context, household);
                           },
                         ),
                         ElevatedButton.icon(
-                          icon: const Icon(Icons.copy),
-                          label: const Text('Haushalts-ID kopieren'),
+                          icon: const Icon(Icons.delete),
+                          label: const Text('Haushalt löschen'),
                           onPressed: () {
-                            Clipboard.setData(ClipboardData(text: household['invite_code']));
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Haushalts-ID kopiert')),
-                            );
+                            _showDeleteConfirmationDialog(context);
                           },
                         ),
-                        const SizedBox(height: 20),
-                        if (userRole == 'admin') ...[
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.edit),
-                            label: const Text('Haushalt bearbeiten'),
-                            onPressed: () {
-                              _showEditHouseholdDialog(context, household);
-                            },
-                          ),
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.delete),
-                            label: const Text('Haushalt löschen'),
-                            onPressed: () {
-                              _showDeleteConfirmationDialog(context);
-                            },
-                          ),
-                        ],
-                        if (userRole == 'member') ...[
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.exit_to_app),
-                            label: const Text('Haushalt verlassen'),
-                            onPressed: () {
-                              _showLeaveConfirmationDialog(context);
-                            },
-                          ),
-                        ],
-                        const SizedBox(height: 16),
                       ],
-                    ),
+                      if (userRole == 'member') ...[
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.exit_to_app),
+                          label: const Text('Haushalt verlassen'),
+                          onPressed: () {
+                            _showLeaveConfirmationDialog(context);
+                          },
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                    ],
                   ),
                 );
               }
@@ -387,11 +413,13 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
           );
         },
       ),
-      bottomNavigationBar: const BottomNavBarCustom(
+      bottomNavigationBar: BottomNavBarCustom(
         pageType: PageType.homeDetail,
         showHome: false,
-        showShoppingList: false,
+        showShoppingList: true,
+        showShoppingHistory: false,
         showPlanner: true,
+        householdId: widget.householdId,
       ),
     );
   }

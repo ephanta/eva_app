@@ -12,9 +12,9 @@ if (!supabaseUrl || !supabaseKey || !authUrl || !authKey) {
   Deno.exit(1);
 }
 
-// Supabase clients
-const supabase = createClient(supabaseUrl, supabaseKey);
-const supabaseAuth = createClient(authUrl, authKey);
+// Supabase clients for Database D and Database A
+const supabase = createClient(supabaseUrl, supabaseKey); // Database D
+const supabaseAuth = createClient(authUrl, authKey); // Database A
 
 // Validate and extract user ID from the token
 async function validateAndGetUserId(token: string) {
@@ -106,7 +106,21 @@ async function handleGetRequest(url: URL, userId: string) {
   const householdId = url.searchParams.get("household_id");
   const action = url.searchParams.get("action");
 
-  if (action === "get_role" && householdId) {
+  if (!action) {
+    throw { message: "Missing action parameter", status: 400 };
+  }
+
+  if (action === "get_details" && householdId) {
+    const { data, error } = await supabase
+      .from("households")
+      .select("id, name, color, invite_code, owner_id")
+      .eq("id", householdId)
+      .single();
+
+    if (error) throw { message: error.message, status: 400 };
+
+    return { data };
+  } else if (action === "get_role" && householdId) {
     const { data, error } = await supabase
       .from("household_member")
       .select("role")
@@ -117,74 +131,108 @@ async function handleGetRequest(url: URL, userId: string) {
     if (error) throw { message: error.message, status: 400 };
     return { role: data.role };
   } else if (action === "get_members" && householdId) {
-    const { data, error } = await supabase
+    const { data: members, error: membersError } = await supabase
       .from("household_member")
       .select("member_uid, role")
       .eq("household_id", householdId);
 
-    if (error) throw { message: error.message, status: 400 };
-    return { members: data };
+    if (membersError) throw { message: membersError.message, status: 400 };
+
+    const userIds = members.map((member) => member.member_uid);
+    const { data: userData, error: userDataError } = await supabase
+      .from("profil")
+      .select("user_id, username")
+      .in("user_id", userIds);
+
+    if (userDataError) throw { message: "Error fetching user data from profil table", status: 500 };
+
+    const transformedMembers = members.map((member) => {
+      const user = userData.find((u) => u.user_id === member.member_uid);
+      return {
+        member_uid: member.member_uid,
+        role: member.role,
+        username: user?.username || "Benutzer",
+      };
+    });
+
+    return { members: transformedMembers };
+  } else if (action === "get_households_by_owner") {
+    const { data: households, error: householdError } = await supabase
+      .from("households")
+      .select("id, name, color")
+      .eq("owner_id", userId);
+
+    if (householdError) throw { message: householdError.message, status: 400 };
+
+    return { data: households };
   } else {
-    const [memberHouseholds, ownerHouseholds] = await Promise.all([
-      supabase
-        .from("household_member")
-        .select("household_id, households(name, color)")  // Fetch related household details
-        .eq("member_uid", userId),
-      supabase
-        .from("households")
-        .select("id, name, color")
-        .eq("owner_id", userId),
-    ]);
-
-    if (memberHouseholds.error) throw { message: memberHouseholds.error.message, status: 400 };
-    if (ownerHouseholds.error) throw { message: ownerHouseholds.error.message, status: 400 };
-
-    const allHouseholds = [
-      ...memberHouseholds.data.map((row) => ({
-        id: row.household_id,
-        name: row.households.name,  // Access nested household details
-        color: row.households.color,
-      })),
-      ...ownerHouseholds.data.map((row) => ({
-        id: row.id,
-        name: row.name,
-        color: row.color,
-      })),
-    ];
-
-    return { data: allHouseholds };
+    throw { message: "Invalid action", status: 400 };
   }
 }
 
 // POST Request Handler
-async function handlePostRequest(body: any, userId: string) {
-  const { name, color, invite_code } = body;
+async function handlePostRequest(body, userId) {
+  const { name, color, invite_code, action } = body;
 
-  if (!name) {
-    throw { message: "Missing required fields", status: 400 };
+  if (action === "join") {
+    if (!invite_code) {
+      throw { message: "Missing invite code", status: 400 };
+    }
+
+    const { data: household, error: householdError } = await supabase
+      .from("households")
+      .select("id")
+      .eq("invite_code", invite_code)
+      .single();
+
+    if (householdError) throw { message: "Invalid invite code", status: 400 };
+
+    const { data: existingMember, error: existingMemberError } = await supabase
+      .from("household_member")
+      .select("household_id")
+      .eq("household_id", household.id)
+      .eq("member_uid", userId)
+      .single();
+
+    if (existingMember) {
+      return { message: "User is already a member of this household.", status: 400 };
+    }
+
+    const { data, error } = await supabase
+      .from("household_member")
+      .insert({ household_id: household.id, member_uid: userId, role: "member" })
+      .select();
+
+    if (error) throw { message: error.message, status: 400 };
+
+    return { data: { household_id: household.id }, status: 200 };
+  } else {
+    if (!name || !color) {
+      throw { message: "Missing required fields: name or color", status: 400 };
+    }
+
+    const generatedInviteCode = invite_code || Date.now().toString();
+
+    const { data, error } = await supabase
+      .from("households")
+      .insert([{ name, color, owner_id: userId, invite_code: generatedInviteCode, user_id: userId }])
+      .select();
+
+    if (error) throw { message: error.message, status: 400 };
+
+    const householdId = data[0].id;
+    const { error: memberError } = await supabase
+      .from("household_member")
+      .insert([{ household_id: householdId, member_uid: userId, role: "admin" }]);
+
+    if (memberError) throw { message: memberError.message, status: 400 };
+
+    return { data, status: 201 };
   }
-
-  const generatedInviteCode = invite_code || Date.now().toString();
-
-  const { data, error } = await supabase
-    .from("households")
-    .insert([{ name, color, owner_id: userId, invite_code: generatedInviteCode }])
-    .select();
-
-  if (error) throw { message: error.message, status: 400 };
-
-  const householdId = data[0].id;
-  const { error: memberError } = await supabase
-    .from("household_member")
-    .insert([{ household_id: householdId, member_uid: userId, role: "admin" }]);
-
-  if (memberError) throw { message: memberError.message, status: 400 };
-
-  return { data, status: 201 };
 }
 
 // PUT Request Handler
-async function handlePutRequest(householdId: string | null, body: any, userId: string) {
+async function handlePutRequest(householdId, body, userId) {
   const { name, color } = body;
 
   if (!householdId || !name) {
@@ -199,7 +247,7 @@ async function handlePutRequest(householdId: string | null, body: any, userId: s
     .single();
 
   if (roleError) throw { message: roleError.message, status: 403 };
-  if (roleData.role !== "admin") throw { message: "Unauthorized: User is not an admin of this household", status: 403 };
+  if (roleData.role !== "admin") throw { message: "Unauthorized", status: 403 };
 
   const { data, error } = await supabase
     .from("households")
@@ -213,7 +261,7 @@ async function handlePutRequest(householdId: string | null, body: any, userId: s
 }
 
 // DELETE Request Handler
-async function handleDeleteRequest(householdId: string | null, userId: string, action: string | null) {
+async function handleDeleteRequest(householdId, userId, action) {
   if (!householdId) {
     throw { message: "Missing household_id parameter", status: 400 };
   }
@@ -237,7 +285,7 @@ async function handleDeleteRequest(householdId: string | null, userId: string, a
       .single();
 
     if (roleError) throw { message: roleError.message, status: 403 };
-    if (roleData.role !== "admin") throw { message: "Unauthorized: User is not an admin of this household", status: 403 };
+    if (roleData.role !== "admin") throw { message: "Unauthorized", status: 403 };
 
     const { error } = await supabase
       .from("households")

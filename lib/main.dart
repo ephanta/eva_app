@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart'; // For locale initialization
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,6 +20,10 @@ Future<void> main() async {
     url: dotenv.env['URL_ACCOUNT_A']!,
     anonKey: dotenv.env['ANON_KEY_ACCOUNT_A']!,
   );
+
+  // Initialize date formatting for the German locale
+  await initializeDateFormatting('de_DE', null);
+  print('Date formatting for German initialized');
 
   final supabase = Supabase.instance.client;
 
