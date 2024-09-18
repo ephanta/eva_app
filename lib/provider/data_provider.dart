@@ -14,6 +14,7 @@ class DataProvider with ChangeNotifier {
   final String _profileEdgeFunctionUrl = 'https://saxeplastjnaakcyifnn.supabase.co/functions/v1/profile-management';
   final String _plannerEdgeFunctionUrl = 'https://saxeplastjnaakcyifnn.supabase.co/functions/v1/planner-management';
   final String _shoppingListEdgeFunctionUrl = 'https://saxeplastjnaakcyifnn.supabase.co/functions/v1/shopping-management';
+  final String _ratingEdgeFunctionUrl = 'https://saxeplastjnaakcyifnn.supabase.co/functions/v1/bewertung-management';
 
   DataProvider(this._client);
 
@@ -79,7 +80,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-// Profile-related methods
+  // Profile-related methods
   Future<Map<String, dynamic>> fetchUserProfile() async {
     final response = await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'GET');
     return response;
@@ -95,10 +96,10 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // New method to update dietary notes
+  // Method to update dietary notes
   Future<void> updateDietaryNotes(String notes) async {
     final body = {
-      'hinweise_zur_ernaehrung': notes, // The string with dietary notes separated by commas
+      'hinweise_zur_ernaehrung': notes,
     };
     await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'PUT', body: body);
     notifyListeners();
@@ -157,8 +158,6 @@ class DataProvider with ChangeNotifier {
           'action': 'get_details',
         },
       );
-
-      print('Response from getCurrentHousehold: $response');
 
       if (response.containsKey('data') && response['data'] is Map<String, dynamic>) {
         return response['data'];
@@ -258,7 +257,12 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addOrUpdateMealPlan(String householdId, String date, String? breakfastRecipeId, String? lunchRecipeId, String? dinnerRecipeId) async {
+  Future<void> deleteMealPlan(String householdId, String date) async {
+    await _makeRequest<Map<String, dynamic>>(_plannerEdgeFunctionUrl, 'DELETE', queryParams: {'household_id': householdId, 'datum': date});
+    notifyListeners();
+  }
+
+  Future<void> addMealPlan(String householdId, String date, String? breakfastRecipeId, String? lunchRecipeId, String? dinnerRecipeId) async {
     await _makeRequest<Map<String, dynamic>>(
       _plannerEdgeFunctionUrl,
       'POST',
@@ -273,8 +277,17 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> deleteMealPlan(String householdId, String date) async {
-    await _makeRequest<Map<String, dynamic>>(_plannerEdgeFunctionUrl, 'DELETE', queryParams: {'household_id': householdId, 'datum': date});
+  Future<void> updateMealPlan(String householdId, String date, String? breakfastRecipeId, String? lunchRecipeId, String? dinnerRecipeId) async {
+    await _makeRequest<Map<String, dynamic>>(
+      _plannerEdgeFunctionUrl,
+      'PUT',
+      queryParams: {'household_id': householdId, 'datum': date},
+      body: {
+        'fruehstueck_rezept_id': breakfastRecipeId,
+        'mittagessen_rezept_id': lunchRecipeId,
+        'abendessen_rezept_id': dinnerRecipeId,
+      },
+    );
     notifyListeners();
   }
 
@@ -300,6 +313,55 @@ class DataProvider with ChangeNotifier {
 
   Future<void> removeItemFromShoppingList(String itemId) async {
     await _makeRequest<Map<String, dynamic>>(_shoppingListEdgeFunctionUrl, 'DELETE', queryParams: {'id': itemId});
+    notifyListeners();
+  }
+
+  // Rating-related methods
+  Future<List<Map<String, dynamic>>> getRatings(String recipeId) async {
+    final response = await _makeRequest<Map<String, dynamic>>(
+      _ratingEdgeFunctionUrl,
+      'GET',
+      queryParams: {'recipe_id': recipeId},
+    );
+    if (response['data'] is List) {
+      return List<Map<String, dynamic>>.from(response['data']);
+    } else {
+      throw Exception('Unexpected response format for ratings');
+    }
+  }
+
+  Future<void> addRating(String recipeId, int rating, String? comment) async {
+    await _makeRequest<Map<String, dynamic>>(
+      _ratingEdgeFunctionUrl,
+      'POST',
+      body: {
+        'recipe_id': recipeId,
+        'rating': rating,
+        'comment': comment,
+      },
+    );
+    notifyListeners();
+  }
+
+  Future<void> updateRating(String ratingId, int rating, String? comment) async {
+    await _makeRequest<Map<String, dynamic>>(
+      _ratingEdgeFunctionUrl,
+      'PUT',
+      body: {
+        'id': ratingId,
+        'rating': rating,
+        'comment': comment,
+      },
+    );
+    notifyListeners();
+  }
+
+  Future<void> deleteRating(String ratingId) async {
+    await _makeRequest<Map<String, dynamic>>(
+      _ratingEdgeFunctionUrl,
+      'DELETE',
+      queryParams: {'id': ratingId},
+    );
     notifyListeners();
   }
 }

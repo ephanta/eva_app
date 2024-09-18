@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/date_symbol_data_local.dart'; // For locale initialization
+import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,46 +21,35 @@ Future<void> main() async {
     anonKey: dotenv.env['ANON_KEY_ACCOUNT_A']!,
   );
 
-  // Initialize date formatting for the German locale
   await initializeDateFormatting('de_DE', null);
   print('Date formatting for German initialized');
 
   final supabase = Supabase.instance.client;
 
-  // Fetch the current session and JWT token
-  final session = Supabase.instance.client.auth.currentSession;
+  final session = supabase.auth.currentSession;
   final jwtToken = session?.accessToken;
 
   if (jwtToken != null) {
-    print('JWT Token: $jwtToken');  // Print the JWT token to the console
+    print('JWT Token: $jwtToken');
   } else {
     print('No JWT token found. User may not be authenticated.');
   }
 
   runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (_) => DataProvider(supabase),
-        ),
-      ],
+    ChangeNotifierProvider(
+      create: (_) => DataProvider(supabase),
       child: const FamilyFeastApp(),
     ),
   );
 }
 
-class FamilyFeastApp extends StatefulWidget {
+class FamilyFeastApp extends StatelessWidget {
   const FamilyFeastApp({Key? key}) : super(key: key);
 
   @override
-  _FamilyFeastAppState createState() => _FamilyFeastAppState();
-}
-
-class _FamilyFeastAppState extends State<FamilyFeastApp> {
-  final _appRouter = AppRouter();
-
-  @override
   Widget build(BuildContext context) {
+    final _appRouter = AppRouter();
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'FamilyFeast',

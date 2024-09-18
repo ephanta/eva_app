@@ -1,10 +1,9 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:image_picker/image_picker.dart';
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
-import '../widgets/navigation/app_bar_custom.dart';
-import 'package:image_picker/image_picker.dart'; // For selecting images
 
 @RoutePage()
 class ProfileScreen extends StatefulWidget {
@@ -19,15 +18,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool _isEditing = false;
   late TextEditingController _usernameController;
   late TextEditingController _dietaryNoteController;
-  String _avatarUrl = ''; // Directly storing the avatar URL
-  List<String> _dietaryNotes = ['keine']; // List to store dietary notes with default ["keine"]
+  String _avatarUrl = '';
+  List<String> _dietaryNotes = ['keine'];
 
   @override
   void initState() {
     super.initState();
     _dataProvider = Provider.of<DataProvider>(context, listen: false);
     _usernameController = TextEditingController();
-    _dietaryNoteController = TextEditingController(); // Controller for dietary notes input
+    _dietaryNoteController = TextEditingController();
     _loadUserProfile();
   }
 
@@ -38,7 +37,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _usernameController.text = profile['username'] ?? '';
         _avatarUrl = profile['avatar_url'] ?? '';
 
-        // Fetch dietary notes, if empty, use default ["keine"]
         final dietaryNotes = profile['hinweise_zur_ernaehrung']?.toString().split(',') ?? [];
         _dietaryNotes = dietaryNotes.isNotEmpty && dietaryNotes.first.trim() != ''
             ? dietaryNotes.map((note) => note.trim()).toList()
@@ -48,27 +46,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error loading profile: $e')),
       );
-    }
-  }
-
-  Future<void> _pickAvatarImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      try {
-        final newAvatarUrl = await _dataProvider.uploadAvatar(pickedFile.path);
-        setState(() {
-          _avatarUrl = newAvatarUrl;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile picture updated successfully.')),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating avatar: $e')),
-        );
-      }
     }
   }
 
@@ -84,17 +61,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 radius: 50,
                 backgroundImage: _avatarUrl.isNotEmpty
                     ? NetworkImage(_avatarUrl)
-                    : null, // Only display avatar if URL is valid
-                backgroundColor: _avatarUrl.isEmpty
-                    ? Colors.grey[300]
-                    : Colors.transparent, // Default color for placeholder
-                child: _avatarUrl.isEmpty
-                    ? const Icon(
-                  Icons.person,
-                  size: 50,
-                  color: Colors.white,
-                ) // Placeholder icon
-                    : null,
+                    : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                backgroundColor: Colors.transparent,
               ),
             ),
             const SizedBox(height: 10),
@@ -115,7 +83,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   label: Text(note),
                   deleteIcon: const Icon(Icons.close),
                   onDeleted: note == 'keine'
-                      ? null // Do not allow deletion of "keine"
+                      ? null
                       : () {
                     _removeDietaryNote(note);
                   },
@@ -145,11 +113,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _addDietaryNotes(String notes) async {
     setState(() {
-      // Add new notes, splitting by comma, and trim whitespace
       _dietaryNotes.addAll(
           notes.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty));
-      _dietaryNotes.remove('keine'); // Remove "keine" if there are new entries
-      _dietaryNoteController.clear(); // Clear input after submission
+      _dietaryNotes.remove('keine');
+      _dietaryNoteController.clear();
     });
 
     await _updateDietaryNotesInDatabase();
@@ -159,7 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() {
       _dietaryNotes.remove(note);
       if (_dietaryNotes.isEmpty) {
-        _dietaryNotes = ['keine']; // Reset to default if empty
+        _dietaryNotes = ['keine'];
       }
     });
 
@@ -168,13 +135,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _updateDietaryNotesInDatabase() async {
     try {
-      // Prepare the dietary notes as a single string
       String notesString = _dietaryNotes.join(',');
-      await _dataProvider.updateDietaryNotes(notesString); // Update database
+      await _dataProvider.updateDietaryNotes(notesString);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating dietary notes: $e')),
       );
+    }
+  }
+
+  Future<void> _pickAvatarImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      try {
+        final newAvatarUrl = await _dataProvider.uploadAvatar(pickedFile.path);
+        setState(() {
+          _avatarUrl = newAvatarUrl;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated successfully.')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating avatar: $e')),
+        );
+      }
     }
   }
 
@@ -183,12 +170,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       children: [
         _buildActionButton('Manage Households', Icons.home, () {
           // Navigate to Manage Households
+          // context.router.push(const ManageHouseholdsRoute()); // Uncomment when implemented
         }),
         _buildActionButton('My Ratings', Icons.star, () {
           // Navigate to Ratings
+          // context.router.push(const MyRatingsRoute()); // Uncomment when implemented
         }),
         _buildActionButton('Recipe Management', Icons.book, () {
-          AutoRouter.of(context).push(const RecipeManagementRoute());
+          context.router.push(const RecipeManagementRoute());
         }),
       ],
     );
@@ -247,7 +236,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _logout() {
     _dataProvider.signOut();
-    AutoRouter.of(context).replace(const AuthRoute());
+    context.router.replace(const AuthRoute());
   }
 
   @override
@@ -260,18 +249,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const AppBarCustom(
-        showArrow: true,
-        showHome: true,
-        showProfile: true,
-      ),
+      appBar: AppBar(title: const Text('Profil')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text('Profil', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 20),
             _buildProfileSection(),
             const SizedBox(height: 20),
             _buildActionButtons(),

@@ -239,10 +239,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       transitionDuration: const Duration(milliseconds: 300),
       transitionBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
         return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 1),
-            end: Offset.zero,
-          ).animate(animation),
+          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(animation),
           child: child,
         );
       },
@@ -300,18 +297,17 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                 final household = snapshot.data!;
                 Color householdColor;
                 try {
-                  householdColor = Color(
-                    int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000,
-                  );
+                  householdColor = Color(int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
                 } catch (e) {
                   householdColor = Colors.grey;
                 }
 
-                return Center(
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
+                      const SizedBox(height: 20),
                       Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
@@ -340,27 +336,33 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                             return const CircularProgressIndicator();
                           } else if (snapshot.hasError) {
                             return Text('Fehler: ${snapshot.error}');
-                          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          } else
+                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
                             return const Text('Keine Mitglieder gefunden.');
                           } else {
-                            final List<Map<String, dynamic>> members = snapshot.data!;
+                            final List<Map<String, dynamic>> members = snapshot
+                                .data!;
                             return Column(
                               children: members
                                   .map(
-                                    (member) => ListTile(
-                                  title: Center(
-                                    child: Text(
-                                      member['username'] ?? 'Unbekanntes Mitglied',
-                                      style: const TextStyle(color: Colors.black),
+                                    (member) =>
+                                    ListTile(
+                                      title: Center(
+                                        child: Text(
+                                          member['username'] ??
+                                              'Unbekanntes Mitglied',
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                      ),
+                                      subtitle: Center(
+                                        child: Text(
+                                          member['role'] ?? '',
+                                          style: const TextStyle(
+                                              color: Colors.black),
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  subtitle: Center(
-                                    child: Text(
-                                      member['role'] ?? '',
-                                      style: const TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                ),
                               )
                                   .toList(),
                             );
@@ -372,13 +374,16 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         icon: const Icon(Icons.copy),
                         label: const Text('Einladungscode kopieren'),
                         onPressed: () {
-                          Clipboard.setData(ClipboardData(text: household['invite_code'] ?? ''));
+                          Clipboard.setData(ClipboardData(
+                              text: household['invite_code'] ?? ''));
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Einladungscode kopiert')),
+                            const SnackBar(
+                                content: Text('Einladungscode kopiert')),
                           );
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const Spacer(),
+                      // This pushes everything above towards the top
                       if (userRole == 'admin') ...[
                         ElevatedButton.icon(
                           icon: const Icon(Icons.edit),
@@ -387,6 +392,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                             _showEditHouseholdDialog(context, household);
                           },
                         ),
+                        const SizedBox(height: 10),
+                        // Add spacing between buttons
                         ElevatedButton.icon(
                           icon: const Icon(Icons.delete),
                           label: const Text('Haushalt löschen'),
@@ -404,7 +411,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                           },
                         ),
                       ],
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
+                      // Add space between buttons and bottom of the screen
                     ],
                   ),
                 );
@@ -424,3 +432,4 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
     );
   }
 }
+

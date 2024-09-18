@@ -38,11 +38,66 @@ async function validateAndGetUserId(token) {
   }
 }
 
+// Get profile data (Database D)
+async function handleGetRequest(userId) {
+  const { data, error } = await supabase
+    .from("profil")
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching profile:", error);
+    throw { message: "Error fetching profile", status: 400 };
+  }
+
+  // Ensure the dietary notes are returned as a string
+  if (data.hinweise_zur_ernaehrung && Array.isArray(data.hinweise_zur_ernaehrung)) {
+    data.hinweise_zur_ernaehrung = data.hinweise_zur_ernaehrung.join(',') || 'keine';
+  }
+
+  return data;
+}
+
+// Update profile data (Database D)
+async function handlePutRequest(body, userId) {
+  const { username, avatar_url, hinweise_zur_ernaehrung } = body;
+
+  // Prepare the update object
+  const updateData = {};
+
+  if (username !== undefined) updateData.username = username;
+  if (avatar_url !== undefined) updateData.avatar_url = avatar_url;
+
+  if (hinweise_zur_ernaehrung !== undefined) {
+    // Ensure hinweise_zur_ernaehrung is a string (comma-separated)
+    updateData.hinweise_zur_ernaehrung = Array.isArray(hinweise_zur_ernaehrung)
+      ? hinweise_zur_ernaehrung.join(',')
+      : hinweise_zur_ernaehrung || 'keine'; // Default to 'keine'
+  }
+
+  updateData.updated_at = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("profil")
+    .update(updateData)
+    .eq("user_id", userId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating profile:", error);
+    throw { message: "Error updating profile", status: 400 };
+  }
+
+  return data;
+}
+
 // Main function for handling requests
 Deno.serve(async (req) => {
   const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, PUT, OPTIONS",
     "Access-Control-Allow-Headers": "Authorization, Content-Type",
   };
 
@@ -52,7 +107,6 @@ Deno.serve(async (req) => {
 
   try {
     const { method } = req;
-    const url = new URL(req.url);
 
     // Extract authorization token
     const authHeader = req.headers.get("Authorization");
@@ -69,7 +123,7 @@ Deno.serve(async (req) => {
     let result;
     switch (method) {
       case "GET":
-        result = await handleGetRequest(url, userId);
+        result = await handleGetRequest(userId);
         break;
       case "PUT":
         const putBody = await req.json();
@@ -83,48 +137,14 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json; charset=UTF-8" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
     });
   } catch (error) {
     console.error("Request error:", error);
     return new Response(JSON.stringify({ error: error.message || "Internal Server Error" }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json; charset=UTF-8" },
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: error.status || 500,
     });
   }
 });
-
-// Get profile data (Database D)
-async function handleGetRequest(url, userId) {
-  const { data, error } = await supabase
-    .from("profil")
-    .select("*")
-    .eq("user_id", userId)
-    .single();
-
-  if (error) {
-    console.error("Error fetching profile:", error);
-    throw { message: "Error fetching profile", status: 400 };
-  }
-
-  return data;
-}
-
-// Update profile data (Database D)
-async function handlePutRequest(body, userId) {
-  const { username, avatar_url, bio, allergies } = body;
-
-  // Check if 'allergies' is an array; if not, convert it to one
-  const parsedAllergies = Array.isArray(allergies) ? allergies : [];
-
-  const { data, error } = await supabase
-    .from("profil")
-    .update({ username, avatar_url, bio, allergies: parsedAllergies })
-    .eq("user_id", userId)
-    .select();
-
-  if (error) throw { message: "Error updating profile", status: 400 };
-
-  return data;
-}

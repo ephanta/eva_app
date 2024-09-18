@@ -50,6 +50,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
         _recipes = recipes;
         _isLoading = false;
       });
+      print('Loaded wochenplan: $_wochenplan'); // Debug print
     } catch (e) {
       print('Error loading data: $e');
       setState(() => _isLoading = false);
@@ -98,6 +99,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
         context: context,
         builder: (BuildContext context) {
           String selectedMealType = _mealTypes[0];
+          Map<String, dynamic>? selectedRecipe;
+
           return StatefulBuilder(
             builder: (context, setState) {
               return AlertDialog(
@@ -127,26 +130,14 @@ class _PlannerScreenState extends State<PlannerScreen> {
                             return ListTile(
                               title: Text(recipe['name'] ?? 'Unbekanntes Rezept'),
                               subtitle: Text(recipe['beschreibung'] ?? ''),
-                              onTap: () async {
-                                if (_selectedDay != null) {
-                                  try {
-                                    await _dataProvider.addOrUpdateMealPlan(
-                                      widget.householdId,
-                                      _selectedDay!.toIso8601String(),
-                                      selectedMealType == 'fruehstueck' ? recipe['id'] : null,
-                                      selectedMealType == 'mittagessen' ? recipe['id'] : null,
-                                      selectedMealType == 'abendessen' ? recipe['id'] : null,
-                                    );
-                                    await _loadData(); // Refresh after selecting recipe
-                                    Navigator.of(context).pop(); // Close the dialog
-                                  } catch (e) {
-                                    print('Error adding recipe: $e');
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Fehler beim Hinzufügen des Rezepts: $e')),
-                                    );
-                                  }
-                                }
+                              onTap: () {
+                                setState(() {
+                                  selectedRecipe = recipe;
+                                });
                               },
+                              selected: selectedRecipe != null &&
+                                  selectedRecipe!['id'] == recipe['id'],
+                              selectedTileColor: Colors.grey[200],
                             );
                           }).toList(),
                         ),
@@ -156,10 +147,48 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                    onPressed: () => Navigator.of(context).pop(),
                     child: Text("Abbrechen"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (_selectedDay != null && selectedRecipe != null) {
+                        try {
+                          final currentPlan = _wochenplan[_selectedDay!.toIso8601String().split('T')[0]] ?? {};
+                          final updatedMeals = {
+                            'fruehstueck_rezept_id': selectedMealType == 'fruehstueck' ? selectedRecipe!['id'] : currentPlan['fruehstueck_rezept_id'],
+                            'mittagessen_rezept_id': selectedMealType == 'mittagessen' ? selectedRecipe!['id'] : currentPlan['mittagessen_rezept_id'],
+                            'abendessen_rezept_id': selectedMealType == 'abendessen' ? selectedRecipe!['id'] : currentPlan['abendessen_rezept_id'],
+                          };
+
+                          if (currentPlan.isEmpty) {
+                            await _dataProvider.addMealPlan(
+                              widget.householdId,
+                              _selectedDay!.toIso8601String().split('T')[0],
+                              updatedMeals['fruehstueck_rezept_id'],
+                              updatedMeals['mittagessen_rezept_id'],
+                              updatedMeals['abendessen_rezept_id'],
+                            );
+                          } else {
+                            await _dataProvider.updateMealPlan(
+                              widget.householdId,
+                              _selectedDay!.toIso8601String().split('T')[0],
+                              updatedMeals['fruehstueck_rezept_id'],
+                              updatedMeals['mittagessen_rezept_id'],
+                              updatedMeals['abendessen_rezept_id'],
+                            );
+                          }
+                          await _loadData(); // Refresh the planner with the updated recipe
+                          Navigator.of(context).pop(); // Close the dialog
+                        } catch (e) {
+                          print('Error adding recipe: $e');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Fehler beim Hinzufügen des Rezepts: $e')),
+                          );
+                        }
+                      }
+                    },
+                    child: Text("Bestätigen"),
                   ),
                 ],
               );
@@ -176,7 +205,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
   }
 
   void _navigateToRecipeCreation(BuildContext context) {
-    AutoRouter.of(context).push(RecipeManagementRoute()).then((_) {
+    context.router.push(RecipeManagementRoute()).then((_) {
       _loadData();
       Navigator.of(context).pop();
     });
@@ -207,7 +236,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
             lastDay: DateTime.utc(2030, 12, 31),
             focusedDay: _focusedDay,
             selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-            onDaySelected: (selectedDay, focusedDay,) {
+            onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 _selectedDay = selectedDay;
                 _focusedDay = focusedDay;
@@ -240,8 +269,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
           SizedBox(height: 20),
           Expanded(
             child: _selectedDay != null
-                ? _wochenplan.containsKey(_selectedDay!.toIso8601String())
-                ? _zeigeTagesplan(_wochenplan[_selectedDay!.toIso8601String()]!)
+                ? _wochenplan.containsKey(_selectedDay!.toIso8601String().split('T')[0])
+                ? _zeigeTagesplan(_wochenplan[_selectedDay!.toIso8601String().split('T')[0]]!)
                 : Center(child: Text("Keine Rezepte für diesen Tag."))
                 : Center(child: Text("Bitte wählen Sie einen Tag aus.")),
           ),
@@ -257,12 +286,15 @@ class _PlannerScreenState extends State<PlannerScreen> {
   }
 
   Widget _zeigeTagesplan(Map<String, String?> tagesplan) {
+    print('Showing tagesplan for: $tagesplan'); // Debug print
     return ListView.builder(
       itemCount: _mealTypes.length,
       itemBuilder: (context, index) {
         final mealType = _mealTypes[index];
         final recipeId = tagesplan['${mealType}_rezept_id'];
-        return _zeigeRezept(mealType, recipeId != null ? _getRecipeById(recipeId) : null);
+        print('$mealType recipe ID: $recipeId'); // Debug print
+        return _zeigeRezept(
+            mealType, recipeId != null ? _getRecipeById(recipeId) : null);
       },
     );
   }
@@ -270,7 +302,12 @@ class _PlannerScreenState extends State<PlannerScreen> {
   Map<String, dynamic>? _getRecipeById(String recipeId) {
     return _recipes.firstWhere(
           (recipe) => recipe['id'] == recipeId,
-      orElse: () => {'id': '', 'name': 'Unbekanntes Rezept', 'beschreibung': '', 'zutaten': []},
+      orElse: () => {
+        'id': '',
+        'name': 'Unbekanntes Rezept',
+        'beschreibung': '',
+        'zutaten': []
+      },
     );
   }
 
@@ -299,14 +336,22 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 onPressed: () async {
                   if (_selectedDay != null) {
                     try {
-                      await _dataProvider.addOrUpdateMealPlan(
+                      final currentPlan = _wochenplan[_selectedDay!.toIso8601String().split('T')[0]] ?? {};
+                      final updatedMeals = {
+                        'fruehstueck_rezept_id': mealType == 'fruehstueck' ? null : currentPlan['fruehstueck_rezept_id'],
+                        'mittagessen_rezept_id': mealType == 'mittagessen' ? null : currentPlan['mittagessen_rezept_id'],
+                        'abendessen_rezept_id': mealType == 'abendessen' ? null : currentPlan['abendessen_rezept_id'],
+                      };
+
+                      await _dataProvider.updateMealPlan(
                         widget.householdId,
-                        _selectedDay!.toIso8601String(),
-                        mealType == 'fruehstueck' ? null : _wochenplan[_selectedDay!.toIso8601String()]!['fruehstueck_rezept_id'],
-                        mealType == 'mittagessen' ? null : _wochenplan[_selectedDay!.toIso8601String()]!['mittagessen_rezept_id'],
-                        mealType == 'abendessen' ? null : _wochenplan[_selectedDay!.toIso8601String()]!['abendessen_rezept_id'],
+                        _selectedDay!.toIso8601String().split('T')[0],
+                        updatedMeals['fruehstueck_rezept_id'],
+                        updatedMeals['mittagessen_rezept_id'],
+                        updatedMeals['abendessen_rezept_id'],
                       );
-                      await _loadData();
+                      await _loadData(); // Refresh the data
+                      setState(() {}); // Trigger a rebuild
                     } catch (e) {
                       print('Error removing recipe: $e');
                       ScaffoldMessenger.of(context).showSnackBar(

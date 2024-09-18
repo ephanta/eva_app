@@ -17,7 +17,7 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 const supabaseAuth = createClient(authUrl, authKey);
 
 // Function to validate token and extract user ID
-async function validateAndGetUserId(token) {
+async function validateAndGetUserId(token: string) {
   try {
     const [, payload] = decode(token);
     const userId = payload.sub;
@@ -76,8 +76,7 @@ Deno.serve(async (req) => {
         break;
       case "PUT":
         const putBody = await req.json();
-        const datum = url.searchParams.get("datum");
-        result = await handlePutRequest(putBody, datum, userId);
+        result = await handlePutRequest(putBody, userId, url);
         break;
       case "DELETE":
         const deleteDatum = url.searchParams.get("datum");
@@ -104,7 +103,7 @@ Deno.serve(async (req) => {
 });
 
 // Handle GET request: Retrieve the entire meal plan for a household
-async function handleGetRequest(userId, url) {
+async function handleGetRequest(userId: string, url: URL) {
   const householdId = url.searchParams.get("household_id");
   if (!householdId) {
     throw { message: "Missing household_id parameter", status: 400 };
@@ -118,9 +117,9 @@ async function handleGetRequest(userId, url) {
 
   if (error) throw { message: error.message, status: 500 };
 
-  const planMap = {};
+  const planMap: { [key: string]: any } = {};
   for (const entry of data) {
-    planMap[entry.datum] = {
+    planMap[entry.datum.split('T')[0]] = {
       fruehstueck_rezept_id: entry.fruehstueck_rezept_id || null,
       mittagessen_rezept_id: entry.mittagessen_rezept_id || null,
       abendessen_rezept_id: entry.abendessen_rezept_id || null,
@@ -131,7 +130,7 @@ async function handleGetRequest(userId, url) {
 }
 
 // Handle POST request: Add or update recipes for a specific day
-async function handlePostRequest(body, userId) {
+async function handlePostRequest(body: any, userId: string) {
   console.log("Incoming body:", body);
   const { household_id, datum, fruehstueck_rezept_id, mittagessen_rezept_id, abendessen_rezept_id } = body;
 
@@ -139,29 +138,35 @@ async function handlePostRequest(body, userId) {
     throw { message: "Missing required fields: household_id or datum", status: 400 };
   }
 
-  // Insert or update the data while handling null values
+  const formattedDate = datum.split('T')[0];
+
   const { data, error } = await supabase
     .from("wochenplaner")
-    .upsert({
-      household_id,
-      datum,
-      fruehstueck_rezept_id: fruehstueck_rezept_id || null,
-      mittagessen_rezept_id: mittagessen_rezept_id || null,
-      abendessen_rezept_id: abendessen_rezept_id || null,
-      benutzer_id: userId,
-    })
-    .select();
+    .upsert(
+      {
+        household_id,
+        datum: formattedDate,
+        fruehstueck_rezept_id: fruehstueck_rezept_id || null,
+        mittagessen_rezept_id: mittagessen_rezept_id || null,
+        abendessen_rezept_id: abendessen_rezept_id || null,
+        benutzer_id: userId,
+      },
+      { onConflict: ['household_id', 'datum'], returning: "minimal" }
+    );
 
   console.log("Supabase response:", data, error);
 
   if (error) throw { message: error.message, status: 500 };
-  return { data, status: 201 };
+  return { message: "Meal plan updated successfully", status: 200 };
 }
 
 // Handle PUT request: Update meals for a specific day
-async function handlePutRequest(body, datum, userId) {
-  if (!datum) {
-    throw { message: "Missing required parameter: datum", status: 400 };
+async function handlePutRequest(body: any, userId: string, url: URL) {
+  const householdId = url.searchParams.get("household_id");
+  const datum = url.searchParams.get("datum");
+
+  if (!householdId || !datum) {
+    throw { message: "Missing required parameters: household_id or datum", status: 400 };
   }
 
   const { fruehstueck_rezept_id, mittagessen_rezept_id, abendessen_rezept_id } = body;
@@ -173,16 +178,16 @@ async function handlePutRequest(body, datum, userId) {
       mittagessen_rezept_id: mittagessen_rezept_id || null,
       abendessen_rezept_id: abendessen_rezept_id || null,
     })
+    .eq("household_id", householdId)
     .eq("datum", datum)
-    .eq("benutzer_id", userId)
     .select();
 
   if (error) throw { message: error.message, status: 500 };
-  return { data };
+  return { data, status: 200 };
 }
 
 // Handle DELETE request: Remove a plan for a specific day
-async function handleDeleteRequest(datum, userId) {
+async function handleDeleteRequest(datum: string | null, userId: string) {
   if (!datum) {
     throw { message: "Missing required parameter: datum", status: 400 };
   }

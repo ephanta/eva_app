@@ -51,6 +51,11 @@ class AppRouter extends $AppRouter {
       guards: [AuthGuard()],
     ),
     AutoRoute(
+      page: RatingRoute.page,
+      path: '/rating/:recipeId/:recipeName',
+      guards: [AuthGuard()],
+    ),
+    AutoRoute(
       page: ShoppingHistoryRoute.page,
       path: '/detail/:id/shopping-history',
       guards: [AuthGuard()],
