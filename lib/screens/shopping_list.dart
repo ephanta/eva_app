@@ -58,11 +58,19 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           }
           return Column(
             children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  'Einkaufsliste',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              // Title Styling
+              Container(
+                color: const Color(0xFFFDF6F4), // Light background color
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Center(
+                  child: const Text(
+                    'Einkaufsliste',
+                    style: TextStyle(
+                      fontSize: 22, // Matching font size
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF3A0B01), // Matching text color
+                    ),
+                  ),
                 ),
               ),
               Expanded(
@@ -71,10 +79,22 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   itemBuilder: (context, index) {
                     final item = shoppingList[index];
                     return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      color: const Color(0xFFFDD9CF), // Matching card background color
                       child: ListTile(
-                        title: Text(item['item_name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('Menge: ${item['amount']}'),
+                        title: Text(
+                          item['item_name'],
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF3A0B01), // Consistent text color
+                          ),
+                        ),
+                        subtitle: Text(
+                          'Menge: ${item['amount']}',
+                          style: const TextStyle(color: Color(0xFF3A0B01)),
+                        ),
                         leading: IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
                           onPressed: () => _deleteItem(item['id']),
@@ -94,9 +114,9 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                   icon: const Icon(Icons.delete_sweep),
                   label: const Text('Einkaufsliste leeren'),
                   onPressed: _clearShoppingList,
-                  style: ElevatedButton.styleFrom(
+                  style: _elevatedButtonStyle(
                     backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
+                    textColor: Colors.white,
                   ),
                 ),
               ),
@@ -110,15 +130,28 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           await _showAddItemDialog(context);
           setState(() {});
         },
-        child: const Icon(Icons.add),
+        backgroundColor: const Color(0xFFFDD9CF), // Consistent FAB background color
+        child: const Icon(Icons.add, color: Color(0xFF3A0B01)), // Consistent icon color
       ),
       bottomNavigationBar: BottomNavBarCustom(
         pageType: PageType.shoppingList,
-        showHome: true,
+        showHome: false,
         showShoppingList: false,
-        showShoppingHistory:true,
-        showPlanner: false,
+        showShoppingHistory: true,
+        showPlanner: true,
         householdId: widget.householdId,
+      ),
+    );
+  }
+
+  // Method to define consistent button styles
+  ButtonStyle _elevatedButtonStyle({required Color backgroundColor, required Color textColor}) {
+    return ElevatedButton.styleFrom(
+      backgroundColor: backgroundColor,
+      foregroundColor: textColor,
+      minimumSize: const Size(double.infinity, 50),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
       ),
     );
   }
@@ -265,6 +298,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
           ],
         );
       },
-    ) ?? false; // Return false if dialog is dismissed
+    ) ??
+        false; // Return false if dialog is dismissed
   }
 }

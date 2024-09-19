@@ -109,9 +109,20 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
             : Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Einkaufshistorie',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            // Title Styling
+            Container(
+              color: const Color(0xFFFDF6F4),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: const Center(
+                child: Text(
+                  'Einkaufshistorie',
+                  style: TextStyle(
+                    fontSize: 22, // Matching font size
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF3A0B01), // Matching text color
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             _purchasedItems.isEmpty
@@ -129,8 +140,8 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _clearPurchasedList,
-        backgroundColor: Colors.red,
-        child: const Icon(Icons.delete_sweep),
+        backgroundColor: Colors.red, // Matching red color for delete actions
+        child: const Icon(Icons.delete_sweep, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavBarCustom(
         pageType: PageType.homeDetail,
@@ -150,12 +161,16 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: const Color(0xFFFDD9CF),
+      color: const Color(0xFFFDD9CF), // Consistent background color for cards
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         title: Text(
           item['item_name'] ?? '',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3A0B01)),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF3A0B01), // Matching text color
+          ),
         ),
         subtitle: Text('Menge: ${item['amount']} - Gekauft am $formattedDate'),
         trailing: Row(

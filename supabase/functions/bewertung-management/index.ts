@@ -19,10 +19,17 @@ const supabaseAuth = createClient(authUrl, authKey); // Database A
 // Validate token and extract user ID
 async function validateAndGetUserId(token: string) {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
+    console.log('Validating token...');
+    const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
+    if (error) {
+      console.error('Error validating token:', error);
       throw new Error("Invalid token: Unable to validate.");
     }
+    if (!user) {
+      console.error('No user found for token');
+      throw new Error("Invalid token: No user found.");
+    }
+    console.log('Token validated successfully for user:', user.id);
     return user.id;
   } catch (error) {
     console.error("Token validation error:", error);
@@ -46,8 +53,11 @@ Deno.serve(async (req) => {
     const { method } = req;
     const url = new URL(req.url);
 
+    console.log(`Received ${method} request to ${url.pathname}`);
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      console.error("Missing or invalid Authorization header");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -77,6 +87,8 @@ Deno.serve(async (req) => {
         throw { message: "Method not allowed", status: 405 };
     }
 
+    console.log(`Request processed successfully. Result:`, result);
+
     return new Response(JSON.stringify(result), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: result.status || 200,
@@ -92,22 +104,58 @@ Deno.serve(async (req) => {
 
 // Handle GET request: Retrieve ratings
 async function handleGetRequest(url: URL, userId: string) {
+  console.log('Handling GET request');
+  const action = url.searchParams.get("action");
   const recipeId = url.searchParams.get("recipe_id");
-  if (!recipeId) {
-    throw { message: "Missing recipe_id parameter", status: 400 };
+
+  if (action === "get_user_ratings") {
+    try {
+      const { data, error } = await supabase
+        .from("Bewertung")
+        .select(`
+          *,
+          recipe_id
+        `)
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      // Fetch recipe names separately
+      const recipeIds = data.map(rating => rating.recipe_id);
+      const { data: recipes, error: recipesError } = await supabase
+        .from("Rezepte")
+        .select("id, name")
+        .in("id", recipeIds);
+
+      if (recipesError) throw recipesError;
+
+      // Merge recipe names into ratings
+      const ratingsWithRecipeNames = data.map(rating => ({
+        ...rating,
+        recipe_name: recipes.find(recipe => recipe.id === rating.recipe_id)?.name || 'Unknown Recipe'
+      }));
+
+      return { data: ratingsWithRecipeNames };
+    } catch (error) {
+      console.error("Error fetching user ratings:", error);
+      throw { message: error.message, status: 500 };
+    }
+  } else if (recipeId) {
+    const { data, error } = await supabase
+      .from("Bewertung")
+      .select("*")
+      .eq("recipe_id", recipeId);
+
+    if (error) throw { message: error.message, status: 500 };
+    return { data };
   }
 
-  const { data, error } = await supabase
-    .from("Bewertung")
-    .select("*")
-    .eq("recipe_id", recipeId);
-
-  if (error) throw { message: error.message, status: 500 };
-  return { data };
+  throw { message: "Invalid request", status: 400 };
 }
 
 // Handle POST request: Add a new rating
 async function handlePostRequest(body: any, userId: string) {
+  console.log('Handling POST request', body);
   const { recipe_id, rating, comment } = body;
 
   if (!recipe_id || !rating) {
@@ -125,6 +173,7 @@ async function handlePostRequest(body: any, userId: string) {
 
 // Handle PUT request: Update an existing rating
 async function handlePutRequest(body: any, userId: string) {
+  console.log('Handling PUT request', body);
   const { id, rating, comment } = body;
 
   if (!id) {
@@ -144,6 +193,7 @@ async function handlePutRequest(body: any, userId: string) {
 
 // Handle DELETE request: Remove a rating
 async function handleDeleteRequest(url: URL, userId: string) {
+  console.log('Handling DELETE request');
   const id = url.searchParams.get("id");
 
   if (!id) {

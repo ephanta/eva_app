@@ -43,6 +43,10 @@ class DataProvider with ChangeNotifier {
     final token = await _getAuthToken();
     if (token == null) throw Exception('User not authenticated');
 
+    print('Making request to: $url');
+    print('Method: $method');
+    print('Token: ${token.substring(0, 10)}...');
+
     final headers = {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json; charset=UTF-8',
@@ -71,24 +75,34 @@ class DataProvider with ChangeNotifier {
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         final responseData = json.decode(response.body);
+        print('Request Success: ${response.statusCode} - $responseData');
         return responseData as T;
       } else {
+        print('Request Failed: ${response.statusCode} - ${response.body}');
         throw Exception('Request failed with status: ${response.statusCode}. ${response.body}');
       }
     } catch (e) {
+      print('Error during request: $e');
       throw Exception('Failed to perform request: $e');
     }
   }
 
   // Profile-related methods
   Future<Map<String, dynamic>> fetchUserProfile() async {
-    final response = await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'GET');
-    return response;
+    try {
+      return await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'GET');
+    } catch (e) {
+      throw Exception('Failed to fetch profile: $e');
+    }
   }
 
   Future<void> updateProfile(Map<String, dynamic> profileData) async {
-    await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'PUT', body: profileData);
-    notifyListeners();
+    try {
+      await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'PUT', body: profileData);
+      notifyListeners();
+    } catch (e) {
+      throw Exception('Failed to update profile: $e');
+    }
   }
 
   Future<void> signOut() async {
@@ -101,7 +115,16 @@ class DataProvider with ChangeNotifier {
     final body = {
       'hinweise_zur_ernaehrung': notes,
     };
-    await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'PUT', body: body);
+
+    try {
+      print('Sending PUT request with body: $body');
+      await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'PUT', body: body);
+      print('Dietary notes successfully updated');
+    } catch (e) {
+      print('Failed to update dietary notes: $e');
+      throw Exception('Error updating dietary notes');
+    }
+
     notifyListeners();
   }
 
@@ -119,6 +142,10 @@ class DataProvider with ChangeNotifier {
     }
 
     final publicUrl = _client.storage.from('avatars').getPublicUrl('$userId/$fileName');
+    if (publicUrl == null || publicUrl.isEmpty) {
+      throw Exception('Failed to retrieve public URL for avatar');
+    }
+
     return publicUrl;
   }
 
@@ -137,8 +164,28 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateRecipe(String recipeId, Map<String, dynamic> recipe) async {
-    await _makeRequest<Map<String, dynamic>>(_recipeEdgeFunctionUrl, 'PUT', body: {'id': recipeId, ...recipe});
+  Future<void> updateRecipe(String recipeId, Map<String, dynamic> updatedRecipe) async {
+    final token = await _client.auth.currentSession?.accessToken;
+
+    if (token == null) throw Exception('User not authenticated');
+
+    final headers = {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json; charset=UTF-8',
+    };
+
+    final uri = Uri.parse('$_recipeEdgeFunctionUrl?id=$recipeId');
+
+    final response = await http.put(
+      uri,
+      headers: headers,
+      body: json.encode(updatedRecipe),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update recipe: ${response.body}');
+    }
+
     notifyListeners();
   }
 
@@ -331,16 +378,23 @@ class DataProvider with ChangeNotifier {
   }
 
   Future<void> addRating(String recipeId, int rating, String? comment) async {
-    await _makeRequest<Map<String, dynamic>>(
-      _ratingEdgeFunctionUrl,
-      'POST',
-      body: {
-        'recipe_id': recipeId,
-        'rating': rating,
-        'comment': comment,
-      },
-    );
-    notifyListeners();
+    try {
+      print('Attempting to add rating for recipe: $recipeId');
+      final response = await _makeRequest<Map<String, dynamic>>(
+        _ratingEdgeFunctionUrl,
+        'POST',
+        body: {
+          'recipe_id': recipeId,
+          'rating': rating,
+          'comment': comment,
+        },
+      );
+      print('Rating added successfully: $response');
+      notifyListeners();
+    } catch (e) {
+      print('Error adding rating: $e');
+      throw Exception('Failed to add rating: $e');
+    }
   }
 
   Future<void> updateRating(String ratingId, int rating, String? comment) async {
@@ -363,6 +417,25 @@ class DataProvider with ChangeNotifier {
       queryParams: {'id': ratingId},
     );
     notifyListeners();
+  }
+
+  Future<List<Map<String, dynamic>>> getUserRatings() async {
+    try {
+      final response = await _makeRequest<Map<String, dynamic>>(
+        _ratingEdgeFunctionUrl,
+        'GET',
+        queryParams: {'action': 'get_user_ratings'},
+      );
+      if (response['data'] is List) {
+        return List<Map<String, dynamic>>.from(response['data']);
+      } else {
+        print('Unexpected response format for user ratings: $response');
+        return [];
+      }
+    } catch (e) {
+      print('Error fetching user ratings: $e');
+      return [];
+    }
   }
 }
 

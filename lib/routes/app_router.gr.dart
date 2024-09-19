@@ -38,6 +38,8 @@ abstract class $AppRouter extends _i10.RootStackRouter {
         child: _i2.HomeDetailScreen(
           key: args.key,
           householdId: args.householdId,
+          preloadedHouseholdData: args.preloadedHouseholdData,
+          preloadedUserRole: args.preloadedUserRole,
         ),
       );
     },
@@ -64,7 +66,8 @@ abstract class $AppRouter extends _i10.RootStackRouter {
       );
     },
     RatingRoute.name: (routeData) {
-      final args = routeData.argsAs<RatingRouteArgs>();
+      final args = routeData.argsAs<RatingRouteArgs>(
+          orElse: () => const RatingRouteArgs());
       return _i10.AutoRoutePage<dynamic>(
         routeData: routeData,
         child: _i6.RatingScreen(
@@ -123,12 +126,16 @@ class HomeDetailRoute extends _i10.PageRouteInfo<HomeDetailRouteArgs> {
   HomeDetailRoute({
     _i11.Key? key,
     required String householdId,
+    required Map<String, dynamic> preloadedHouseholdData,
+    required String preloadedUserRole,
     List<_i10.PageRouteInfo>? children,
   }) : super(
           HomeDetailRoute.name,
           args: HomeDetailRouteArgs(
             key: key,
             householdId: householdId,
+            preloadedHouseholdData: preloadedHouseholdData,
+            preloadedUserRole: preloadedUserRole,
           ),
           initialChildren: children,
         );
@@ -143,15 +150,21 @@ class HomeDetailRouteArgs {
   const HomeDetailRouteArgs({
     this.key,
     required this.householdId,
+    required this.preloadedHouseholdData,
+    required this.preloadedUserRole,
   });
 
   final _i11.Key? key;
 
   final String householdId;
 
+  final Map<String, dynamic> preloadedHouseholdData;
+
+  final String preloadedUserRole;
+
   @override
   String toString() {
-    return 'HomeDetailRouteArgs{key: $key, householdId: $householdId}';
+    return 'HomeDetailRouteArgs{key: $key, householdId: $householdId, preloadedHouseholdData: $preloadedHouseholdData, preloadedUserRole: $preloadedUserRole}';
   }
 }
 
@@ -226,8 +239,8 @@ class ProfileRoute extends _i10.PageRouteInfo<void> {
 class RatingRoute extends _i10.PageRouteInfo<RatingRouteArgs> {
   RatingRoute({
     _i11.Key? key,
-    required String recipeId,
-    required String recipeName,
+    String? recipeId,
+    String? recipeName,
     List<_i10.PageRouteInfo>? children,
   }) : super(
           RatingRoute.name,
@@ -248,15 +261,15 @@ class RatingRoute extends _i10.PageRouteInfo<RatingRouteArgs> {
 class RatingRouteArgs {
   const RatingRouteArgs({
     this.key,
-    required this.recipeId,
-    required this.recipeName,
+    this.recipeId,
+    this.recipeName,
   });
 
   final _i11.Key? key;
 
-  final String recipeId;
+  final String? recipeId;
 
-  final String recipeName;
+  final String? recipeName;
 
   @override
   String toString() {

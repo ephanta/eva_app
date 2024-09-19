@@ -4,6 +4,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:image_picker/image_picker.dart';
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
+import '../widgets/navigation/app_bar_custom.dart';
 
 @RoutePage()
 class ProfileScreen extends StatefulWidget {
@@ -51,6 +52,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildProfileSection() {
     return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: const Color(0xFFFDD9CF),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -65,45 +69,82 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 backgroundColor: Colors.transparent,
               ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 16),
             TextField(
               controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Username'),
+              decoration: InputDecoration(
+                labelText: 'Username',
+                labelStyle: const TextStyle(color: Color(0xFF3A0B01)),
+                enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                ),
+              ),
               enabled: _isEditing,
+              style: const TextStyle(color: Color(0xFF3A0B01)),
             ),
-            const SizedBox(height: 10),
-            Text(
+            const SizedBox(height: 16),
+            const Text(
               'Hinweise zur Ernährung:',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF3A0B01),
+              ),
             ),
             Wrap(
               spacing: 8,
               children: _dietaryNotes.map((note) {
                 return Chip(
-                  label: Text(note),
-                  deleteIcon: const Icon(Icons.close),
-                  onDeleted: note == 'keine'
-                      ? null
-                      : () {
-                    _removeDietaryNote(note);
-                  },
+                  label: Text(note, style: const TextStyle(color: Color(0xFF3A0B01))),
+                  backgroundColor: const Color(0xFFFFECE7),
+                  deleteIcon: const Icon(Icons.close, color: Color(0xFF3A0B01)),
+                  onDeleted: note == 'keine' ? null : () => _removeDietaryNote(note),
                 );
               }).toList(),
             ),
             if (_isEditing) ...[
               TextField(
                 controller: _dietaryNoteController,
-                decoration: const InputDecoration(labelText: 'Neue Hinweise zur Ernährung'),
+                decoration: InputDecoration(
+                  labelText: 'Neue Hinweise zur Ernährung',
+                  labelStyle: const TextStyle(color: Color(0xFF3A0B01)),
+                  enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                  ),
+                ),
+                style: const TextStyle(color: Color(0xFF3A0B01)),
                 onSubmitted: (value) {
                   if (value.isNotEmpty) {
                     _addDietaryNotes(value);
                   }
                 },
               ),
+              ElevatedButton(
+                onPressed: () {
+                  if (_dietaryNoteController.text.isNotEmpty) {
+                    _addDietaryNotes(_dietaryNoteController.text);
+                  }
+                },
+                child: const Text('Add New Dietary Note', style: TextStyle(color: Color(0xFF3A0B01))),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFECE7),
+                ),
+              ),
             ],
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _isEditing ? _saveProfile : _startEditing,
-              child: Text(_isEditing ? 'Speichern' : 'Profil bearbeiten'),
+              child: Text(_isEditing ? 'Speichern' : 'Profil bearbeiten', style: const TextStyle(color: Color(0xFF3A0B01))),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFECE7),
+                minimumSize: const Size(double.infinity, 50),
+              ),
             ),
           ],
         ),
@@ -113,9 +154,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _addDietaryNotes(String notes) async {
     setState(() {
-      _dietaryNotes.addAll(
-          notes.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty));
-      _dietaryNotes.remove('keine');
+      final newNotes = notes.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+      if (_dietaryNotes.contains('keine')) {
+        _dietaryNotes.remove('keine');
+      }
+
+      _dietaryNotes.addAll(newNotes);
       _dietaryNoteController.clear();
     });
 
@@ -135,8 +180,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _updateDietaryNotesInDatabase() async {
     try {
-      String notesString = _dietaryNotes.join(',');
+      String notesString = _dietaryNotes.contains('keine') ? '' : _dietaryNotes.join(',');
       await _dataProvider.updateDietaryNotes(notesString);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dietary notes updated successfully')),
+      );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error updating dietary notes: $e')),
@@ -168,15 +216,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildActionButtons() {
     return Column(
       children: [
-        _buildActionButton('Manage Households', Icons.home, () {
-          // Navigate to Manage Households
-          // context.router.push(const ManageHouseholdsRoute()); // Uncomment when implemented
+        _buildActionButton('Haushalte verwalten', Icons.home, () {
+          // Dummy button, do nothing for now
         }),
-        _buildActionButton('My Ratings', Icons.star, () {
-          // Navigate to Ratings
-          // context.router.push(const MyRatingsRoute()); // Uncomment when implemented
+        _buildActionButton('Meine Bewertungen', Icons.star, () {
+          context.router.push(RatingRoute());
         }),
-        _buildActionButton('Recipe Management', Icons.book, () {
+        _buildActionButton('Rezeptverwaltung', Icons.book, () {
           context.router.push(const RecipeManagementRoute());
         }),
       ],
@@ -187,11 +233,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton.icon(
-        icon: Icon(icon),
-        label: Text(label),
+        icon: Icon(icon, color: const Color(0xFF3A0B01)),  // Matching icon color
+        label: Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF3A0B01), // Matching text color
+          ),
+        ),
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 50),
+          backgroundColor: const Color(0xFFFFECE7), // Matching background color
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), // Rounded look
+          ),
+          minimumSize: const Size(double.infinity, 50), // Ensuring full-width buttons
+          elevation: 2, // Optional elevation for a more distinct button
         ),
       ),
     );
@@ -216,14 +272,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _saveProfile() async {
     try {
+      String dietaryNotesString = _dietaryNotes.contains('keine') ? '' : _dietaryNotes.join(',');
+
       final updatedProfile = {
         'username': _usernameController.text,
         'avatar_url': _avatarUrl,
+        'hinweise_zur_ernaehrung': dietaryNotesString,
       };
+
       await _dataProvider.updateProfile(updatedProfile);
+
       setState(() {
         _isEditing = false;
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Profil erfolgreich aktualisiert')),
       );
@@ -249,19 +311,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profil')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _buildProfileSection(),
-            const SizedBox(height: 20),
-            _buildActionButtons(),
-            const SizedBox(height: 20),
-            _buildLogoutButton(),
-          ],
-        ),
+      appBar: const AppBarCustom(
+        showArrow: true,
+        showHome: true,
+        showProfile: false,
+      ),
+      body: Column(
+        children: [
+          Container(
+            color: const Color(0xFFFDF6F4),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child: const Text(
+                'Profil',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF3A0B01),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildProfileSection(),
+                  const SizedBox(height: 20),
+                  _buildActionButtons(),
+                  const SizedBox(height: 20),
+                  _buildLogoutButton(),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

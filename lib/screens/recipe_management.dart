@@ -46,7 +46,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     if (updatedRecipe != null) {
       try {
         await dataProvider.updateRecipe(_recipes[index]['id'], updatedRecipe);
-        _loadUserRecipes();
+        _loadUserRecipes(); // Reload after update
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Fehler beim Aktualisieren des Rezepts: $e')),
@@ -59,7 +59,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     final dataProvider = Provider.of<DataProvider>(context, listen: false);
     try {
       await dataProvider.deleteRecipe(_recipes[index]['id']);
-      _loadUserRecipes();
+      _loadUserRecipes(); // Reload after deletion
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Fehler beim Löschen des Rezepts: $e')),
@@ -73,7 +73,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     if (newRecipe != null) {
       try {
         await dataProvider.addNewRecipe(newRecipe);
-        _loadUserRecipes();
+        _loadUserRecipes(); // Reload after adding
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Fehler beim Hinzufügen des Rezepts: $e')),
@@ -171,6 +171,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
                     }
                   },
                   child: Text(isEditing ? 'Aktualisieren' : 'Hinzufügen'),
+                  style: _elevatedButtonStyle(),
                 ),
               ],
             );
@@ -185,49 +186,49 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
     TextEditingController quantityController = TextEditingController();
 
     return showDialog<Map<String, String>>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Zutat hinzufügen'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Zutatenname'),
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Zutat hinzufügen'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: 'Zutatenname'),
+                ),
+                TextField(
+                  controller: quantityController,
+                  decoration: const InputDecoration(labelText: 'Menge'),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('Abbrechen'),
               ),
-              TextField(
-                controller: quantityController,
-                decoration: const InputDecoration(labelText: 'Menge'),
+              ElevatedButton(
+                onPressed: () {
+                  if (nameController.text.isNotEmpty && quantityController.text.isNotEmpty) {
+                    Navigator.pop(context, {
+                      'name': nameController.text,
+                      'menge': quantityController.text,
+                    });
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Bitte füllen Sie alle Felder aus.')),
+                    );
+                  }
+                },
+                child: const Text('Hinzufügen'),
+                style: _elevatedButtonStyle(),
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: const Text('Abbrechen'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (nameController.text.isNotEmpty && quantityController.text.isNotEmpty) {
-                  Navigator.pop(context, {
-                    'name': nameController.text,
-                    'menge': quantityController.text,
-                  });
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Bitte füllen Sie alle Felder aus.')),
-                  );
-                }
-              },
-              child: const Text('Hinzufügen'),
-            ),
-          ],
-        );
-      },
-    );
+          );
+        });
   }
 
   @override
@@ -243,11 +244,21 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center, // Center alignment for the column
           children: [
-            const Text(
-              'Meine Rezepte',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            Container(
+              color: const Color(0xFFFDF6F4), // Matching background color for consistency
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: Text(
+                  'Meine Rezepte',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF3A0B01),
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
             _recipes.isEmpty
@@ -282,7 +293,11 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
         contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
         title: Text(
           _recipes[index]['name'] ?? '',
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF3A0B01)),
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF3A0B01),
+          ),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,6 +331,17 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  ButtonStyle _elevatedButtonStyle() {
+    return ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFFFFECE7),
+      foregroundColor: const Color(0xFF3A0B01),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      minimumSize: const Size(120, 40),
     );
   }
 }

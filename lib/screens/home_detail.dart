@@ -12,37 +12,197 @@ import '../widgets/navigation/bottom_navigation_bar.dart';
 @RoutePage()
 class HomeDetailScreen extends StatefulWidget {
   final String householdId;
+  final Map<String, dynamic> preloadedHouseholdData; // Preload household data
+  final String preloadedUserRole; // Preload user role
 
-  const HomeDetailScreen({Key? key, required this.householdId}) : super(key: key);
+  const HomeDetailScreen({
+    Key? key,
+    required this.householdId,
+    required this.preloadedHouseholdData,
+    required this.preloadedUserRole,
+  }) : super(key: key);
 
   @override
   State<HomeDetailScreen> createState() => _HomeDetailScreenState();
 }
 
 class _HomeDetailScreenState extends State<HomeDetailScreen> {
-  String? userRole;
-  bool _isLoading = true;
+  bool _isLoading = false;
 
   @override
-  void initState() {
-    super.initState();
-    _fetchUserRole();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: const AppBarCustom(
+        showArrow: true,
+        showHome: true,
+        showProfile: true,
+      ),
+      body: _isLoading
+          ? _buildSkeletonLoader()
+          : AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        child: _buildContent(context),
+      ),
+      bottomNavigationBar: BottomNavBarCustom(
+        pageType: PageType.homeDetail,
+        showHome: false,
+        showShoppingList: true,
+        showShoppingHistory: false,
+        showPlanner: true,
+        householdId: widget.householdId,
+      ),
+    );
   }
 
-  Future<void> _fetchUserRole() async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+  Widget _buildContent(BuildContext context) {
+    final household = widget.preloadedHouseholdData;
+    final userRole = widget.preloadedUserRole;
+    Color householdColor;
     try {
-      final role = await dataProvider.getUserRoleInHousehold(widget.householdId);
-      setState(() {
-        userRole = role;
-        _isLoading = false;
-      });
+      householdColor = Color(int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      _showErrorSnackBar('Fehler beim Abrufen der Benutzerrolle: $e');
+      householdColor = Colors.grey;
     }
+
+    return Column(
+      children: [
+        // Title of the Household with the same style as 'Meine Bewertungen'
+        Container(
+          color: const Color(0xFFFDF6F4), // Light background similar to 'Meine Bewertungen'
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Center(
+            child: Text(
+              household['name'] ?? 'Unbenannter Haushalt',
+              style: const TextStyle(
+                fontSize: 22, // Matching font size to 'Meine Bewertungen'
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF3A0B01), // Matching color to 'Meine Bewertungen'
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CircleAvatar(
+            radius: 30,
+            backgroundColor: householdColor,
+          ),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          'Mitglieder:',
+          style: TextStyle(fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        FutureBuilder<List<Map<String, dynamic>>>(
+          future: Provider.of<DataProvider>(context, listen: false).getHouseholdMembers(widget.householdId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const CircularProgressIndicator();
+            } else if (snapshot.hasError) {
+              return Text('Fehler: ${snapshot.error}');
+            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return const Text('Keine Mitglieder gefunden.');
+            } else {
+              final members = snapshot.data!;
+              return Column(
+                children: members
+                    .map(
+                      (member) => ListTile(
+                    title: Center(
+                      child: Text(
+                        member['username'] ?? 'Unbekanntes Mitglied',
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                    ),
+                    subtitle: Center(
+                      child: Text(
+                        member['role'] ?? '',
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                    ),
+                  ),
+                )
+                    .toList(),
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 20),
+        ElevatedButton.icon(
+          icon: const Icon(Icons.copy),
+          label: const Text('Einladungscode kopieren'),
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: household['invite_code'] ?? ''));
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Einladungscode kopiert')),
+            );
+          },
+          style: _elevatedButtonStyle(),
+        ),
+        const Spacer(),
+        if (userRole == 'admin') ...[
+          ElevatedButton.icon(
+            icon: const Icon(Icons.edit),
+            label: const Text('Haushalt bearbeiten'),
+            onPressed: () {
+              _showEditHouseholdDialog(context, household);
+            },
+            style: _elevatedButtonStyle(),
+          ),
+          const SizedBox(height: 10),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.delete),
+            label: const Text('Haushalt löschen'),
+            onPressed: () {
+              _showDeleteConfirmationDialog(context);
+            },
+            style: _elevatedButtonStyle(),
+          ),
+        ],
+        if (userRole == 'member') ...[
+          ElevatedButton.icon(
+            icon: const Icon(Icons.exit_to_app),
+            label: const Text('Haushalt verlassen'),
+            onPressed: () {
+              _showLeaveConfirmationDialog(context);
+            },
+            style: _elevatedButtonStyle(),
+          ),
+        ],
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+
+  ButtonStyle _elevatedButtonStyle() {
+    return ElevatedButton.styleFrom(
+      backgroundColor: const Color(0xFFFFECE7),
+      foregroundColor: const Color(0xFF3A0B01),
+      minimumSize: const Size(double.infinity, 50),
+      padding: const EdgeInsets.symmetric(vertical: 14.0),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonLoader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        const SizedBox(height: 20),
+        Container(height: 30, width: 200, color: Colors.grey[300]),
+        const SizedBox(height: 20),
+        CircleAvatar(radius: 30, backgroundColor: Colors.grey[300]),
+        const SizedBox(height: 20),
+        Container(height: 20, width: 100, color: Colors.grey[300]),
+        const SizedBox(height: 20),
+        const CircularProgressIndicator(),
+        const Spacer(),
+      ],
+    );
   }
 
   Future<void> _showDeleteConfirmationDialog(BuildContext context) async {
@@ -228,6 +388,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         }
                       },
                       child: const Text('Speichern'),
+                      style: _elevatedButtonStyle(),
                     ),
                   ],
                 ),
@@ -271,165 +432,4 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       },
     );
   }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const AppBarCustom(
-        showArrow: true,
-        showHome: true,
-        showProfile: true,
-      ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Consumer<DataProvider>(
-        builder: (context, dataProvider, child) {
-          return FutureBuilder<Map<String, dynamic>>(
-            future: dataProvider.getCurrentHousehold(widget.householdId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Error: ${snapshot.error}'));
-              } else if (!snapshot.hasData) {
-                return const Center(child: Text('Keine Daten gefunden.'));
-              } else {
-                final household = snapshot.data!;
-                Color householdColor;
-                try {
-                  householdColor = Color(int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
-                } catch (e) {
-                  householdColor = Colors.grey;
-                }
-
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      const SizedBox(height: 20),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          '${household['name'] ?? 'Unbenannter Haushalt'}',
-                          style: Theme.of(context).textTheme.headlineMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: CircleAvatar(
-                          radius: 30,
-                          backgroundColor: householdColor,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        'Mitglieder:',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                        textAlign: TextAlign.center,
-                      ),
-                      FutureBuilder<List<Map<String, dynamic>>>(
-                        future: dataProvider.getHouseholdMembers(widget.householdId),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          } else if (snapshot.hasError) {
-                            return Text('Fehler: ${snapshot.error}');
-                          } else
-                          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                            return const Text('Keine Mitglieder gefunden.');
-                          } else {
-                            final List<Map<String, dynamic>> members = snapshot
-                                .data!;
-                            return Column(
-                              children: members
-                                  .map(
-                                    (member) =>
-                                    ListTile(
-                                      title: Center(
-                                        child: Text(
-                                          member['username'] ??
-                                              'Unbekanntes Mitglied',
-                                          style: const TextStyle(
-                                              color: Colors.black),
-                                        ),
-                                      ),
-                                      subtitle: Center(
-                                        child: Text(
-                                          member['role'] ?? '',
-                                          style: const TextStyle(
-                                              color: Colors.black),
-                                        ),
-                                      ),
-                                    ),
-                              )
-                                  .toList(),
-                            );
-                          }
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.copy),
-                        label: const Text('Einladungscode kopieren'),
-                        onPressed: () {
-                          Clipboard.setData(ClipboardData(
-                              text: household['invite_code'] ?? ''));
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Einladungscode kopiert')),
-                          );
-                        },
-                      ),
-                      const Spacer(),
-                      // This pushes everything above towards the top
-                      if (userRole == 'admin') ...[
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.edit),
-                          label: const Text('Haushalt bearbeiten'),
-                          onPressed: () {
-                            _showEditHouseholdDialog(context, household);
-                          },
-                        ),
-                        const SizedBox(height: 10),
-                        // Add spacing between buttons
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.delete),
-                          label: const Text('Haushalt löschen'),
-                          onPressed: () {
-                            _showDeleteConfirmationDialog(context);
-                          },
-                        ),
-                      ],
-                      if (userRole == 'member') ...[
-                        ElevatedButton.icon(
-                          icon: const Icon(Icons.exit_to_app),
-                          label: const Text('Haushalt verlassen'),
-                          onPressed: () {
-                            _showLeaveConfirmationDialog(context);
-                          },
-                        ),
-                      ],
-                      const SizedBox(height: 20),
-                      // Add space between buttons and bottom of the screen
-                    ],
-                  ),
-                );
-              }
-            },
-          );
-        },
-      ),
-      bottomNavigationBar: BottomNavBarCustom(
-        pageType: PageType.homeDetail,
-        showHome: false,
-        showShoppingList: true,
-        showShoppingHistory: false,
-        showPlanner: true,
-        householdId: widget.householdId,
-      ),
-    );
-  }
 }
-
