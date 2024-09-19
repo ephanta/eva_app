@@ -19,7 +19,7 @@ Die App ist für Android und iOS verfügbar, wurde jedoch nur auf Android getest
 - Registrierung und Anmeldung mit E-Mail und Passwort
 - Erstellung und Beitreten eines Haushalts
 - Erstellung und Bearbeitung von Rezepten
-- Planung von Mahlzeiten für die Woche
+- Planung von Mahlzeiten für die Woche per Kalender
 - Bewertung von Rezepten
 - Einkaufsliste mit automatischer Aktualisierung für alle Haushaltsmitglieder
 
