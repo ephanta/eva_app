@@ -40,14 +40,44 @@ async function validateAndGetUserId(token: string): Promise<string> {
   }
 }
 
-// Get profile data (Database D)
+// Get or create profile data (Database D)
 async function handleGetRequest(userId: string) {
   try {
+    // Fetch the user profile from the "profil" table
     const { data, error } = await supabase
       .from("profil")
       .select("*")
       .eq("user_id", userId)
       .single();
+
+    if (error && error.code === 'PGRST116') {
+      // If the profile does not exist, create a default one
+      console.log("Profile not found for user. Creating default profile...");
+
+      const defaultProfile = {
+        user_id: userId,
+        username: "New User",
+        avatar_url: "",
+        hinweise_zur_ernaehrung: "keine", // Default dietary notes
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Insert the new default profile
+      const { data: newProfile, error: insertError } = await supabase
+        .from("profil")
+        .insert(defaultProfile)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Error creating default profile:", insertError);
+        throw { message: "Error creating default profile", status: 500 };
+      }
+
+      console.log("Default profile created successfully for user:", userId);
+      return newProfile; // Return the newly created profile
+    }
 
     if (error) {
       console.error("Error fetching profile:", error);
@@ -60,15 +90,15 @@ async function handleGetRequest(userId: string) {
     }
 
     console.log("Profile data fetched successfully for user:", userId);
-
     return data;
+
   } catch (error) {
     console.error("Get request failed:", error);
     throw error;
   }
 }
 
-// Update profile data (Database D)
+// Update or create profile data (Database D)
 async function handlePutRequest(body: any, userId: string) {
   try {
     const { username, avatar_url, hinweise_zur_ernaehrung } = body;
@@ -88,24 +118,48 @@ async function handlePutRequest(body: any, userId: string) {
 
     updateData.updated_at = new Date().toISOString();
 
-    console.log("Attempting to update profile for user:", userId);
+    console.log("Attempting to update or create profile for user:", userId);
     console.log("Update data:", updateData);
 
-    const { data, error } = await supabase
+    // First, try to update the profile
+    const { data: updateProfile, error: updateError, count } = await supabase
       .from("profil")
       .update(updateData)
       .eq("user_id", userId)
       .select()
       .single();
 
-    if (error) {
-      console.error("Error updating profile:", error);
-      throw { message: "Error updating profile", status: 400 };
+    if (count === 0 || updateError) {
+      // If no rows were updated (no profile exists), insert a new profile
+      console.log("No profile found, creating a new one...");
+
+      const newProfile = {
+        user_id: userId,
+        username: username || "New User",
+        avatar_url: avatar_url || "",
+        hinweise_zur_ernaehrung: hinweise_zur_ernaehrung || "keine",
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data: insertProfile, error: insertError } = await supabase
+        .from("profil")
+        .insert(newProfile)
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error("Error creating new profile:", insertError);
+        throw { message: "Error creating new profile", status: 500 };
+      }
+
+      console.log("New profile created successfully for user:", userId);
+      return insertProfile; // Return the newly created profile
     }
 
     console.log("Profile updated successfully for user:", userId);
+    return updateProfile;
 
-    return data;
   } catch (error) {
     console.error("Put request failed:", error);
     throw error;

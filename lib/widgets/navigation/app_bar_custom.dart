@@ -30,7 +30,7 @@ class AppBarCustom extends StatelessWidget implements PreferredSizeWidget {
       actions: [
         if (showHome)
           IconButton(
-            icon: const Icon(Icons.home),
+            icon: const Icon(Icons.other_houses),
             onPressed: () {
               AutoRouter.of(context).push(const HomeRoute());
             },
