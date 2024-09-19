@@ -110,54 +110,8 @@ async function handleGetRequest(url: URL, userId: string) {
     throw { message: "Missing action parameter", status: 400 };
   }
 
-  if (action === "get_details" && householdId) {
-    const { data, error } = await supabase
-      .from("households")
-      .select("id, name, color, invite_code, owner_id")
-      .eq("id", householdId)
-      .single();
-
-    if (error) throw { message: error.message, status: 400 };
-
-    return { data };
-  } else if (action === "get_role" && householdId) {
-    const { data, error } = await supabase
-      .from("household_member")
-      .select("role")
-      .eq("household_id", householdId)
-      .eq("member_uid", userId)
-      .single();
-
-    if (error) throw { message: error.message, status: 400 };
-    return { role: data.role };
-  } else if (action === "get_members" && householdId) {
-    const { data: members, error: membersError } = await supabase
-      .from("household_member")
-      .select("member_uid, role")
-      .eq("household_id", householdId);
-
-    if (membersError) throw { message: membersError.message, status: 400 };
-
-    const userIds = members.map((member) => member.member_uid);
-    const { data: userData, error: userDataError } = await supabase
-      .from("profil")
-      .select("user_id, username")
-      .in("user_id", userIds);
-
-    if (userDataError) throw { message: "Error fetching user data from profil table", status: 500 };
-
-    const transformedMembers = members.map((member) => {
-      const user = userData.find((u) => u.user_id === member.member_uid);
-      return {
-        member_uid: member.member_uid,
-        role: member.role,
-        username: user?.username || "Benutzer",
-      };
-    });
-
-    return { members: transformedMembers };
-  } else if (action === "get_households_by_user") {
-    // Fetch households where the user is a member, admin, or owner
+  if (action === "get_households_by_user") {
+    // Fetch households where the user is a member or admin
     const { data: households, error: householdError } = await supabase
       .from("household_member")
       .select("household_id")
@@ -176,8 +130,59 @@ async function handleGetRequest(url: URL, userId: string) {
     if (detailsError) throw { message: detailsError.message, status: 400 };
 
     return { data: householdDetails };
+  } else if (householdId) {
+    // Actions that require householdId
+    if (action === "get_details") {
+      const { data, error } = await supabase
+        .from("households")
+        .select("id, name, color, invite_code, owner_id")
+        .eq("id", householdId)
+        .single();
+
+      if (error) throw { message: error.message, status: 400 };
+
+      return { data };
+    } else if (action === "get_role") {
+      const { data, error } = await supabase
+        .from("household_member")
+        .select("role")
+        .eq("household_id", householdId)
+        .eq("member_uid", userId)
+        .single();
+
+      if (error) throw { message: error.message, status: 400 };
+      return { role: data.role };
+    } else if (action === "get_members") {
+      const { data: members, error: membersError } = await supabase
+        .from("household_member")
+        .select("member_uid, role")
+        .eq("household_id", householdId);
+
+      if (membersError) throw { message: membersError.message, status: 400 };
+
+      const userIds = members.map((member) => member.member_uid);
+      const { data: userData, error: userDataError } = await supabase
+        .from("profil")
+        .select("user_id, username")
+        .in("user_id", userIds);
+
+      if (userDataError) throw { message: "Error fetching user data from profil table", status: 500 };
+
+      const transformedMembers = members.map((member) => {
+        const user = userData.find((u) => u.user_id === member.member_uid);
+        return {
+          member_uid: member.member_uid,
+          role: member.role,
+          username: user?.username || "Benutzer",
+        };
+      });
+
+      return { members: transformedMembers };
+    } else {
+      throw { message: "Invalid action", status: 400 };
+    }
   } else {
-    throw { message: "Invalid action", status: 400 };
+    throw { message: "Missing household_id parameter for this action", status: 400 };
   }
 }
 
@@ -232,11 +237,19 @@ async function handlePostRequest(body, userId) {
     if (error) throw { message: error.message, status: 400 };
 
     const householdId = data[0].id;
+
+    // Use 'admin' role for the household creator
+    const creatorRole = 'admin';
+
     const { error: memberError } = await supabase
       .from("household_member")
-      .insert([{ household_id: householdId, member_uid: userId, role: "owner" }]); // Owner role
+      .insert([{ household_id: householdId, member_uid: userId, role: creatorRole }]);
 
-    if (memberError) throw { message: memberError.message, status: 400 };
+    if (memberError) {
+      // If insertion fails, attempt to delete the created household
+      await supabase.from("households").delete().eq("id", householdId);
+      throw { message: `Failed to add member: ${memberError.message}`, status: 400 };
+    }
 
     return { data, status: 201 };
   }
@@ -258,7 +271,7 @@ async function handlePutRequest(householdId, body, userId) {
     .single();
 
   if (roleError) throw { message: roleError.message, status: 403 };
-  if (roleData.role !== "owner" && roleData.role !== "admin") throw { message: "Unauthorized", status: 403 };
+  if (roleData.role !== "admin") throw { message: "Unauthorized", status: 403 };
 
   const { data, error } = await supabase
     .from("households")
@@ -296,7 +309,7 @@ async function handleDeleteRequest(householdId, userId, action) {
       .single();
 
     if (roleError) throw { message: roleError.message, status: 403 };
-    if (roleData.role !== "owner") throw { message: "Unauthorized", status: 403 };
+    if (roleData.role !== "admin") throw { message: "Unauthorized", status: 403 };
 
     const { error } = await supabase
       .from("households")
