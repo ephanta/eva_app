@@ -58,6 +58,46 @@ class _PlannerScreenState extends State<PlannerScreen> {
     }
   }
 
+  Future<void> _removeRecipeFromPlan(String mealType) async {
+    if (_selectedDay == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Kein Tag ausgewählt")),
+      );
+      return;
+    }
+
+    final selectedDate = _selectedDay!.toIso8601String().split('T')[0];
+
+    try {
+      final currentPlan = _wochenplan[selectedDate] ?? {};
+      final updatedMeals = {
+        'fruehstueck_rezept_id': mealType == 'fruehstueck' ? null : currentPlan['fruehstueck_rezept_id'],
+        'mittagessen_rezept_id': mealType == 'mittagessen' ? null : currentPlan['mittagessen_rezept_id'],
+        'abendessen_rezept_id': mealType == 'abendessen' ? null : currentPlan['abendessen_rezept_id'],
+      };
+
+      await _dataProvider.updateMealPlan(
+        widget.householdId,
+        selectedDate,
+        updatedMeals['fruehstueck_rezept_id'],
+        updatedMeals['mittagessen_rezept_id'],
+        updatedMeals['abendessen_rezept_id'],
+      );
+
+      setState(() {
+        _wochenplan[selectedDate] = updatedMeals;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Rezept erfolgreich entfernt')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Entfernen des Rezepts: $e')),
+      );
+    }
+  }
+
   void _showAddRecipeDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -421,7 +461,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 children: [
                   ElevatedButton(
                     onPressed: () async {
-                      // Recipe removal logic
+                      await _removeRecipeFromPlan(mealType); // Call this to handle removal
                     },
                     child: const Text("Rezept entfernen"),
                     style: _elevatedButtonStyle(),
