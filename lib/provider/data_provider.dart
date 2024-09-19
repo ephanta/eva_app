@@ -219,7 +219,12 @@ class DataProvider with ChangeNotifier {
   }
 
   Future<List<Map<String, dynamic>>> fetchUserHouseholds() async {
-    final response = await _makeRequest<Map<String, dynamic>>(_householdEdgeFunctionUrl, 'GET', queryParams: {'action': 'get_households_by_owner'});
+    final response = await _makeRequest<Map<String, dynamic>>(
+      _householdEdgeFunctionUrl,
+      'GET',
+      queryParams: {'action': 'get_households_by_user'},
+    );
+
     if (response['data'] is List) {
       return List<Map<String, dynamic>>.from(response['data']);
     } else {

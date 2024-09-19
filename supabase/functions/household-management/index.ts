@@ -156,15 +156,26 @@ async function handleGetRequest(url: URL, userId: string) {
     });
 
     return { members: transformedMembers };
-  } else if (action === "get_households_by_owner") {
+  } else if (action === "get_households_by_user") {
+    // Fetch households where the user is a member, admin, or owner
     const { data: households, error: householdError } = await supabase
-      .from("households")
-      .select("id, name, color")
-      .eq("owner_id", userId);
+      .from("household_member")
+      .select("household_id")
+      .eq("member_uid", userId);
 
     if (householdError) throw { message: householdError.message, status: 400 };
 
-    return { data: households };
+    const householdIds = households.map((h) => h.household_id);
+
+    // Fetch household details for the relevant household IDs
+    const { data: householdDetails, error: detailsError } = await supabase
+      .from("households")
+      .select("id, name, color")
+      .in("id", householdIds);
+
+    if (detailsError) throw { message: detailsError.message, status: 400 };
+
+    return { data: householdDetails };
   } else {
     throw { message: "Invalid action", status: 400 };
   }
@@ -215,7 +226,7 @@ async function handlePostRequest(body, userId) {
 
     const { data, error } = await supabase
       .from("households")
-      .insert([{ name, color, owner_id: userId, invite_code: generatedInviteCode, user_id: userId }])
+      .insert([{ name, color, owner_id: userId, invite_code: generatedInviteCode }])
       .select();
 
     if (error) throw { message: error.message, status: 400 };
@@ -223,7 +234,7 @@ async function handlePostRequest(body, userId) {
     const householdId = data[0].id;
     const { error: memberError } = await supabase
       .from("household_member")
-      .insert([{ household_id: householdId, member_uid: userId, role: "admin" }]);
+      .insert([{ household_id: householdId, member_uid: userId, role: "owner" }]); // Owner role
 
     if (memberError) throw { message: memberError.message, status: 400 };
 
@@ -247,7 +258,7 @@ async function handlePutRequest(householdId, body, userId) {
     .single();
 
   if (roleError) throw { message: roleError.message, status: 403 };
-  if (roleData.role !== "admin") throw { message: "Unauthorized", status: 403 };
+  if (roleData.role !== "owner" && roleData.role !== "admin") throw { message: "Unauthorized", status: 403 };
 
   const { data, error } = await supabase
     .from("households")
@@ -285,7 +296,7 @@ async function handleDeleteRequest(householdId, userId, action) {
       .single();
 
     if (roleError) throw { message: roleError.message, status: 403 };
-    if (roleData.role !== "admin") throw { message: "Unauthorized", status: 403 };
+    if (roleData.role !== "owner") throw { message: "Unauthorized", status: 403 };
 
     const { error } = await supabase
       .from("households")
