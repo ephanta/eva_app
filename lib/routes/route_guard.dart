@@ -2,19 +2,16 @@ import 'package:auto_route/auto_route.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app_router.gr.dart';
 
-/// {@category Routes}
-/// Schütz die Routen der App vor unautorisierten Zugriffen.
 class AuthGuard extends AutoRouteGuard {
   @override
-  Future<void> onNavigation(NavigationResolver resolver, StackRouter router) async {
-    /// Aktueller User
+  void onNavigation(NavigationResolver resolver, StackRouter router) {
     final user = Supabase.instance.client.auth.currentUser;
-
-    /// Überprüft, ob der User angemeldet ist. Falls nicht, wird er auf die Auth-Seite weitergeleitet.
-    if (user == null) {
-      router.push(const AuthRoute());
-    } else {
+    if (user != null) {
+      // If the user is authenticated, continue
       resolver.next(true);
+    } else {
+      // If the user is not authenticated, redirect to the auth page
+      router.push(const AuthRoute());
     }
   }
 }

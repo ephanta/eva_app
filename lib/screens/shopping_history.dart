@@ -8,11 +8,9 @@ import '../provider/data_provider.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 
-/// {@category Screens}
-/// Ansicht für die Einkaufshistorie-Seite
 @RoutePage()
 class ShoppingHistoryScreen extends StatefulWidget {
-  final int householdId;
+  final String householdId;
 
   const ShoppingHistoryScreen({Key? key, required this.householdId})
       : super(key: key);
@@ -21,8 +19,81 @@ class ShoppingHistoryScreen extends StatefulWidget {
   State<ShoppingHistoryScreen> createState() => _ShoppingHistoryScreenState();
 }
 
-/// Der Zustand für die EinkaufsHistorien-Seite
 class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
+  List<Map<String, dynamic>> _purchasedItems = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadShoppingHistory();
+  }
+
+  Future<void> _loadShoppingHistory() async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    try {
+      final items = await dataProvider.getShoppingList(widget.householdId);
+      setState(() {
+        _purchasedItems = items.where((item) => item['status'] == 'purchased').toList();
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Laden der Einkaufshistorie: $e')),
+      );
+    }
+  }
+
+  void _deleteItem(String itemId) async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    try {
+      await dataProvider.removeItemFromShoppingList(itemId);
+      _loadShoppingHistory();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Löschen des Eintrags: $e')),
+      );
+    }
+  }
+
+  void _addItemAgain(Map<String, dynamic> item) async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    try {
+      await dataProvider.addItemToShoppingList(widget.householdId, item['item_name'], item['amount']);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${item['item_name']} wurde der Einkaufsliste hinzugefügt.')),
+      );
+      _loadShoppingHistory();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Hinzufügen des Artikels: $e')),
+      );
+    }
+  }
+
+  Future<void> _clearPurchasedList() async {
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    setState(() => _isLoading = true);
+    try {
+      for (var item in _purchasedItems) {
+        await dataProvider.removeItemFromShoppingList(item['id'].toString());
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Einkaufshistorie erfolgreich geleert')),
+      );
+      _loadShoppingHistory();
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Löschen der Einkaufshistorie: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -31,159 +102,91 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
         showHome: true,
         showProfile: true,
       ),
-      body: Consumer<DataProvider>(
-        builder: (context, dataProvider, child) {
-          return FutureBuilder<List<Map<String, dynamic>>>(
-            future: dataProvider.getShoppingList(widget.householdId.toString()),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text('Fehler: ${snapshot.error}'));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Center(child: Text('Keine gekauften Artikel.'));
-              } else {
-                final purchasedList = snapshot.data!
-                    .where((item) => item['status'] == 'purchased')
-                    .toList();
-
-                if (purchasedList.isEmpty) {
-                  return const Center(
-                      child: Text('Die Einkaufshistorie ist leer.'));
-                }
-
-                return Column(
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.all(16.0),
-                      child: Text(
-                        'Einkaufshistorie',
-                        style: TextStyle(fontSize: 24),
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        color: Colors.orange[50],
-                        child: ListView.builder(
-                          itemCount: purchasedList.length,
-                          itemBuilder: (context, index) {
-                            final item = purchasedList[index];
-                            final DateTime checkedAt =
-                                DateTime.parse(item['checked_at']);
-                            final String formattedDate =
-                                DateFormat('dd.MM.yyyy HH:mm')
-                                    .format(checkedAt);
-
-                            return ListTile(
-                              title: Text(item['item_name']),
-                              subtitle: Text(
-                                  'Menge: ${item['amount']} - Gekauft am $formattedDate'),
-                              leading: IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  _deleteItem(item['id']);
-                                },
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.arrow_upward),
-                                onPressed: () {
-                                  _addItemAgain(item['id']);
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ElevatedButton.icon(
-                        icon: const Icon(Icons.delete_sweep),
-                        label: const Text('Einkaufshistorie leeren'),
-                        onPressed: () async {
-                          await _clearPurchasedList(
-                              dataProvider, purchasedList);
-                          setState(() {}); // UI-Update nach dem Löschen
-                        },
-                      ),
-                    ),
-                  ],
-                );
-              }
-            },
-          );
-        },
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Title Styling
+            Container(
+              color: const Color(0xFFFDF6F4),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: const Center(
+                child: Text(
+                  'Einkaufshistorie',
+                  style: TextStyle(
+                    fontSize: 22, // Matching font size
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF3A0B01), // Matching text color
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            _purchasedItems.isEmpty
+                ? const Center(child: Text('Keine gekauften Artikel vorhanden.'))
+                : Expanded(
+              child: ListView.builder(
+                itemCount: _purchasedItems.length,
+                itemBuilder: (context, index) {
+                  return _buildShoppingHistoryCard(_purchasedItems[index]);
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _clearPurchasedList,
+        backgroundColor: Colors.red, // Matching red color for delete actions
+        child: const Icon(Icons.delete_sweep, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavBarCustom(
-        pageType: PageType.shoppingHistory,
-        showHome: true,
+        pageType: PageType.homeDetail,
+        showHome: false,
         showShoppingList: true,
-        showPlanner: false,
         showShoppingHistory: false,
+        showPlanner: true,
         householdId: widget.householdId,
       ),
     );
   }
 
-  /// Löscht einen Artikel aus der Einkaufshistorie
-  Future<void> _deleteItem(int itemId) async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    try {
-      await dataProvider.removeItemFromShoppingList(
-          widget.householdId.toString(), itemId.toString());
-      setState(() {}); // Aktualisierung der UI nach dem Löschen
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Fehler beim Löschen des Eintrags: $e'),
+  Widget _buildShoppingHistoryCard(Map<String, dynamic> item) {
+    final DateTime purchasedAt = DateTime.parse(item['purchased_at']);
+    final String formattedDate = DateFormat('dd.MM.yyyy HH:mm').format(purchasedAt);
+
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: const Color(0xFFFDD9CF), // Consistent background color for cards
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        title: Text(
+          item['item_name'] ?? '',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF3A0B01), // Matching text color
+          ),
         ),
-      );
-    }
-  }
-
-  /// Fügt einen Artikel erneut zur Einkaufsliste hinzu
-  Future<void> _addItemAgain(int itemId) async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-
-    try {
-      /// Artikel aus der Historie finden
-      final item = await dataProvider.getShoppingItemById(itemId);
-
-      await dataProvider.addItemToShoppingList(
-        widget.householdId.toString(),
-        item?['item_name'],
-        item?['amount'],
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-              '${item?['item_name']} wurde der Einkaufsliste hinzugefügt.'),
+        subtitle: Text('Menge: ${item['amount']} - Gekauft am $formattedDate'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.add_shopping_cart, color: Colors.green),
+              onPressed: () => _addItemAgain(item),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _deleteItem(item['id'].toString()),
+            ),
+          ],
         ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Fehler beim Zurücksetzen des Eintrags: $e'),
-        ),
-      );
-    }
-  }
-
-  /// Löscht die gesamte Einkaufshistorie
-  Future<void> _clearPurchasedList(DataProvider dataProvider,
-      List<Map<String, dynamic>> purchasedList) async {
-    try {
-      for (var item in purchasedList) {
-        await dataProvider.removeItemFromShoppingList(
-            widget.householdId.toString(), item['id'].toString());
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Fehler beim Löschen der Einkaufshistorie: $e'),
-        ),
-      );
-    }
+      ),
+    );
   }
 }

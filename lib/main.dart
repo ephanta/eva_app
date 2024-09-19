@@ -4,61 +4,52 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-/// Die Hauptmethode für die Flutter-Anwendung.
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   try {
     await dotenv.load(fileName: '.env');
     print('.env Datei erfolgreich geladen');
   } catch (e) {
     print('Fehler beim Laden der .env Datei: $e');
   }
-  await initializeSupabase();
+
+  await Supabase.initialize(
+    url: dotenv.env['URL_ACCOUNT_A']!,
+    anonKey: dotenv.env['ANON_KEY_ACCOUNT_A']!,
+  );
+
+  await initializeDateFormatting('de_DE', null);
+  print('Date formatting for German initialized');
+
+  final supabase = Supabase.instance.client;
+
+  final session = supabase.auth.currentSession;
+  final jwtToken = session?.accessToken;
+
+  if (jwtToken != null) {
+    print('JWT Token: $jwtToken');
+  } else {
+    print('No JWT token found. User may not be authenticated.');
+  }
+
   runApp(
-    /// Initialisieren der Provider für die Datenverwaltung
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-            create: (_) => DataProvider(Supabase.instance.client)),
-      ],
+    ChangeNotifierProvider(
+      create: (_) => DataProvider(supabase),
       child: const FamilyFeastApp(),
     ),
   );
 }
 
-/// Initialisierung Supabase
-Future<void> initializeSupabase() async {
-  try {
-    await Supabase.initialize(
-      url: dotenv.env['SUPABASE_URL']!,
-      anonKey: dotenv.env['SUPABASE_KEY']!,
-    );
-    print('Supabase erfolgreich initialisiert');
-  } catch (e) {
-    print('Fehler bei der Initialisierung von Supabase: $e');
-  }
-}
-
-/// Das Root-Widget der Anwendung
-class FamilyFeastApp extends StatefulWidget {
-  const FamilyFeastApp({super.key});
-
-  @override
-  _FamilyFeastAppState createState() => _FamilyFeastAppState();
-}
-
-/// Der Zustand der FamilyFeastApp
-class _FamilyFeastAppState extends State<FamilyFeastApp> {
-  /// AppRouter für das Verwenden von Routen
-  final _appRouter = AppRouter();
-
-  @override
-  void initState() {
-    super.initState();
-  }
+class FamilyFeastApp extends StatelessWidget {
+  const FamilyFeastApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final _appRouter = AppRouter();
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'FamilyFeast',
@@ -66,8 +57,6 @@ class _FamilyFeastAppState extends State<FamilyFeastApp> {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-
-      /// Konfiguration des AppRouters
       routerConfig: _appRouter.config(),
     );
   }

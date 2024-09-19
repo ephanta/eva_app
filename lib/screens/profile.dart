@@ -1,48 +1,353 @@
-import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_auth_ui/supabase_auth_ui.dart';
-
+import 'package:provider/provider.dart';
+import 'package:auto_route/auto_route.dart';
+import 'package:image_picker/image_picker.dart';
+import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 
-/// {@category Screens}
-/// Ansicht für das Profil des angemeldeten Benutzers
 @RoutePage()
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  const ProfileScreen({Key? key}) : super(key: key);
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-/// Der Zustand für die Profil-Seite
 class _ProfileScreenState extends State<ProfileScreen> {
+  late DataProvider _dataProvider;
+  bool _isEditing = false;
+  late TextEditingController _usernameController;
+  late TextEditingController _dietaryNoteController;
+  String _avatarUrl = '';
+  List<String> _dietaryNotes = ['keine'];
+
+  @override
+  void initState() {
+    super.initState();
+    _dataProvider = Provider.of<DataProvider>(context, listen: false);
+    _usernameController = TextEditingController();
+    _dietaryNoteController = TextEditingController();
+    _loadUserProfile();
+  }
+
+  Future<void> _loadUserProfile() async {
+    try {
+      final profile = await _dataProvider.fetchUserProfile();
+      setState(() {
+        _usernameController.text = profile['username'] ?? '';
+        _avatarUrl = profile['avatar_url'] ?? '';
+
+        final dietaryNotes = profile['hinweise_zur_ernaehrung']?.toString().split(',') ?? [];
+        _dietaryNotes = dietaryNotes.isNotEmpty && dietaryNotes.first.trim() != ''
+            ? dietaryNotes.map((note) => note.trim()).toList()
+            : ['keine'];
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading profile: $e')),
+      );
+    }
+  }
+
+  Widget _buildProfileSection() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      color: const Color(0xFFFDD9CF),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: _pickAvatarImage,
+              child: CircleAvatar(
+                radius: 50,
+                backgroundImage: _avatarUrl.isNotEmpty
+                    ? NetworkImage(_avatarUrl)
+                    : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                backgroundColor: Colors.transparent,
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _usernameController,
+              decoration: InputDecoration(
+                labelText: 'Username',
+                labelStyle: const TextStyle(color: Color(0xFF3A0B01)),
+                enabledBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                ),
+                focusedBorder: const UnderlineInputBorder(
+                  borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                ),
+              ),
+              enabled: _isEditing,
+              style: const TextStyle(color: Color(0xFF3A0B01)),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Hinweise zur Ernährung:',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF3A0B01),
+              ),
+            ),
+            Wrap(
+              spacing: 8,
+              children: _dietaryNotes.map((note) {
+                return Chip(
+                  label: Text(note, style: const TextStyle(color: Color(0xFF3A0B01))),
+                  backgroundColor: const Color(0xFFFFECE7),
+                  deleteIcon: const Icon(Icons.close, color: Color(0xFF3A0B01)),
+                  onDeleted: note == 'keine' ? null : () => _removeDietaryNote(note),
+                );
+              }).toList(),
+            ),
+            if (_isEditing) ...[
+              TextField(
+                controller: _dietaryNoteController,
+                decoration: InputDecoration(
+                  labelText: 'Neue Hinweise zur Ernährung',
+                  labelStyle: const TextStyle(color: Color(0xFF3A0B01)),
+                  enabledBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                  ),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                  ),
+                ),
+                style: const TextStyle(color: Color(0xFF3A0B01)),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    _addDietaryNotes(value);
+                  }
+                },
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  if (_dietaryNoteController.text.isNotEmpty) {
+                    _addDietaryNotes(_dietaryNoteController.text);
+                  }
+                },
+                child: const Text('Add New Dietary Note', style: TextStyle(color: Color(0xFF3A0B01))),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFFFECE7),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _isEditing ? _saveProfile : _startEditing,
+              child: Text(_isEditing ? 'Speichern' : 'Profil bearbeiten', style: const TextStyle(color: Color(0xFF3A0B01))),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFFECE7),
+                minimumSize: const Size(double.infinity, 50),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _addDietaryNotes(String notes) async {
+    setState(() {
+      final newNotes = notes.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+      if (_dietaryNotes.contains('keine')) {
+        _dietaryNotes.remove('keine');
+      }
+
+      _dietaryNotes.addAll(newNotes);
+      _dietaryNoteController.clear();
+    });
+
+    await _updateDietaryNotesInDatabase();
+  }
+
+  Future<void> _removeDietaryNote(String note) async {
+    setState(() {
+      _dietaryNotes.remove(note);
+      if (_dietaryNotes.isEmpty) {
+        _dietaryNotes = ['keine'];
+      }
+    });
+
+    await _updateDietaryNotesInDatabase();
+  }
+
+  Future<void> _updateDietaryNotesInDatabase() async {
+    try {
+      String notesString = _dietaryNotes.contains('keine') ? '' : _dietaryNotes.join(',');
+      await _dataProvider.updateDietaryNotes(notesString);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dietary notes updated successfully')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error updating dietary notes: $e')),
+      );
+    }
+  }
+
+  Future<void> _pickAvatarImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      try {
+        final newAvatarUrl = await _dataProvider.uploadAvatar(pickedFile.path);
+        setState(() {
+          _avatarUrl = newAvatarUrl;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile picture updated successfully.')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating avatar: $e')),
+        );
+      }
+    }
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        _buildActionButton('Haushalte verwalten', Icons.home, () {
+          // Dummy button, do nothing for now
+        }),
+        _buildActionButton('Meine Bewertungen', Icons.star, () {
+          context.router.push(RatingRoute());
+        }),
+        _buildActionButton('Rezeptverwaltung', Icons.book, () {
+          context.router.push(const RecipeManagementRoute());
+        }),
+      ],
+    );
+  }
+
+  Widget _buildActionButton(String label, IconData icon, VoidCallback onPressed) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: ElevatedButton.icon(
+        icon: Icon(icon, color: const Color(0xFF3A0B01)),  // Matching icon color
+        label: Text(
+          label,
+          style: const TextStyle(
+            color: Color(0xFF3A0B01), // Matching text color
+          ),
+        ),
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFFECE7), // Matching background color
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20), // Rounded look
+          ),
+          minimumSize: const Size(double.infinity, 50), // Ensuring full-width buttons
+          elevation: 2, // Optional elevation for a more distinct button
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLogoutButton() {
+    return ElevatedButton(
+      onPressed: _logout,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.red,
+        minimumSize: const Size(double.infinity, 50),
+      ),
+      child: const Text('Log Out', style: TextStyle(color: Colors.white)),
+    );
+  }
+
+  void _startEditing() {
+    setState(() {
+      _isEditing = true;
+    });
+  }
+
+  Future<void> _saveProfile() async {
+    try {
+      String dietaryNotesString = _dietaryNotes.contains('keine') ? '' : _dietaryNotes.join(',');
+
+      final updatedProfile = {
+        'username': _usernameController.text,
+        'avatar_url': _avatarUrl,
+        'hinweise_zur_ernaehrung': dietaryNotesString,
+      };
+
+      await _dataProvider.updateProfile(updatedProfile);
+
+      setState(() {
+        _isEditing = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profil erfolgreich aktualisiert')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Aktualisieren des Profils: $e')),
+      );
+    }
+  }
+
+  void _logout() {
+    _dataProvider.signOut();
+    context.router.replace(const AuthRoute());
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _dietaryNoteController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const AppBarCustom(
-          showArrow: true, showHome: true, showProfile: true),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'Profil',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Supabase.instance.client.auth.signOut();
-                AutoRouter.of(context).popUntilRoot();
-                AutoRouter.of(context).replace(const AuthRoute());
-              },
+        showArrow: true,
+        showHome: true,
+        showProfile: false,
+      ),
+      body: Column(
+        children: [
+          Container(
+            color: const Color(0xFFFDF6F4),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
               child: const Text(
-                'Log Out',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                'Profil',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF3A0B01),
+                ),
               ),
-            )
-          ],
-        ),
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _buildProfileSection(),
+                  const SizedBox(height: 20),
+                  _buildActionButtons(),
+                  const SizedBox(height: 20),
+                  _buildLogoutButton(),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
