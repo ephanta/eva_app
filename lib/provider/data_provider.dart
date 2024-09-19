@@ -442,6 +442,99 @@ class DataProvider with ChangeNotifier {
       return [];
     }
   }
+
+  /// Erhalte die Einkaufsliste des Haushalts
+  Future<List<Map<String, dynamic>>> getShoppingList(String householdId) async {
+    try {
+      /// Erhalte alle Elemente der Einkaufsliste
+      final response = await _client
+          .from('shopping_list')
+          .select()
+          .eq('household_id', householdId)
+          .select();
+      return response;
+    } catch (e) {
+      throw Exception('Fehler beim Laden der Einkaufsliste: $e');
+    }
+  }
+
+  /// Erhalte die Einkaufshistorie des Haushalts
+  Future<PostgrestMap?> getShoppingItemById(int itemId) async {
+    try {
+      final response = await _client
+          .from('shopping_list')
+          .select()
+          .eq('id', itemId)
+          .single();
+
+      return response;
+    } catch (error) {
+      print('Fehler beim Abrufen des Eintrags mit der ID $itemId: $error');
+      return null;
+    }
+  }
+
+  /// Element der Einkaufsliste des Haushalts hinzufügen
+  Future<void> addItemToShoppingList(
+    String householdId,
+    String itemName,
+    String amount,
+  ) async {
+    try {
+      /// Füge das Element zur Einkaufsliste hinzu
+      await _client.from('shopping_list').insert({
+        'household_id': householdId,
+        'item_name': itemName,
+        'amount': amount,
+        'status': 'pending',
+      }).select();
+
+      notifyListeners();
+    } catch (e) {
+      throw Exception(
+          'Fehler beim Hinzufügen des Elements zur Einkaufsliste: $e');
+    }
+  }
+
+  /// Element der Einkaufsliste des Haushalts entfernen
+  Future<void> removeItemFromShoppingList(
+    String householdId,
+    String itemId,
+  ) async {
+    try {
+      /// Lösche das Element aus der Einkaufsliste
+      await _client
+          .from('shopping_list')
+          .delete()
+          .eq('household_id', householdId)
+          .eq('id', itemId);
+
+      notifyListeners();
+    } catch (e) {
+      throw Exception(
+          'Fehler beim Entfernen des Elements aus der Einkaufsliste: $e');
+    }
+  }
+
+  /// Status des Elements in der Einkaufsliste aktualisieren
+  Future<void> updateShoppingItemStatus(
+      int itemId, String userId, DateTime timestamp, bool isChecked) async {
+    final String status = isChecked ? 'purchased' : 'pending';
+
+    final updateData = {
+      'status': status,
+      'checked_by': isChecked ? userId : null,
+      'checked_at': isChecked ? timestamp.toIso8601String() : null,
+    };
+
+    try {
+      await _client.from('shopping_list').update(updateData).eq('id', itemId);
+      notifyListeners();
+    } catch (e) {
+      throw Exception(
+          'Fehler beim Aktualisieren des Status des Elements in der Einkaufsliste: $e');
+    }
+  }
 }
 
 extension on String {
