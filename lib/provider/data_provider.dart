@@ -265,6 +265,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Abrufen der Haushalte des Benutzers
   Future<List<Map<String, dynamic>>> fetchUserHouseholds() async {
     final response = await _makeRequest<Map<String, dynamic>>(
       _householdEdgeFunctionUrl,
@@ -279,6 +280,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Erstellen eines neuen Haushalts
   Future<Map<String, dynamic>> createHousehold(
       String householdName, String color,
       {String? inviteCode}) async {
@@ -296,6 +298,7 @@ class DataProvider with ChangeNotifier {
     return response;
   }
 
+  /// Funktion zum Beitreten eines Haushalts
   Future<Map<String, dynamic>> joinHousehold(String inviteCode) async {
     final response = await _makeRequest<Map<String, dynamic>>(
       _householdEdgeFunctionUrl,
@@ -306,6 +309,7 @@ class DataProvider with ChangeNotifier {
     return response['data'] ?? {};
   }
 
+  /// Funktion zum Abrufen der Rolle des Benutzers im Haushalt
   Future<String> getUserRoleInHousehold(String householdId) async {
     final response = await _makeRequest<Map<String, dynamic>>(
         _householdEdgeFunctionUrl, 'GET',

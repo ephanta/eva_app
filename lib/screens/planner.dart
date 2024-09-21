@@ -11,6 +11,8 @@ import '../widgets/buttons/custom_text_button.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht für den Wochenplaner
 @RoutePage()
 class PlannerScreen extends StatefulWidget {
   final String householdId;

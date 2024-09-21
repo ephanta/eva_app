@@ -79,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             TextField(
               controller: _usernameController,
               decoration: const InputDecoration(
-                labelText: 'Username',
+                labelText: 'Nutzername',
                 labelStyle: TextStyle(color: Constants.primaryTextColor),
                 enabledBorder: UnderlineInputBorder(
                   borderSide: BorderSide(color: Constants.primaryTextColor),

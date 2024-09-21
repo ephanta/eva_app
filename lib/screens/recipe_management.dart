@@ -8,6 +8,8 @@ import '../widgets/buttons/custom_text_button.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht zur Verwaltung der Rezepte
 @RoutePage()
 class RecipeManagementScreen extends StatefulWidget {
   const RecipeManagementScreen({super.key});
@@ -16,6 +18,7 @@ class RecipeManagementScreen extends StatefulWidget {
   State<RecipeManagementScreen> createState() => _RecipeManagementScreenState();
 }
 
+/// Der State für die Rezeptverwaltung
 class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
   List<Map<String, dynamic>> _recipes = [];
   bool _isLoading = true;

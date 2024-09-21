@@ -5,18 +5,18 @@ packages:
     dependency: transitive
     description:
       name: _fe_analyzer_shared
-      sha256: ae92f5d747aee634b87f89d9946000c2de774be1d6ac3e58268224348cd0101a
+      sha256: "0b2f2bd91ba804e53a61d757b986f89f1f9eaed5b11e4b2f5a2468d86d6c9fc7"
       url: "https://pub.dev"
     source: hosted
-    version: "61.0.0"
+    version: "67.0.0"
   analyzer:
     dependency: transitive
     description:
       name: analyzer
-      sha256: ea3d8652bda62982addfd92fdc2d0214e5f82e43325104990d4f4c4a2a313562
+      sha256: "37577842a27e4338429a1cbc32679d508836510b056f1eedf0c8d20e39c1383d"
       url: "https://pub.dev"
     source: hosted
-    version: "5.13.0"
+    version: "6.4.1"
   app_links:
     dependency: transitive
     description:
@@ -253,10 +253,18 @@ packages:
     dependency: "direct main"
     description:
       name: dartdoc
-      sha256: d9bab893c9f42615f62bf2d3ff2b89d5905952d1d42cc7890003537249cb472e
+      sha256: "5f7df06758621f9da4f09724ebd2904ab2526bce928b25bfe255ca32a2a839a1"
       url: "https://pub.dev"
     source: hosted
-    version: "6.3.0"
+    version: "7.0.2"
+  email_validator:
+    dependency: transitive
+    description:
+      name: email_validator
+      sha256: e9a90f27ab2b915a27d7f9c2a7ddda5dd752d6942616ee83529b686fc086221b
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.17"
   fake_async:
     dependency: transitive
     description:
@@ -368,6 +376,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  font_awesome_flutter:
+    dependency: transitive
+    description:
+      name: font_awesome_flutter
+      sha256: "275ff26905134bcb59417cf60ad979136f1f8257f2f449914b2c3e05bbb4cd6f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "10.7.0"
   frontend_server_client:
     dependency: transitive
     description:
@@ -392,6 +408,54 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  google_identity_services_web:
+    dependency: transitive
+    description:
+      name: google_identity_services_web
+      sha256: "5be191523702ba8d7a01ca97c17fca096822ccf246b0a9f11923a6ded06199b6"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1+4"
+  google_sign_in:
+    dependency: transitive
+    description:
+      name: google_sign_in
+      sha256: "0b8787cb9c1a68ad398e8010e8c8766bfa33556d2ab97c439fb4137756d7308f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.2.1"
+  google_sign_in_android:
+    dependency: transitive
+    description:
+      name: google_sign_in_android
+      sha256: "0608de03fc541ece4f91ba3e01a68b17cce7a6cf42bd59e40bbe5c55cc3a49d8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.30"
+  google_sign_in_ios:
+    dependency: transitive
+    description:
+      name: google_sign_in_ios
+      sha256: "4898410f55440049e1ba8f15411612d9f89299d89c61cd9baf7e02d56ff81ac7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.7.7"
+  google_sign_in_platform_interface:
+    dependency: transitive
+    description:
+      name: google_sign_in_platform_interface
+      sha256: "1f6e5787d7a120cc0359ddf315c92309069171306242e181c09472d1b00a2971"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.5"
+  google_sign_in_web:
+    dependency: transitive
+    description:
+      name: google_sign_in_web
+      sha256: "042805a21127a85b0dc46bba98a37926f17d2439720e8a459d27045d8ef68055"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.12.4+2"
   gotrue:
     dependency: transitive
     description:
@@ -864,6 +928,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  sign_in_with_apple:
+    dependency: transitive
+    description:
+      name: sign_in_with_apple
+      sha256: "3c9dc9dcd5c42a17c6d4b912556198e8bd8e731ab67ac30f4a655974f95e7260"
+      url: "https://pub.dev"
+    source: hosted
+    version: "6.1.2"
+  sign_in_with_apple_platform_interface:
+    dependency: transitive
+    description:
+      name: sign_in_with_apple_platform_interface
+      sha256: c2ef2ce6273fce0c61acd7e9ff5be7181e33d7aa2b66508b39418b786cca2119
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
+  sign_in_with_apple_web:
+    dependency: transitive
+    description:
+      name: sign_in_with_apple_web
+      sha256: c009e9beeb6c376e86aaa154fcc8b4e075d4bad90c56286b9668a51cdb6129ea
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.0"
   simple_gesture_detector:
     dependency: transitive
     description:
@@ -949,6 +1037,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.0"
+  supabase_auth_ui:
+    dependency: "direct main"
+    description:
+      name: supabase_auth_ui
+      sha256: fd7eac6a804fae6cd51191bb1344489e206dc38433e91ee64e60d03ea568b981
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.1"
   supabase_flutter:
     dependency: "direct main"
     description:

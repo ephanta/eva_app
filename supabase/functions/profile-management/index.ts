@@ -56,7 +56,7 @@ async function handleGetRequest(userId: string) {
 
       const defaultProfile = {
         user_id: userId,
-        username: "Neuer User",
+        username: "New User", // Default username
         avatar_url: "",
         hinweise_zur_ernaehrung: "keine", // Default dietary notes
         created_at: new Date().toISOString(),

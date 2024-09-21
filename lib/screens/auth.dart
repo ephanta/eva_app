@@ -1,91 +1,38 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 
-import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 
 /// {@category Screens}
-/// Authentifizierungsbildschirm
+/// Ansicht für das Anmelden oder Registrieren eines Nutzers
 @RoutePage()
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
 
   @override
-  _AuthScreenState createState() => _AuthScreenState();
+  State<AuthScreen> createState() => _AuthScreenState();
 }
 
-/// Der State des Authentifizierungsbildschirms
+/// Der Zustand für die Authentifizierungsseite
 class _AuthScreenState extends State<AuthScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _isSignUp = false;
-  bool _loading = false;
-
   @override
   void initState() {
     super.initState();
-    _checkAuthStatus();
+    _checkAuthStatus(); // Check authentication status when the screen initializes
   }
 
+  /// Überprüft den Authentifizierungsstatus
   Future<void> _checkAuthStatus() async {
     try {
-      final dataProvider = Provider.of<DataProvider>(context, listen: false);
-      final session = await dataProvider.getCurrentSession();
+      final session = Supabase.instance.client.auth.currentSession;
       if (session != null) {
-        AutoRouter.of(context).replace(const HomeRoute());
+        AutoRouter.of(context).push(const HomeRoute());
       }
     } catch (e) {
-      if (kDebugMode) {
-        print('Error checking auth status: $e');
-      }
+      print('Error checking auth status: $e');
       // Handle error appropriately
-    }
-  }
-
-  Future<void> _signInOrSignUp() async {
-    setState(() {
-      _loading = true; // Show loading spinner while processing
-    });
-    try {
-      final dataProvider = Provider.of<DataProvider>(context, listen: false);
-      if (_isSignUp) {
-        // Sign up and include username in user metadata
-        final response = await Supabase.instance.client.auth.signUp(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-
-        if (response.user != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text(
-                    'Erfolgreich registriert! Bitte bestätigen Sie Ihre E-Mail.')),
-          );
-        }
-      } else {
-        // Sign in with email and password
-        final response = await Supabase.instance.client.auth.signInWithPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-
-        if (response.session != null) {
-          _checkAuthStatus(); // Proceed to Home if sign-in is successful
-        }
-      }
-    } catch (e) {
-      // Handle exceptions
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler: ${e.toString()}')),
-      );
-    } finally {
-      setState(() {
-        _loading = false; // Hide loading spinner when done
-      });
     }
   }
 
@@ -99,48 +46,59 @@ class _AuthScreenState extends State<AuthScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              'Authentifizierung',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 20),
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'E-Mail'),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Passwort'),
-              obscureText: true,
-            ),
-            if (_isSignUp) const SizedBox(height: 20),
-            _loading
-                ? const CircularProgressIndicator() // Show a spinner while loading
-                : ElevatedButton(
-                    onPressed: _signInOrSignUp,
-                    child: Text(_isSignUp ? 'Registrieren' : 'Anmelden'),
+            Column(
+              children: [
+                Text(
+                  'Authentifizierung',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+
+                /// Email Auth
+                SupaEmailAuth(
+                  localization: const SupaEmailAuthLocalization(
+                    enterEmail: 'E-Mail eingeben',
+                    validEmailError:
+                        'Bitte geben Sie eine gültige E-Mail-Adresse ein',
+                    enterPassword: 'Passwort eingeben',
+                    passwordLengthError:
+                        'Das Passwort muss mindestens 6 Zeichen lang sein',
+                    forgotPassword: 'Passwort vergessen?',
+                    signIn: 'Anmelden',
+                    signUp: 'Registrieren',
+                    dontHaveAccount:
+                        'Sie haben noch keinen Account? Registrieren Sie sich!',
+                    haveAccount:
+                        'Sie haben bereits einen Account? Melden Sie sich an!',
+                    sendPasswordReset: 'Passwort zurücksetzen',
+                    backToSignIn: 'Zurück zur Anmeldung',
+                    unexpectedError: 'Ein unerwarteter Fehler ist aufgetreten',
                   ),
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  _isSignUp = !_isSignUp;
-                });
-              },
-              child: Text(_isSignUp
-                  ? 'Bereits ein Konto? Anmelden'
-                  : 'Kein Konto? Registrieren'),
+                  redirectTo: '/',
+                  onSignInComplete: (response) {
+                    _checkAuthStatus();
+                  },
+                  onSignUpComplete: (response) {
+                    _checkAuthStatus();
+                  },
+                  metadataFields: [
+                    MetaDataField(
+                      prefixIcon: const Icon(Icons.person),
+                      label: 'Nutzername',
+                      key: 'username',
+                      validator: (val) {
+                        if (val == null || val.isEmpty) {
+                          return 'Bitte geben Sie einen Nutzernamen ein';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
   }
 }
