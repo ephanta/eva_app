@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 
 import '../routes/app_router.gr.dart';
@@ -17,9 +18,12 @@ class AuthScreen extends StatefulWidget {
 
 /// Der Zustand für die Authentifizierungsseite
 class _AuthScreenState extends State<AuthScreen> {
+  late final SharedPreferences prefs;
+
   @override
   void initState() {
     super.initState();
+    _initPrefs();
     _checkAuthStatus(); // Check authentication status when the screen initializes
   }
 
@@ -34,6 +38,10 @@ class _AuthScreenState extends State<AuthScreen> {
       print('Error checking auth status: $e');
       // Handle error appropriately
     }
+  }
+
+  void _initPrefs() async {
+    prefs = await SharedPreferences.getInstance();
   }
 
   @override
@@ -89,6 +97,7 @@ class _AuthScreenState extends State<AuthScreen> {
                         if (val == null || val.isEmpty) {
                           return 'Bitte geben Sie einen Nutzernamen ein';
                         }
+                        prefs.setString('username', val);
                         return null;
                       },
                     ),

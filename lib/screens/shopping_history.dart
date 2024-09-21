@@ -10,6 +10,8 @@ import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht der Einkaufshistorie
 @RoutePage()
 class ShoppingHistoryScreen extends StatefulWidget {
   final String householdId;
@@ -21,6 +23,7 @@ class ShoppingHistoryScreen extends StatefulWidget {
   State<ShoppingHistoryScreen> createState() => _ShoppingHistoryScreenState();
 }
 
+/// Der Zustand für die Einkaufshistorie
 class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
   List<Map<String, dynamic>> _purchasedItems = [];
   bool _isLoading = true;

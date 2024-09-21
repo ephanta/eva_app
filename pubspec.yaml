@@ -43,6 +43,7 @@ dependencies:
   http: ^1.1.0
   image_picker: ^0.8.5+3
   table_calendar: ^3.0.9
+  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -74,6 +75,7 @@ flutter:
   assets:
     - .env
     - assets/launch_image.png
+    - assets/default_avatar.png
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
 

@@ -9,6 +9,8 @@ import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht der Einkaufsliste
 @RoutePage()
 class ShoppingListScreen extends StatefulWidget {
   final String householdId;
@@ -20,6 +22,7 @@ class ShoppingListScreen extends StatefulWidget {
   State<ShoppingListScreen> createState() => _ShoppingListScreenState();
 }
 
+/// Der Zustand für die Einkaufsliste
 class _ShoppingListScreenState extends State<ShoppingListScreen> {
   late DataProvider _dataProvider;
   bool _isLoading = false;
@@ -166,6 +169,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     );
   }
 
+  // TODO: Auslagern
   Future<void> _showAddItemDialog(BuildContext context) async {
     final result = await showDialog<Map<String, String>>(
       context: context,
@@ -292,6 +296,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     }
   }
 
+  //TODO: Auslagern
   Future<bool> showDeleteConfirmationDialog(
       BuildContext context, String title, String content) async {
     return await showDialog<bool>(

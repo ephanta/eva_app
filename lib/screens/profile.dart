@@ -3,6 +3,7 @@ import 'package:eva_app/data/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
@@ -36,9 +37,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadUserProfile() async {
     try {
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
       final profile = await _dataProvider.fetchUserProfile();
+      final String? localeUsername = prefs.getString('username');
       setState(() {
-        _usernameController.text = profile['username'] ?? '';
+        if (localeUsername != null && profile['username'] == 'New User') {
+          _usernameController.text = localeUsername;
+          final updatedProfile = {
+            'username': localeUsername,
+          };
+          _dataProvider.updateProfile(updatedProfile);
+        } else {
+          _usernameController.text = profile['username'] ?? '';
+        }
         _avatarUrl = profile['avatar_url'] ?? '';
 
         final dietaryNotes =

@@ -9,6 +9,8 @@ import '../widgets/buttons/custom_text_button.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht der Bewertungsübersicht
 @RoutePage()
 class RatingScreen extends StatefulWidget {
   final String? recipeId;

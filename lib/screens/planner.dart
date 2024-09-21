@@ -6,8 +6,8 @@ import 'package:table_calendar/table_calendar.dart';
 
 import '../data/constants.dart';
 import '../provider/data_provider.dart';
-import '../routes/app_router.gr.dart';
 import '../widgets/buttons/custom_text_button.dart';
+import '../widgets/dialogs/addRecipeDialog.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/text/custom_text.dart';
 
@@ -23,6 +23,7 @@ class PlannerScreen extends StatefulWidget {
   State<PlannerScreen> createState() => _PlannerScreenState();
 }
 
+/// Der Zustand für den Wochenplaner
 class _PlannerScreenState extends State<PlannerScreen> {
   late DataProvider _dataProvider;
   DateTime _focusedDay = DateTime.now();
@@ -61,168 +62,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Fehler beim Laden der Daten: $e')),
-      );
-    }
-  }
-
-  void _showAddRecipeDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const CustomText(
-            text: "Rezept hinzufügen",
-            fontSize: 18,
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton(
-                onPressed: () => _showRecipeSelectionDialog(context),
-                style: _elevatedButtonStyle(),
-                child: const Text("Vorhandenes Rezept auswählen"),
-              ),
-              const SizedBox(height: 10),
-              ElevatedButton(
-                onPressed: () => _navigateToRecipeCreation(context),
-                style: _elevatedButtonStyle(),
-                child: const Text("Neues Rezept erstellen"),
-              ),
-            ],
-          ),
-          actions: [
-            CustomTextButton(
-              buttonType: ButtonType.abort,
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showRecipeSelectionDialog(BuildContext context) async {
-    try {
-      final recipes = await _dataProvider.fetchUserRecipes();
-
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          String selectedMealType = _mealTypes[0];
-          Map<String, dynamic>? selectedRecipe;
-
-          return StatefulBuilder(
-            builder: (context, setState) {
-              return AlertDialog(
-                title: const Text("Rezept auswählen",
-                    style: TextStyle(color: Constants.primaryTextColor)),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButton<String>(
-                      value: selectedMealType,
-                      items: _mealTypes.map((String value) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(_mealTypeLabels[value]!),
-                        );
-                      }).toList(),
-                      onChanged: (String? newValue) {
-                        setState(() {
-                          selectedMealType = newValue!;
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 10),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        child: Column(
-                          children: recipes.map((recipe) {
-                            return ListTile(
-                              title:
-                                  Text(recipe['name'] ?? 'Unbekanntes Rezept'),
-                              subtitle: Text(recipe['beschreibung'] ?? ''),
-                              onTap: () {
-                                setState(() {
-                                  selectedRecipe = recipe;
-                                });
-                              },
-                              selected: selectedRecipe != null &&
-                                  selectedRecipe!['id'] == recipe['id'],
-                              selectedTileColor: Colors.grey[200],
-                            );
-                          }).toList(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                actions: [
-                  CustomTextButton(
-                    buttonType: ButtonType.abort,
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      if (_selectedDay != null && selectedRecipe != null) {
-                        try {
-                          final currentPlan = _wochenplan[_selectedDay!
-                                  .toIso8601String()
-                                  .split('T')[0]] ??
-                              {};
-                          final updatedMeals = {
-                            'fruehstueck_rezept_id':
-                                selectedMealType == 'fruehstueck'
-                                    ? selectedRecipe!['id']
-                                    : currentPlan['fruehstueck_rezept_id'],
-                            'mittagessen_rezept_id':
-                                selectedMealType == 'mittagessen'
-                                    ? selectedRecipe!['id']
-                                    : currentPlan['mittagessen_rezept_id'],
-                            'abendessen_rezept_id':
-                                selectedMealType == 'abendessen'
-                                    ? selectedRecipe!['id']
-                                    : currentPlan['abendessen_rezept_id'],
-                          };
-
-                          if (currentPlan.isEmpty) {
-                            await _dataProvider.addMealPlan(
-                              widget.householdId,
-                              _selectedDay!.toIso8601String().split('T')[0],
-                              updatedMeals['fruehstueck_rezept_id'],
-                              updatedMeals['mittagessen_rezept_id'],
-                              updatedMeals['abendessen_rezept_id'],
-                            );
-                          } else {
-                            await _dataProvider.updateMealPlan(
-                              widget.householdId,
-                              _selectedDay!.toIso8601String().split('T')[0],
-                              updatedMeals['fruehstueck_rezept_id'],
-                              updatedMeals['mittagessen_rezept_id'],
-                              updatedMeals['abendessen_rezept_id'],
-                            );
-                          }
-                          await _loadData(); // Refresh the planner with the updated recipe
-                          AutoRouter.of(context).maybePop(); // Close the dialog
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(
-                                    'Fehler beim Hinzufügen des Rezepts: $e')),
-                          );
-                        }
-                      }
-                    },
-                    style: _elevatedButtonStyle(),
-                    child: const Text("Bestätigen"),
-                  ),
-                ],
-              );
-            },
-          );
-        },
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Laden der Rezepte: $e')),
       );
     }
   }
@@ -274,7 +113,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
                   buttonType: ButtonType.abort,
                 ),
                 ElevatedButton(
-                  style: _elevatedButtonStyle(),
+                  style: Constants.elevatedButtonStyle(),
                   onPressed: () async {
                     try {
                       await _dataProvider.addRating(
@@ -303,13 +142,6 @@ class _PlannerScreenState extends State<PlannerScreen> {
         );
       },
     );
-  }
-
-  void _navigateToRecipeCreation(BuildContext context) {
-    context.router.push(const RecipeManagementRoute()).then((_) {
-      _loadData();
-      AutoRouter.of(context).maybePop();
-    });
   }
 
   @override
@@ -384,7 +216,8 @@ class _PlannerScreenState extends State<PlannerScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'addRecipe',
-        onPressed: () => _showAddRecipeDialog(context),
+        onPressed: () => addRecipeDialog(context, _dataProvider, _mealTypes,
+            _mealTypeLabels, _selectedDay, _wochenplan, widget.householdId),
         backgroundColor: Constants.primaryBackgroundColor,
         child: const Icon(Icons.add, color: Constants.primaryTextColor),
       ),
@@ -446,12 +279,12 @@ class _PlannerScreenState extends State<PlannerScreen> {
                 children: [
                   ElevatedButton(
                     onPressed: () => _removeRecipe(mealType),
-                    style: _elevatedButtonStyle(),
+                    style: Constants.elevatedButtonStyle(),
                     child: const Text("Rezept entfernen"),
                   ),
                   ElevatedButton(
                     onPressed: () => _showRatingDialog(recipe),
-                    style: _elevatedButtonStyle(),
+                    style: Constants.elevatedButtonStyle(),
                     child: const Text("Bewerten"),
                   ),
                 ],
@@ -491,16 +324,5 @@ class _PlannerScreenState extends State<PlannerScreen> {
         SnackBar(content: Text('Fehler beim Entfernen des Rezepts: $e')),
       );
     }
-  }
-
-  ButtonStyle _elevatedButtonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: Constants.secondaryBackgroundColor,
-      foregroundColor: Constants.primaryTextColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      minimumSize: const Size(120, 40),
-    );
   }
 }
