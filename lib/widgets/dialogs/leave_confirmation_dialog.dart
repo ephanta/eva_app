@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_auth_ui/supabase_auth_ui.dart';
 
 import '../../provider/data_provider.dart';
 import '../../routes/app_router.gr.dart';
@@ -36,10 +35,8 @@ Future<void> showLeaveConfirmationDialog(
             onPressed: () async {
               final dataProvider =
                   Provider.of<DataProvider>(context, listen: false);
-              final userId = Supabase.instance.client.auth.currentUser!.id;
               try {
-                await dataProvider.leaveHousehold(
-                    householdId.toString(), userId);
+                await dataProvider.leaveHousehold(householdId.toString());
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Haushalt verlassen')),
                 );

@@ -3,7 +3,6 @@ import 'package:eva_app/provider/data_provider.dart'; // Passe diesen Import an 
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../routes/app_router.gr.dart';
 
@@ -88,9 +87,8 @@ Future<Future<Object?>> showCreateHouseholdDialog(BuildContext context) async {
                     try {
                       final dataProvider =
                           Provider.of<DataProvider>(context, listen: false);
-                      final householdId = await dataProvider.createHousehold(
+                      final household = await dataProvider.createHousehold(
                         householdName,
-                        Supabase.instance.client.auth.currentUser!.id,
                         householdColor,
                       );
 
@@ -100,7 +98,10 @@ Future<Future<Object?>> showCreateHouseholdDialog(BuildContext context) async {
                       );
                       AutoRouter.of(context).maybePop();
                       AutoRouter.of(context).push(
-                        HomeDetailRoute(householdId: householdId),
+                        HomeDetailRoute(
+                            householdId: household['id'],
+                            preloadedHouseholdData: household,
+                            preloadedUserRole: household['role']),
                       );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(

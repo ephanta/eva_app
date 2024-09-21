@@ -44,8 +44,7 @@ Future<void> showDeleteConfirmationDialog(
                 if (delete == 'household') {
                   await dataProvider.deleteHousehold(householdId.toString());
                 } else if (delete == 'shoppinglist') {
-                  await dataProvider.removeItemFromShoppingList(
-                      householdId.toString(), id.toString());
+                  await dataProvider.removeItemFromShoppingList(id.toString());
                 }
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text('$subject erfolgreich gelöscht.')),
