@@ -8,6 +8,7 @@ import '../data/constants.dart';
 import '../provider/data_provider.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
+import '../widgets/text/custom_text.dart';
 
 @RoutePage()
 class ShoppingHistoryScreen extends StatefulWidget {
@@ -119,15 +120,7 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
                     color: Constants.secondaryBackgroundColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: const Center(
-                      child: Text(
-                        'Einkaufshistorie',
-                        style: TextStyle(
-                          fontSize: 22, // Matching font size
-                          fontWeight: FontWeight.bold,
-                          color:
-                              Constants.primaryTextColor, // Matching text color
-                        ),
-                      ),
+                      child: CustomText(text: 'Einkaufshistorie'),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -176,13 +169,9 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        title: Text(
-          item['item_name'] ?? '',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Constants.primaryTextColor, // Matching text color
-          ),
+        title: CustomText(
+          text: item['item_name'] ?? '',
+          fontSize: 18,
         ),
         subtitle: Text('Menge: ${item['amount']} - Gekauft am $formattedDate'),
         trailing: Row(

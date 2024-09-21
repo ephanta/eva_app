@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../provider/data_provider.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
+import '../widgets/text/custom_text.dart';
 
 @RoutePage()
 class ShoppingListScreen extends StatefulWidget {
@@ -66,14 +67,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                       color: Constants.secondaryBackgroundColor,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: const Center(
-                        child: Text(
-                          'Einkaufsliste',
-                          style: TextStyle(
-                            fontSize: 22, // Matching font size
-                            fontWeight: FontWeight.bold,
-                            color: Constants
-                                .primaryTextColor, // Matching text color
-                          ),
+                        child: CustomText(
+                          text: 'Einkaufsliste',
                         ),
                       ),
                     ),

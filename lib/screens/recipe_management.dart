@@ -6,6 +6,7 @@ import '../data/constants.dart';
 import '../provider/data_provider.dart';
 import '../widgets/buttons/custom_text_button.dart';
 import '../widgets/navigation/app_bar_custom.dart';
+import '../widgets/text/custom_text.dart';
 
 @RoutePage()
 class RecipeManagementScreen extends StatefulWidget {
@@ -267,14 +268,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
                     // Matching background color for consistency
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     child: const Center(
-                      child: Text(
-                        'Meine Rezepte',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Constants.primaryTextColor,
-                        ),
-                      ),
+                      child: CustomText(text: 'Meine Rezepte'),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -309,13 +303,9 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        title: Text(
-          _recipes[index]['name'] ?? '',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Constants.primaryTextColor,
-          ),
+        title: CustomText(
+          text: _recipes[index]['name'] ?? '',
+          fontSize: 18,
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

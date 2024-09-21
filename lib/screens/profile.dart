@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
+import '../widgets/text/custom_text.dart';
 
 @RoutePage()
 class ProfileScreen extends StatefulWidget {
@@ -91,14 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: const TextStyle(color: Constants.primaryTextColor),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Hinweise zur Ernährung:',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Constants.primaryTextColor,
-              ),
-            ),
+            const CustomText(text: 'Hinweise zur Ernährung:', fontSize: 18),
             Wrap(
               spacing: 8,
               children: _dietaryNotes.map((note) {
@@ -341,13 +335,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             color: Constants.secondaryBackgroundColor,
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: const Center(
-              child: Text(
-                'Profil',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Constants.primaryTextColor,
-                ),
+              child: CustomText(
+                text: 'Profil',
               ),
             ),
           ),

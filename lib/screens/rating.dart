@@ -7,6 +7,7 @@ import '../data/constants.dart';
 import '../provider/data_provider.dart';
 import '../widgets/buttons/custom_text_button.dart';
 import '../widgets/navigation/app_bar_custom.dart';
+import '../widgets/text/custom_text.dart';
 
 @RoutePage()
 class RatingScreen extends StatefulWidget {
@@ -114,15 +115,10 @@ class _RatingScreenState extends State<RatingScreen> {
             color: Constants.secondaryBackgroundColor,
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Center(
-              child: Text(
-                widget.recipeName != null
+              child: CustomText(
+                text: widget.recipeName != null
                     ? 'Bewertungen für ${widget.recipeName}'
                     : 'Meine Bewertungen',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Constants.primaryTextColor,
-                ),
               ),
             ),
           ),
@@ -165,13 +161,9 @@ class _RatingScreenState extends State<RatingScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 widget.recipeId == null
-                    ? Text(
-                        rating['recipe_name'] ?? 'Unbekanntes Rezept',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Constants.primaryTextColor,
-                        ),
+                    ? CustomText(
+                        text: rating['recipe_name'] ?? 'Unbekanntes Rezept',
+                        fontSize: 18,
                       )
                     : const SizedBox.shrink(),
                 Row(

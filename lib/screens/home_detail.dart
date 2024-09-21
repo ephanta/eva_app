@@ -10,6 +10,7 @@ import '../routes/app_router.gr.dart';
 import '../widgets/buttons/custom_text_button.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
+import '../widgets/text/custom_text.dart';
 
 @RoutePage()
 class HomeDetailScreen extends StatefulWidget {
@@ -76,15 +77,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
           // Light background similar to 'Meine Bewertungen'
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Center(
-            child: Text(
-              household['name'] ?? 'Unbenannter Haushalt',
-              style: const TextStyle(
-                fontSize: 22, // Matching font size to 'Meine Bewertungen'
-                fontWeight: FontWeight.bold,
-                color: Constants
-                    .primaryTextColor, // Matching color to 'Meine Bewertungen'
-              ),
-            ),
+            child:
+                CustomText(text: household['name'] ?? 'Unbenannter Haushalt'),
           ),
         ),
         const SizedBox(height: 20),

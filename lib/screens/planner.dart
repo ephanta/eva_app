@@ -9,6 +9,7 @@ import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
 import '../widgets/buttons/custom_text_button.dart';
 import '../widgets/navigation/app_bar_custom.dart';
+import '../widgets/text/custom_text.dart';
 
 @RoutePage()
 class PlannerScreen extends StatefulWidget {
@@ -67,12 +68,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text(
-            "Rezept hinzufügen",
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Constants.primaryTextColor),
+          title: const CustomText(
+            text: "Rezept hinzufügen",
+            fontSize: 18,
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -329,15 +327,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
                   color: Constants.secondaryBackgroundColor,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: const Center(
-                    child: Text(
-                      'Wochenplaner',
-                      style: TextStyle(
-                        fontSize: 22, // Consistent title size
-                        fontWeight: FontWeight.bold,
-                        color: Constants
-                            .primaryTextColor, // Consistent title color
-                      ),
-                    ),
+                    child: CustomText(text: 'Wochenplaner'),
                   ),
                 ),
                 TableCalendar(
@@ -436,21 +426,15 @@ class _PlannerScreenState extends State<PlannerScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              _mealTypeLabels[mealType]!,
-              style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Constants.primaryTextColor),
+            CustomText(
+              text: _mealTypeLabels[mealType]!,
+              fontSize: 18,
             ),
             const SizedBox(height: 10),
             if (recipe != null) ...[
-              Text(
-                recipe['name'] ?? 'Unbekanntes Rezept',
-                style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Constants.primaryTextColor),
+              CustomText(
+                text: recipe['name'] ?? 'Unbekanntes Rezept',
+                fontSize: 16,
               ),
               const SizedBox(height: 5),
               Text(recipe['beschreibung'] ?? ''),

@@ -8,6 +8,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 
 import '../data/constants.dart';
+import '../widgets/text/custom_text.dart';
 
 @RoutePage()
 class HomeScreen extends StatefulWidget {
@@ -166,13 +167,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 color: Constants.secondaryBackgroundColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: const Center(
-                  child: Text(
-                    'Haushalte',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Constants.primaryTextColor,
-                    ),
+                  child: CustomText(
+                    text: 'Haushalte',
                   ),
                 ),
               ),
@@ -244,14 +240,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text(
-                                        household['name'] ??
+                                      CustomText(
+                                        text: household['name'] ??
                                             'Unbenannter Haushalt',
                                         textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 20.0,
-                                          color: Colors.white,
-                                        ),
+                                        fontSize: 20.0,
+                                        textColor: Colors.white,
                                       ),
                                     ],
                                   ),
