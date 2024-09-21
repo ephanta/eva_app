@@ -1,10 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.gr.dart';
+import 'package:eva_app/widgets/buttons/custom_text_button.dart';
 import 'package:eva_app/widgets/navigation/app_bar_custom.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
+
+import '../data/constants.dart';
 
 @RoutePage()
 class HomeScreen extends StatefulWidget {
@@ -64,7 +67,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           'Farbe wählen',
                           style: TextStyle(
-                            color: ThemeData.estimateBrightnessForColor(currentColor) == Brightness.dark
+                            color: ThemeData.estimateBrightnessForColor(
+                                        currentColor) ==
+                                    Brightness.dark
                                 ? Colors.white
                                 : Colors.black,
                           ),
@@ -75,37 +80,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               actions: <Widget>[
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Abbrechen'),
-                ),
+                CustomTextButton(buttonType: ButtonType.abort),
                 ElevatedButton(
                   style: _elevatedButtonStyle(),
                   onPressed: () async {
                     final householdName = controller.text;
-                    final householdColor = '#${currentColor.value.toRadixString(16).substring(2, 8)}';
+                    final householdColor =
+                        '#${currentColor.value.toRadixString(16).substring(2, 8)}';
                     if (householdName.isNotEmpty) {
                       try {
-                        final newHousehold = await _dataProvider.createHousehold(householdName, householdColor);
+                        final newHousehold = await _dataProvider
+                            .createHousehold(householdName, householdColor);
                         if (newHousehold['id'] != null) {
-                          final userRole = 'admin'; // Creator is admin
-                          Navigator.pop(context);
+                          const userRole = 'admin'; // Creator is admin
+                          AutoRouter.of(context).maybePop();
                           AutoRouter.of(context).push(
                             HomeDetailRoute(
                               householdId: newHousehold['id'],
-                              preloadedHouseholdData: newHousehold, // Use new household data
+                              preloadedHouseholdData: newHousehold,
+                              // Use new household data
                               preloadedUserRole: userRole,
                             ),
                           );
                         }
                       } catch (e) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to create household: $e')),
+                          SnackBar(
+                              content: Text('Failed to create household: $e')),
                         );
                       }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Bitte geben Sie einen Namen ein')),
+                        const SnackBar(
+                            content: Text('Bitte geben Sie einen Namen ein')),
                       );
                     }
                   },
@@ -119,7 +126,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _pickDetailedColorDialog(BuildContext context, Color currentColor, ValueChanged<Color> onColorChanged) {
+  void _pickDetailedColorDialog(BuildContext context, Color currentColor,
+      ValueChanged<Color> onColorChanged) {
     showDialog(
       context: context,
       builder: (context) {
@@ -129,17 +137,12 @@ class _HomeScreenState extends State<HomeScreen> {
             child: ColorPicker(
               pickerColor: currentColor,
               onColorChanged: onColorChanged,
-              showLabel: true,
+              labelTypes: const [],
               pickerAreaHeightPercent: 0.8,
             ),
           ),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Fertig'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
+            CustomTextButton(buttonType: ButtonType.done),
           ],
         );
       },
@@ -160,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Container(
-                color: const Color(0xFFFDF6F4),
+                color: Constants.secondaryBackgroundColor,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: const Center(
                   child: Text(
@@ -168,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFF3A0B01),
+                      color: Constants.primaryTextColor,
                     ),
                   ),
                 ),
@@ -180,7 +183,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     return const Center(child: CircularProgressIndicator());
                   } else if (snapshot.hasError) {
                     return Center(
-                      child: Text('Fehler beim Laden der Haushalte: ${snapshot.error}'),
+                      child: Text(
+                          'Fehler beim Laden der Haushalte: ${snapshot.error}'),
                     );
                   } else if (snapshot.hasData) {
                     final households = snapshot.data ?? [];
@@ -193,7 +197,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             crossAxisSpacing: 8.0,
                             mainAxisSpacing: 8.0,
@@ -201,15 +206,20 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: households.length,
                           itemBuilder: (context, index) {
                             final household = households[index];
-                            String colorString = household['color'] ?? '#ffffff';
+                            String colorString =
+                                household['color'] ?? '#ffffff';
                             Color householdColor = Color(
-                              int.parse(colorString.substring(1, 7), radix: 16) + 0xFF000000,
+                              int.parse(colorString.substring(1, 7),
+                                      radix: 16) +
+                                  0xFF000000,
                             );
                             return InkWell(
                               onTap: () async {
                                 try {
-                                  final householdData = await dataProvider.getCurrentHousehold(household['id']);
-                                  final userRole = await dataProvider.getUserRoleInHousehold(household['id']);
+                                  final householdData = await dataProvider
+                                      .getCurrentHousehold(household['id']);
+                                  final userRole = await dataProvider
+                                      .getUserRoleInHousehold(household['id']);
                                   AutoRouter.of(context).push(
                                     HomeDetailRoute(
                                       householdId: household['id'],
@@ -219,20 +229,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                   );
                                 } catch (e) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Fehler beim Laden der Haushaltsdaten: $e')),
+                                    SnackBar(
+                                        content: Text(
+                                            'Fehler beim Laden der Haushaltsdaten: $e')),
                                   );
                                 }
                               },
                               child: Card(
                                 elevation: 2,
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12)),
                                 color: householdColor,
                                 child: Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        household['name'] ?? 'Unbenannter Haushalt',
+                                        household['name'] ??
+                                            'Unbenannter Haushalt',
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
                                           fontSize: 20.0,
@@ -264,15 +278,17 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: () {
               _joinHouseholdDialog(context);
             },
-            backgroundColor: const Color(0xFFFDD9CF),
-            child: const Icon(Icons.group_add, color: Color(0xFF3A0B01)),
+            backgroundColor: Constants.primaryBackgroundColor,
+            child:
+                const Icon(Icons.group_add, color: Constants.primaryTextColor),
           ),
           const SizedBox(height: 10),
           FloatingActionButton(
             heroTag: 'createHousehold',
             onPressed: () => _createHouseholdDialog(context),
-            backgroundColor: const Color(0xFFFDD9CF),
-            child: const Icon(Icons.add, color: Color(0xFF3A0B01)),
+            backgroundColor: Constants.primaryBackgroundColor,
+            // Use the same color as the background
+            child: const Icon(Icons.add, color: Constants.primaryTextColor),
           ),
         ],
       ),
@@ -294,11 +310,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
+            CustomTextButton(
+              buttonType: ButtonType.abort,
             ),
             ElevatedButton(
               style: _elevatedButtonStyle(),
@@ -308,14 +321,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 if (inviteCode.isNotEmpty) {
                   try {
-                    final result = await _dataProvider.joinHousehold(inviteCode);
+                    final result =
+                        await _dataProvider.joinHousehold(inviteCode);
                     final householdId = result['household_id'];
 
                     // Fetch household data and user role
-                    final householdData = await _dataProvider.getCurrentHousehold(householdId);
-                    final userRole = await _dataProvider.getUserRoleInHousehold(householdId);
+                    final householdData =
+                        await _dataProvider.getCurrentHousehold(householdId);
+                    final userRole =
+                        await _dataProvider.getUserRoleInHousehold(householdId);
 
-                    Navigator.pop(context);
+                    AutoRouter.of(context).maybePop();
                     AutoRouter.of(context).push(
                       HomeDetailRoute(
                         householdId: householdId,
@@ -324,16 +340,22 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Erfolgreich dem Haushalt beigetreten.')),
+                      const SnackBar(
+                          content:
+                              Text('Erfolgreich dem Haushalt beigetreten.')),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Fehler beim Beitreten des Haushalts: $e')),
+                      SnackBar(
+                          content:
+                              Text('Fehler beim Beitreten des Haushalts: $e')),
                     );
                   }
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Bitte geben Sie einen Einladungscode ein')),
+                    const SnackBar(
+                        content:
+                            Text('Bitte geben Sie einen Einladungscode ein')),
                   );
                 }
               },
@@ -347,8 +369,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // Button style
   ButtonStyle _elevatedButtonStyle() {
     return ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFFDD9CF),
-      foregroundColor: const Color(0xFF3A0B01),
+      backgroundColor: Constants.primaryBackgroundColor,
+      foregroundColor: Constants.primaryTextColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../provider/data_provider.dart';
 import '../../routes/app_router.gr.dart';
+import '../buttons/custom_text_button.dart';
 
 /// {@category Widgets}
 /// Dialog zum Bestätigen des Verlassens eines Haushalts
@@ -24,32 +25,27 @@ Future<void> showLeaveConfirmationDialog(
           ),
         ),
         actions: <Widget>[
-          TextButton(
-            child: const Text('Abbrechen'),
-            onPressed: () {
-              AutoRouter.of(context).maybePop();
-            },
-          ),
-          TextButton(
-            child: const Text('Verlassen'),
-            onPressed: () async {
-              final dataProvider =
-                  Provider.of<DataProvider>(context, listen: false);
-              try {
-                await dataProvider.leaveHousehold(householdId.toString());
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Haushalt verlassen')),
-                );
-                AutoRouter.of(context).maybePop();
-                AutoRouter.of(context).push(const HomeRoute());
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('Fehler beim Verlassen des Haushalts: $e')),
-                );
-              }
-            },
-          ),
+          CustomTextButton(buttonType: ButtonType.abort),
+          CustomTextButton(
+              buttonText: 'Verlassen',
+              onPressed: () async {
+                final dataProvider =
+                    Provider.of<DataProvider>(context, listen: false);
+                try {
+                  await dataProvider.leaveHousehold(householdId.toString());
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Haushalt verlassen')),
+                  );
+                  AutoRouter.of(context).maybePop();
+                  AutoRouter.of(context).push(const HomeRoute());
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                        content:
+                            Text('Fehler beim Verlassen des Haushalts: $e')),
+                  );
+                }
+              }),
         ],
       );
     },

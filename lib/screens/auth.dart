@@ -1,11 +1,12 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
-import '../provider/data_provider.dart';
 
 @RoutePage()
 class AuthScreen extends StatefulWidget {
@@ -35,7 +36,9 @@ class _AuthScreenState extends State<AuthScreen> {
         AutoRouter.of(context).replace(const HomeRoute());
       }
     } catch (e) {
-      print('Error checking auth status: $e');
+      if (kDebugMode) {
+        print('Error checking auth status: $e');
+      }
       // Handle error appropriately
     }
   }
@@ -55,7 +58,9 @@ class _AuthScreenState extends State<AuthScreen> {
 
         if (response.user != null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Erfolgreich registriert! Bitte bestätigen Sie Ihre E-Mail.')),
+            const SnackBar(
+                content: Text(
+                    'Erfolgreich registriert! Bitte bestätigen Sie Ihre E-Mail.')),
           );
         }
       } else {
@@ -106,14 +111,13 @@ class _AuthScreenState extends State<AuthScreen> {
               decoration: const InputDecoration(labelText: 'Passwort'),
               obscureText: true,
             ),
-            if (_isSignUp)
-                    const SizedBox(height: 20),
+            if (_isSignUp) const SizedBox(height: 20),
             _loading
-                ? const CircularProgressIndicator()  // Show a spinner while loading
+                ? const CircularProgressIndicator() // Show a spinner while loading
                 : ElevatedButton(
-              onPressed: _signInOrSignUp,
-              child: Text(_isSignUp ? 'Registrieren' : 'Anmelden'),
-            ),
+                    onPressed: _signInOrSignUp,
+                    child: Text(_isSignUp ? 'Registrieren' : 'Anmelden'),
+                  ),
             TextButton(
               onPressed: () {
                 setState(() {

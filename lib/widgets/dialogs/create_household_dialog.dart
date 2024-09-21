@@ -1,5 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:eva_app/provider/data_provider.dart'; // Passe diesen Import an dein Projekt an.
+import 'package:eva_app/widgets/buttons/custom_text_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
@@ -51,11 +52,8 @@ Future<Future<Object?>> showCreateHouseholdDialog(BuildContext context) async {
                           ),
                         ),
                         actions: <Widget>[
-                          TextButton(
-                            child: const Text('Fertig'),
-                            onPressed: () {
-                              AutoRouter.of(context).maybePop();
-                            },
+                          CustomTextButton(
+                            buttonType: ButtonType.done,
                           ),
                         ],
                       );

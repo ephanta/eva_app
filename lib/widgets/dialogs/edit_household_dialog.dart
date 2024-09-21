@@ -5,6 +5,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/data_provider.dart';
+import '../buttons/custom_text_button.dart';
 
 /// {@category Widgets}
 /// Dialog zum Bearbeiten eines Haushalts
@@ -55,11 +56,8 @@ Future<Future<Object?>> showEditHouseholdDialog(
                           ),
                         ),
                         actions: <Widget>[
-                          TextButton(
-                            child: const Text('Fertig'),
-                            onPressed: () {
-                              AutoRouter.of(context).maybePop();
-                            },
+                          CustomTextButton(
+                            buttonType: ButtonType.done,
                           ),
                         ],
                       );

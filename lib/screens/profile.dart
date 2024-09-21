@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:eva_app/data/constants.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
@@ -38,10 +40,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _usernameController.text = profile['username'] ?? '';
         _avatarUrl = profile['avatar_url'] ?? '';
 
-        final dietaryNotes = profile['hinweise_zur_ernaehrung']?.toString().split(',') ?? [];
-        _dietaryNotes = dietaryNotes.isNotEmpty && dietaryNotes.first.trim() != ''
-            ? dietaryNotes.map((note) => note.trim()).toList()
-            : ['keine'];
+        final dietaryNotes =
+            profile['hinweise_zur_ernaehrung']?.toString().split(',') ?? [];
+        _dietaryNotes =
+            dietaryNotes.isNotEmpty && dietaryNotes.first.trim() != ''
+                ? dietaryNotes.map((note) => note.trim()).toList()
+                : ['keine'];
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,7 +58,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: const Color(0xFFFDD9CF),
+      color: Constants.primaryBackgroundColor,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -65,25 +69,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 radius: 50,
                 backgroundImage: _avatarUrl.isNotEmpty
                     ? NetworkImage(_avatarUrl)
-                    : const AssetImage('assets/default_avatar.png') as ImageProvider,
+                    : const AssetImage('assets/default_avatar.png')
+                        as ImageProvider,
                 backgroundColor: Colors.transparent,
               ),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _usernameController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Username',
-                labelStyle: const TextStyle(color: Color(0xFF3A0B01)),
-                enabledBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                labelStyle: TextStyle(color: Constants.primaryTextColor),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Constants.primaryTextColor),
                 ),
-                focusedBorder: const UnderlineInputBorder(
-                  borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Constants.primaryTextColor),
                 ),
               ),
               enabled: _isEditing,
-              style: const TextStyle(color: Color(0xFF3A0B01)),
+              style: const TextStyle(color: Constants.primaryTextColor),
             ),
             const SizedBox(height: 16),
             const Text(
@@ -91,34 +96,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF3A0B01),
+                color: Constants.primaryTextColor,
               ),
             ),
             Wrap(
               spacing: 8,
               children: _dietaryNotes.map((note) {
                 return Chip(
-                  label: Text(note, style: const TextStyle(color: Color(0xFF3A0B01))),
-                  backgroundColor: const Color(0xFFFFECE7),
-                  deleteIcon: const Icon(Icons.close, color: Color(0xFF3A0B01)),
-                  onDeleted: note == 'keine' ? null : () => _removeDietaryNote(note),
+                  label: Text(note,
+                      style:
+                          const TextStyle(color: Constants.primaryTextColor)),
+                  backgroundColor: Constants.secondaryBackgroundColor,
+                  deleteIcon: const Icon(Icons.close,
+                      color: Constants.primaryTextColor),
+                  onDeleted:
+                      note == 'keine' ? null : () => _removeDietaryNote(note),
                 );
               }).toList(),
             ),
             if (_isEditing) ...[
               TextField(
                 controller: _dietaryNoteController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Neue Hinweise zur Ernährung',
-                  labelStyle: const TextStyle(color: Color(0xFF3A0B01)),
-                  enabledBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                  labelStyle: TextStyle(color: Constants.primaryTextColor),
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Constants.primaryTextColor),
                   ),
-                  focusedBorder: const UnderlineInputBorder(
-                    borderSide: BorderSide(color: Color(0xFF3A0B01)),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide: BorderSide(color: Constants.primaryTextColor),
                   ),
                 ),
-                style: const TextStyle(color: Color(0xFF3A0B01)),
+                style: const TextStyle(color: Constants.primaryTextColor),
                 onSubmitted: (value) {
                   if (value.isNotEmpty) {
                     _addDietaryNotes(value);
@@ -131,20 +140,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _addDietaryNotes(_dietaryNoteController.text);
                   }
                 },
-                child: const Text('Add New Dietary Note', style: TextStyle(color: Color(0xFF3A0B01))),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFECE7),
+                  backgroundColor: Constants.secondaryBackgroundColor,
                 ),
+                child: const Text('Add New Dietary Note',
+                    style: TextStyle(color: Constants.primaryTextColor)),
               ),
             ],
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _isEditing ? _saveProfile : _startEditing,
-              child: Text(_isEditing ? 'Speichern' : 'Profil bearbeiten', style: const TextStyle(color: Color(0xFF3A0B01))),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFECE7),
+                backgroundColor: Constants.secondaryBackgroundColor,
                 minimumSize: const Size(double.infinity, 50),
               ),
+              child: Text(_isEditing ? 'Speichern' : 'Profil bearbeiten',
+                  style: const TextStyle(color: Constants.primaryTextColor)),
             ),
           ],
         ),
@@ -154,7 +165,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _addDietaryNotes(String notes) async {
     setState(() {
-      final newNotes = notes.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      final newNotes = notes
+          .split(',')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
 
       if (_dietaryNotes.contains('keine')) {
         _dietaryNotes.remove('keine');
@@ -180,7 +195,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _updateDietaryNotesInDatabase() async {
     try {
-      String notesString = _dietaryNotes.contains('keine') ? '' : _dietaryNotes.join(',');
+      String notesString =
+          _dietaryNotes.contains('keine') ? '' : _dietaryNotes.join(',');
       await _dataProvider.updateDietaryNotes(notesString);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Dietary notes updated successfully')),
@@ -203,7 +219,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _avatarUrl = newAvatarUrl;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Profile picture updated successfully.')),
+          const SnackBar(
+              content: Text('Profile picture updated successfully.')),
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -216,9 +233,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildActionButtons() {
     return Column(
       children: [
-        _buildActionButton('Haushalte verwalten', Icons.home, () {
-          // Dummy button, do nothing for now
-        }),
         _buildActionButton('Meine Bewertungen', Icons.star, () {
           context.router.push(RatingRoute());
         }),
@@ -229,24 +243,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, VoidCallback onPressed) {
+  Widget _buildActionButton(
+      String label, IconData icon, VoidCallback onPressed) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ElevatedButton.icon(
-        icon: Icon(icon, color: const Color(0xFF3A0B01)),  // Matching icon color
+        icon: Icon(icon, color: Constants.primaryTextColor),
+        // Matching icon color
         label: Text(
           label,
           style: const TextStyle(
-            color: Color(0xFF3A0B01), // Matching text color
+            color: Constants.primaryTextColor, // Matching text color
           ),
         ),
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFECE7), // Matching background color
+          backgroundColor: Constants.secondaryBackgroundColor,
+          // Matching background color
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20), // Rounded look
           ),
-          minimumSize: const Size(double.infinity, 50), // Ensuring full-width buttons
+          minimumSize: const Size(double.infinity, 50),
+          // Ensuring full-width buttons
           elevation: 2, // Optional elevation for a more distinct button
         ),
       ),
@@ -257,7 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return ElevatedButton(
       onPressed: _logout,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
+        backgroundColor: Constants.warningColor,
         minimumSize: const Size(double.infinity, 50),
       ),
       child: const Text('Log Out', style: TextStyle(color: Colors.white)),
@@ -272,7 +290,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _saveProfile() async {
     try {
-      String dietaryNotesString = _dietaryNotes.contains('keine') ? '' : _dietaryNotes.join(',');
+      String dietaryNotesString =
+          _dietaryNotes.contains('keine') ? '' : _dietaryNotes.join(',');
 
       final updatedProfile = {
         'username': _usernameController.text,
@@ -319,15 +338,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       body: Column(
         children: [
           Container(
-            color: const Color(0xFFFDF6F4),
+            color: Constants.secondaryBackgroundColor,
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: const Text(
+            child: const Center(
+              child: Text(
                 'Profil',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF3A0B01),
+                  color: Constants.primaryTextColor,
                 ),
               ),
             ),

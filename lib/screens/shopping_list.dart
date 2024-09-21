@@ -1,5 +1,6 @@
-import 'package:auto_route/annotations.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:eva_app/data/constants.dart';
+import 'package:eva_app/widgets/buttons/custom_text_button.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -29,7 +30,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   Future<List<Map<String, dynamic>>> _getShoppingList() async {
-    final shoppingList = await _dataProvider.getShoppingList(widget.householdId);
+    final shoppingList =
+        await _dataProvider.getShoppingList(widget.householdId);
     return shoppingList.where((item) => item['status'] == 'pending').toList();
   }
 
@@ -44,94 +46,106 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : FutureBuilder<List<Map<String, dynamic>>>(
-        future: _getShoppingList(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return Center(child: Text('Fehler: ${snapshot.error}'));
-          }
-          final shoppingList = snapshot.data ?? [];
-          if (shoppingList.isEmpty) {
-            return const Center(child: Text('Die Einkaufsliste ist leer.'));
-          }
-          return Column(
-            children: [
-              // Title Styling
-              Container(
-                color: const Color(0xFFFDF6F4), // Light background color
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: Center(
-                  child: const Text(
-                    'Einkaufsliste',
-                    style: TextStyle(
-                      fontSize: 22, // Matching font size
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3A0B01), // Matching text color
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: shoppingList.length,
-                  itemBuilder: (context, index) {
-                    final item = shoppingList[index];
-                    return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      color: const Color(0xFFFDD9CF), // Matching card background color
-                      child: ListTile(
-                        title: Text(
-                          item['item_name'],
-                          style: const TextStyle(
+              future: _getShoppingList(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text('Fehler: ${snapshot.error}'));
+                }
+                final shoppingList = snapshot.data ?? [];
+                if (shoppingList.isEmpty) {
+                  return const Center(
+                      child: Text('Die Einkaufsliste ist leer.'));
+                }
+                return Column(
+                  children: [
+                    // Title Styling
+                    Container(
+                      color: Constants.secondaryBackgroundColor,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: const Center(
+                        child: Text(
+                          'Einkaufsliste',
+                          style: TextStyle(
+                            fontSize: 22, // Matching font size
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF3A0B01), // Consistent text color
+                            color: Constants
+                                .primaryTextColor, // Matching text color
                           ),
                         ),
-                        subtitle: Text(
-                          'Menge: ${item['amount']}',
-                          style: const TextStyle(color: Color(0xFF3A0B01)),
-                        ),
-                        leading: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteItem(item['id']),
-                        ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.shopping_cart, color: Colors.green),
-                          onPressed: () => _updateItemStatus(item['id'], true),
+                      ),
+                    ),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: shoppingList.length,
+                        itemBuilder: (context, index) {
+                          final item = shoppingList[index];
+                          return Card(
+                            margin: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 16),
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                            color: Constants.primaryBackgroundColor,
+                            // Matching card background color
+                            child: ListTile(
+                              title: Text(
+                                item['item_name'],
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Constants
+                                      .primaryTextColor, // Consistent text color
+                                ),
+                              ),
+                              subtitle: Text(
+                                'Menge: ${item['amount']}',
+                                style: const TextStyle(
+                                    color: Constants.primaryTextColor),
+                              ),
+                              leading: IconButton(
+                                icon: const Icon(Icons.delete,
+                                    color: Constants.warningColor),
+                                onPressed: () => _deleteItem(item['id']),
+                              ),
+                              trailing: IconButton(
+                                icon: const Icon(Icons.shopping_cart,
+                                    color: Constants.successColor),
+                                onPressed: () =>
+                                    _updateItemStatus(item['id'], true),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton.icon(
+                        icon: const Icon(Icons.delete_sweep),
+                        label: const Text('Einkaufsliste leeren'),
+                        onPressed: _clearShoppingList,
+                        style: _elevatedButtonStyle(
+                          backgroundColor: Constants.warningColor,
+                          textColor: Colors.white,
                         ),
                       ),
-                    );
-                  },
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.delete_sweep),
-                  label: const Text('Einkaufsliste leeren'),
-                  onPressed: _clearShoppingList,
-                  style: _elevatedButtonStyle(
-                    backgroundColor: Colors.red,
-                    textColor: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+                    ),
+                  ],
+                );
+              },
+            ),
       floatingActionButton: FloatingActionButton(
         heroTag: 'addItem',
         onPressed: () async {
           await _showAddItemDialog(context);
           setState(() {});
         },
-        backgroundColor: const Color(0xFFFDD9CF), // Consistent FAB background color
-        child: const Icon(Icons.add, color: Color(0xFF3A0B01)), // Consistent icon color
+        backgroundColor: Constants.primaryBackgroundColor,
+        // Consistent FAB background color
+        child: const Icon(Icons.add,
+            color: Constants.primaryTextColor), // Consistent icon color
       ),
       bottomNavigationBar: BottomNavBarCustom(
         pageType: PageType.shoppingList,
@@ -145,14 +159,15 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   }
 
   // Method to define consistent button styles
-  ButtonStyle _elevatedButtonStyle({required Color backgroundColor, required Color textColor}) {
+  ButtonStyle _elevatedButtonStyle(
+      {required Color backgroundColor, required Color textColor}) {
     return ElevatedButton.styleFrom(
       backgroundColor: backgroundColor,
       foregroundColor: textColor,
-      minimumSize: const Size(double.infinity, 50),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
+      minimumSize: const Size(double.infinity, 50),
     );
   }
 
@@ -178,13 +193,15 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () => Navigator.of(context).pop(),
+            CustomTextButton(
+              buttonType: ButtonType.abort,
             ),
-            TextButton(
-              child: const Text('Hinzufügen'),
-              onPressed: () => Navigator.of(context).pop({'name': itemName, 'amount': amount}),
+            CustomTextButton(
+              buttonText: 'Hinzufügen',
+              onPressed: () {
+                AutoRouter.of(context)
+                    .maybePop({'name': itemName, 'amount': amount});
+              },
             ),
           ],
         );
@@ -194,7 +211,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
     if (result != null) {
       setState(() => _isLoading = true);
       try {
-        await _dataProvider.addItemToShoppingList(widget.householdId, result['name']!, result['amount']!);
+        await _dataProvider.addItemToShoppingList(
+            widget.householdId, result['name']!, result['amount']!);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Artikel erfolgreich hinzugefügt')),
         );
@@ -218,7 +236,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       setState(() {});
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Aktualisieren des Artikelstatus: $e')),
+        SnackBar(
+            content: Text('Fehler beim Aktualisieren des Artikelstatus: $e')),
       );
     } finally {
       setState(() => _isLoading = false);
@@ -281,24 +300,28 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
   Future<bool> showDeleteConfirmationDialog(
       BuildContext context, String title, String content) async {
     return await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: [
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () => Navigator.of(context).pop(false),
-            ),
-            TextButton(
-              child: const Text('Löschen'),
-              onPressed: () => Navigator.of(context).pop(true),
-            ),
-          ],
-        );
-      },
-    ) ??
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(title),
+              content: Text(content),
+              actions: [
+                CustomTextButton(
+                  buttonType: ButtonType.abort,
+                  onPressed: () {
+                    AutoRouter.of(context).maybePop(false);
+                  },
+                ),
+                CustomTextButton(
+                  buttonText: 'Löschen',
+                  onPressed: () {
+                    AutoRouter.of(context).maybePop(true);
+                  },
+                ),
+              ],
+            );
+          },
+        ) ??
         false; // Return false if dialog is dismissed
   }
 }

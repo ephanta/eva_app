@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../provider/data_provider.dart';
+import '../buttons/custom_text_button.dart';
 
 /// {@category Widgets}
 /// Dialog zum Bestätigen des Löschens eines Haushalts oder eines Eintrags aus der Einkaufsliste
@@ -29,14 +30,11 @@ Future<void> showDeleteConfirmationDialog(
           ),
         ),
         actions: <Widget>[
-          TextButton(
-            child: const Text('Abbrechen'),
-            onPressed: () {
-              AutoRouter.of(context).maybePop();
-            },
+          CustomTextButton(
+            buttonType: ButtonType.abort,
           ),
-          TextButton(
-            child: const Text('Löschen'),
+          CustomTextButton(
+            buttonText: 'Löschen',
             onPressed: () async {
               final dataProvider =
                   Provider.of<DataProvider>(context, listen: false);

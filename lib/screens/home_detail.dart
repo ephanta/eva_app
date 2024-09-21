@@ -4,8 +4,10 @@ import 'package:flutter/services.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 
+import '../data/constants.dart';
 import '../provider/data_provider.dart';
 import '../routes/app_router.gr.dart';
+import '../widgets/buttons/custom_text_button.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 
@@ -27,7 +29,7 @@ class HomeDetailScreen extends StatefulWidget {
 }
 
 class _HomeDetailScreenState extends State<HomeDetailScreen> {
-  bool _isLoading = false;
+  final bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -40,9 +42,9 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       body: _isLoading
           ? _buildSkeletonLoader()
           : AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: _buildContent(context),
-      ),
+              duration: const Duration(milliseconds: 300),
+              child: _buildContent(context),
+            ),
       bottomNavigationBar: BottomNavBarCustom(
         pageType: PageType.homeDetail,
         showHome: false,
@@ -59,7 +61,9 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
     final userRole = widget.preloadedUserRole;
     Color householdColor;
     try {
-      householdColor = Color(int.parse(household['color'].substring(1, 7), radix: 16) + 0xFF000000);
+      householdColor = Color(
+          int.parse(household['color'].substring(1, 7), radix: 16) +
+              0xFF000000);
     } catch (e) {
       householdColor = Colors.grey;
     }
@@ -68,7 +72,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       children: [
         // Title of the Household with the same style as 'Meine Bewertungen'
         Container(
-          color: const Color(0xFFFDF6F4), // Light background similar to 'Meine Bewertungen'
+          color: Constants.secondaryBackgroundColor,
+          // Light background similar to 'Meine Bewertungen'
           padding: const EdgeInsets.symmetric(vertical: 16),
           child: Center(
             child: Text(
@@ -76,7 +81,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
               style: const TextStyle(
                 fontSize: 22, // Matching font size to 'Meine Bewertungen'
                 fontWeight: FontWeight.bold,
-                color: Color(0xFF3A0B01), // Matching color to 'Meine Bewertungen'
+                color: Constants
+                    .primaryTextColor, // Matching color to 'Meine Bewertungen'
               ),
             ),
           ),
@@ -96,7 +102,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
           textAlign: TextAlign.center,
         ),
         FutureBuilder<List<Map<String, dynamic>>>(
-          future: Provider.of<DataProvider>(context, listen: false).getHouseholdMembers(widget.householdId),
+          future: Provider.of<DataProvider>(context, listen: false)
+              .getHouseholdMembers(widget.householdId),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const CircularProgressIndicator();
@@ -110,20 +117,20 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                 children: members
                     .map(
                       (member) => ListTile(
-                    title: Center(
-                      child: Text(
-                        member['username'] ?? 'Unbekanntes Mitglied',
-                        style: const TextStyle(color: Colors.black),
+                        title: Center(
+                          child: Text(
+                            member['username'] ?? 'Unbekanntes Mitglied',
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        ),
+                        subtitle: Center(
+                          child: Text(
+                            member['role'] ?? '',
+                            style: const TextStyle(color: Colors.black),
+                          ),
+                        ),
                       ),
-                    ),
-                    subtitle: Center(
-                      child: Text(
-                        member['role'] ?? '',
-                        style: const TextStyle(color: Colors.black),
-                      ),
-                    ),
-                  ),
-                )
+                    )
                     .toList(),
               );
             }
@@ -134,7 +141,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
           icon: const Icon(Icons.copy),
           label: const Text('Einladungscode kopieren'),
           onPressed: () {
-            Clipboard.setData(ClipboardData(text: household['invite_code'] ?? ''));
+            Clipboard.setData(
+                ClipboardData(text: household['invite_code'] ?? ''));
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(content: Text('Einladungscode kopiert')),
             );
@@ -178,8 +186,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
 
   ButtonStyle _elevatedButtonStyle() {
     return ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFFFECE7),
-      foregroundColor: const Color(0xFF3A0B01),
+      backgroundColor: Constants.secondaryBackgroundColor,
+      foregroundColor: Constants.primaryTextColor,
       minimumSize: const Size(double.infinity, 50),
       padding: const EdgeInsets.symmetric(vertical: 14.0),
       shape: RoundedRectangleBorder(
@@ -212,27 +220,27 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Haushalt löschen'),
-          content: const Text('Sind Sie sicher, dass Sie diesen Haushalt löschen möchten?'),
+          content: const Text(
+              'Sind Sie sicher, dass Sie diesen Haushalt löschen möchten?'),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+            CustomTextButton(
+              buttonType: ButtonType.abort,
             ),
             TextButton(
               child: const Text('Löschen'),
               onPressed: () async {
-                final dataProvider = Provider.of<DataProvider>(context, listen: false);
+                final dataProvider =
+                    Provider.of<DataProvider>(context, listen: false);
                 try {
                   await dataProvider.deleteHousehold(widget.householdId);
-                  Navigator.of(context).pop();
+                  AutoRouter.of(context).maybePop();
                   AutoRouter.of(context).replace(const HomeRoute());
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Haushalt erfolgreich gelöscht.')),
+                    const SnackBar(
+                        content: Text('Haushalt erfolgreich gelöscht.')),
                   );
                 } catch (e) {
-                  Navigator.of(context).pop();
+                  AutoRouter.of(context).maybePop();
                   _showErrorSnackBar('Fehler beim Löschen des Haushalts: $e');
                 }
               },
@@ -250,27 +258,27 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Haushalt verlassen'),
-          content: const Text('Sind Sie sicher, dass Sie diesen Haushalt verlassen möchten?'),
+          content: const Text(
+              'Sind Sie sicher, dass Sie diesen Haushalt verlassen möchten?'),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Abbrechen'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+            CustomTextButton(
+              buttonType: ButtonType.abort,
             ),
-            TextButton(
-              child: const Text('Verlassen'),
+            CustomTextButton(
+              buttonText: 'Verlassen',
               onPressed: () async {
-                final dataProvider = Provider.of<DataProvider>(context, listen: false);
+                final dataProvider =
+                    Provider.of<DataProvider>(context, listen: false);
                 try {
                   await dataProvider.leaveHousehold(widget.householdId);
-                  Navigator.of(context).pop();
+                  AutoRouter.of(context).maybePop();
                   AutoRouter.of(context).replace(const HomeRoute());
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Haushalt erfolgreich verlassen.')),
+                    const SnackBar(
+                        content: Text('Haushalt erfolgreich verlassen.')),
                   );
                 } catch (e) {
-                  Navigator.of(context).pop();
+                  AutoRouter.of(context).maybePop();
                   _showErrorSnackBar('Fehler beim Verlassen des Haushalts: $e');
                 }
               },
@@ -283,16 +291,22 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
 
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
+      SnackBar(content: Text(message), backgroundColor: Constants.warningColor),
     );
   }
 
-  void _showEditHouseholdDialog(BuildContext context, Map<String, dynamic> household) {
-    final TextEditingController nameController = TextEditingController(text: household['name'] ?? '');
-    final TextEditingController inviteCodeController = TextEditingController(text: household['invite_code'] ?? '');
+  void _showEditHouseholdDialog(
+      BuildContext context, Map<String, dynamic> household) {
+    final TextEditingController nameController =
+        TextEditingController(text: household['name'] ?? '');
+    final TextEditingController inviteCodeController =
+        TextEditingController(text: household['invite_code'] ?? '');
     Color currentColor;
     try {
-      currentColor = Color(int.parse(household['color']?.substring(1, 7) ?? 'FFFFFF', radix: 16) + 0xFF000000);
+      currentColor = Color(int.parse(
+              household['color']?.substring(1, 7) ?? 'FFFFFF',
+              radix: 16) +
+          0xFF000000);
     } catch (e) {
       currentColor = Colors.grey;
     }
@@ -301,7 +315,8 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       context: context,
       barrierDismissible: true,
       barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
-      pageBuilder: (BuildContext buildContext, Animation animation, Animation secondaryAnimation) {
+      pageBuilder: (BuildContext buildContext, Animation animation,
+          Animation secondaryAnimation) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setState) {
             return Scaffold(
@@ -339,7 +354,9 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                           child: Text(
                             'Farbe wählen',
                             style: TextStyle(
-                              color: ThemeData.estimateBrightnessForColor(currentColor) == Brightness.dark
+                              color: ThemeData.estimateBrightnessForColor(
+                                          currentColor) ==
+                                      Brightness.dark
                                   ? Colors.white
                                   : Colors.black,
                             ),
@@ -357,9 +374,11 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                         suffixIcon: Icon(Icons.copy),
                       ),
                       onTap: () {
-                        Clipboard.setData(ClipboardData(text: inviteCodeController.text));
+                        Clipboard.setData(
+                            ClipboardData(text: inviteCodeController.text));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Einladungscode kopiert')),
+                          const SnackBar(
+                              content: Text('Einladungscode kopiert')),
                         );
                       },
                     ),
@@ -367,28 +386,35 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
                     ElevatedButton(
                       onPressed: () async {
                         final householdName = nameController.text;
-                        final householdColor = '#${currentColor.value.toRadixString(16).substring(2, 8)}';
-                        if (householdName.isNotEmpty && householdColor.isNotEmpty) {
+                        final householdColor =
+                            '#${currentColor.value.toRadixString(16).substring(2, 8)}';
+                        if (householdName.isNotEmpty &&
+                            householdColor.isNotEmpty) {
                           try {
-                            final dataProvider = Provider.of<DataProvider>(context, listen: false);
+                            final dataProvider = Provider.of<DataProvider>(
+                                context,
+                                listen: false);
                             await dataProvider.updateHousehold(
                               widget.householdId,
                               name: householdName,
                               color: householdColor,
                             );
-                            Navigator.pop(context);
+                            AutoRouter.of(context).maybePop();
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Haushalt erfolgreich bearbeitet.')),
+                              const SnackBar(
+                                  content:
+                                      Text('Haushalt erfolgreich bearbeitet.')),
                             );
                           } catch (e) {
-                            _showErrorSnackBar('Fehler beim Bearbeiten des Haushalts: $e');
+                            _showErrorSnackBar(
+                                'Fehler beim Bearbeiten des Haushalts: $e');
                           }
                         } else {
                           _showErrorSnackBar('Bitte alle Felder ausfüllen');
                         }
                       },
-                      child: const Text('Speichern'),
                       style: _elevatedButtonStyle(),
+                      child: const Text('Speichern'),
                     ),
                   ],
                 ),
@@ -398,16 +424,19 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
         );
       },
       transitionDuration: const Duration(milliseconds: 300),
-      transitionBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation, Widget child) {
+      transitionBuilder: (BuildContext context, Animation<double> animation,
+          Animation<double> secondaryAnimation, Widget child) {
         return SlideTransition(
-          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(animation),
+          position: Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+              .animate(animation),
           child: child,
         );
       },
     );
   }
 
-  void _pickColorDialog(BuildContext context, Color currentColor, ValueChanged<Color> onColorChanged) {
+  void _pickColorDialog(BuildContext context, Color currentColor,
+      ValueChanged<Color> onColorChanged) {
     showDialog(
       context: context,
       builder: (context) {
@@ -421,12 +450,7 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
             ),
           ),
           actions: <Widget>[
-            TextButton(
-              child: const Text('Fertig'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
+            CustomTextButton(buttonType: ButtonType.done),
           ],
         );
       },
