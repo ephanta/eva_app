@@ -137,7 +137,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Constants.secondaryBackgroundColor,
                 ),
-                child: const Text('Add New Dietary Note',
+                child: const Text('Neuen Ernährungshinweis hinzufügen',
                     style: TextStyle(color: Constants.primaryTextColor)),
               ),
             ],

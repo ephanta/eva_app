@@ -56,7 +56,7 @@ async function handleGetRequest(userId: string) {
 
       const defaultProfile = {
         user_id: userId,
-        username: "New User",
+        username: "Neuer User",
         avatar_url: "",
         hinweise_zur_ernaehrung: "keine", // Default dietary notes
         created_at: new Date().toISOString(),
@@ -135,7 +135,7 @@ async function handlePutRequest(body: any, userId: string) {
 
       const newProfile = {
         user_id: userId,
-        username: username || "New User",
+        username: username || "Neuer User",
         avatar_url: avatar_url || "",
         hinweise_zur_ernaehrung: hinweise_zur_ernaehrung || "keine",
         created_at: new Date().toISOString(),

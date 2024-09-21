@@ -253,7 +253,7 @@ class _RecipeManagementScreenState extends State<RecipeManagementScreen> {
       appBar: const AppBarCustom(
         showArrow: true,
         showHome: true,
-        showProfile: false,
+        showProfile: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

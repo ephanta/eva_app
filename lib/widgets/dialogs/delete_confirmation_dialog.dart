@@ -7,7 +7,7 @@ import '../buttons/custom_text_button.dart';
 
 /// {@category Widgets}
 /// Dialog zum Bestätigen des Löschens eines Haushalts oder eines Eintrags aus der Einkaufsliste
-Future<void> showDeleteConfirmationDialog(
+Future<void> deleteConfirmationDialog(
   BuildContext context,
   int householdId,
   int? id,

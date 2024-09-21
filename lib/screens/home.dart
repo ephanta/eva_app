@@ -1,15 +1,17 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.gr.dart';
-import 'package:eva_app/widgets/buttons/custom_text_button.dart';
 import 'package:eva_app/widgets/navigation/app_bar_custom.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:provider/provider.dart';
 
 import '../data/constants.dart';
+import '../widgets/dialogs/create_household_dialog.dart';
+import '../widgets/dialogs/join_household_dialog.dart';
 import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht des Home Screen mit einer Übersicht aller Haushalte
 @RoutePage()
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -18,136 +20,15 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+/// Der State des Home Screens
 class _HomeScreenState extends State<HomeScreen> {
   late DataProvider _dataProvider;
-  Color currentColor = Colors.blue; // Default color
+  Color currentColor = Constants.primaryColor;
 
   @override
   void initState() {
     super.initState();
     _dataProvider = Provider.of<DataProvider>(context, listen: false);
-  }
-
-  void _createHouseholdDialog(BuildContext context) {
-    final TextEditingController controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext buildContext) {
-        return StatefulBuilder(
-          builder: (BuildContext context, StateSetter setState) {
-            return AlertDialog(
-              title: const Text('Neuen Haushalt erstellen'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Name des Haushalts',
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  GestureDetector(
-                    onTap: () {
-                      _pickDetailedColorDialog(context, currentColor, (color) {
-                        setState(() {
-                          currentColor = color;
-                        });
-                      });
-                    },
-                    child: Container(
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: currentColor,
-                        borderRadius: BorderRadius.circular(8.0),
-                        border: Border.all(color: Colors.grey),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Farbe wählen',
-                          style: TextStyle(
-                            color: ThemeData.estimateBrightnessForColor(
-                                        currentColor) ==
-                                    Brightness.dark
-                                ? Colors.white
-                                : Colors.black,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: <Widget>[
-                CustomTextButton(buttonType: ButtonType.abort),
-                ElevatedButton(
-                  style: _elevatedButtonStyle(),
-                  onPressed: () async {
-                    final householdName = controller.text;
-                    final householdColor =
-                        '#${currentColor.value.toRadixString(16).substring(2, 8)}';
-                    if (householdName.isNotEmpty) {
-                      try {
-                        final newHousehold = await _dataProvider
-                            .createHousehold(householdName, householdColor);
-                        if (newHousehold['id'] != null) {
-                          const userRole = 'admin'; // Creator is admin
-                          AutoRouter.of(context).maybePop();
-                          AutoRouter.of(context).push(
-                            HomeDetailRoute(
-                              householdId: newHousehold['id'],
-                              preloadedHouseholdData: newHousehold,
-                              // Use new household data
-                              preloadedUserRole: userRole,
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text('Failed to create household: $e')),
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Bitte geben Sie einen Namen ein')),
-                      );
-                    }
-                  },
-                  child: const Text('Erstellen'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  void _pickDetailedColorDialog(BuildContext context, Color currentColor,
-      ValueChanged<Color> onColorChanged) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Wähle eine Farbe'),
-          content: SingleChildScrollView(
-            child: ColorPicker(
-              pickerColor: currentColor,
-              onColorChanged: onColorChanged,
-              labelTypes: const [],
-              pickerAreaHeightPercent: 0.8,
-            ),
-          ),
-          actions: <Widget>[
-            CustomTextButton(buttonType: ButtonType.done),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -270,7 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
           FloatingActionButton(
             heroTag: 'joinHousehold',
             onPressed: () {
-              _joinHouseholdDialog(context);
+              joinHouseholdDialog(context, _dataProvider);
             },
             backgroundColor: Constants.primaryBackgroundColor,
             child:
@@ -279,94 +160,12 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 10),
           FloatingActionButton(
             heroTag: 'createHousehold',
-            onPressed: () => _createHouseholdDialog(context),
+            onPressed: () => createHouseholdDialog(context, _dataProvider),
             backgroundColor: Constants.primaryBackgroundColor,
             // Use the same color as the background
             child: const Icon(Icons.add, color: Constants.primaryTextColor),
           ),
         ],
-      ),
-    );
-  }
-
-  void _joinHouseholdDialog(BuildContext context) {
-    final TextEditingController inviteCodeController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Haushalt beitreten'),
-          content: TextField(
-            controller: inviteCodeController,
-            decoration: const InputDecoration(
-              labelText: 'Einladungscode',
-            ),
-          ),
-          actions: <Widget>[
-            CustomTextButton(
-              buttonType: ButtonType.abort,
-            ),
-            ElevatedButton(
-              style: _elevatedButtonStyle(),
-              child: const Text('Beitreten'),
-              onPressed: () async {
-                final inviteCode = inviteCodeController.text;
-
-                if (inviteCode.isNotEmpty) {
-                  try {
-                    final result =
-                        await _dataProvider.joinHousehold(inviteCode);
-                    final householdId = result['household_id'];
-
-                    // Fetch household data and user role
-                    final householdData =
-                        await _dataProvider.getCurrentHousehold(householdId);
-                    final userRole =
-                        await _dataProvider.getUserRoleInHousehold(householdId);
-
-                    AutoRouter.of(context).maybePop();
-                    AutoRouter.of(context).push(
-                      HomeDetailRoute(
-                        householdId: householdId,
-                        preloadedHouseholdData: householdData,
-                        preloadedUserRole: userRole,
-                      ),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content:
-                              Text('Erfolgreich dem Haushalt beigetreten.')),
-                    );
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content:
-                              Text('Fehler beim Beitreten des Haushalts: $e')),
-                    );
-                  }
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content:
-                            Text('Bitte geben Sie einen Einladungscode ein')),
-                  );
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Button style
-  ButtonStyle _elevatedButtonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: Constants.primaryBackgroundColor,
-      foregroundColor: Constants.primaryTextColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
       ),
     );
   }

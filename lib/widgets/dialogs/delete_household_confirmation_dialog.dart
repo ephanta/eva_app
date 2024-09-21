@@ -8,38 +8,38 @@ import '../../routes/app_router.gr.dart';
 import '../buttons/custom_text_button.dart';
 
 /// {@category Widgets}
-/// Dialog zum Bestätigen des Verlassens eines Haushalts
-Future<void> leaveConfirmationDialog(
-    BuildContext context, String householdId) async {
+/// Dialog um einen Haushalt zu löschen
+Future<void> deleteHouseholdConfirmationDialog(
+    BuildContext context, Map<String, dynamic> household) async {
   return showDialog<void>(
     context: context,
     barrierDismissible: false,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: const Text('Haushalt verlassen'),
+        title: const Text('Haushalt löschen'),
         content: const Text(
-            'Sind Sie sicher, dass Sie diesen Haushalt verlassen möchten?'),
+            'Sind Sie sicher, dass Sie diesen Haushalt löschen möchten?'),
         actions: <Widget>[
           CustomTextButton(
             buttonType: ButtonType.abort,
           ),
-          CustomTextButton(
-            buttonText: 'Verlassen',
+          TextButton(
+            child: const Text('Löschen'),
             onPressed: () async {
               final dataProvider =
                   Provider.of<DataProvider>(context, listen: false);
               try {
-                await dataProvider.leaveHousehold(householdId);
+                await dataProvider.deleteHousehold(household['id'].toString());
                 AutoRouter.of(context).maybePop();
                 AutoRouter.of(context).replace(const HomeRoute());
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                      content: Text('Haushalt erfolgreich verlassen.')),
+                      content: Text('Haushalt erfolgreich gelöscht.')),
                 );
               } catch (e) {
                 AutoRouter.of(context).maybePop();
                 showErrorSnackBar(
-                    context, 'Fehler beim Verlassen des Haushalts: $e');
+                    context, 'Fehler beim Löschen des Haushalts: $e');
               }
             },
           ),

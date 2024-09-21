@@ -107,7 +107,7 @@ class _RatingScreenState extends State<RatingScreen> {
       appBar: const AppBarCustom(
         showArrow: true,
         showHome: true,
-        showProfile: false,
+        showProfile: true,
       ),
       body: Column(
         children: [
