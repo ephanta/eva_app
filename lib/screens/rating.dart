@@ -111,32 +111,35 @@ class _RatingScreenState extends State<RatingScreen> {
         showHome: true,
         showProfile: true,
       ),
-      body: Column(
-        children: [
-          Container(
-            color: Constants.secondaryBackgroundColor,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: CustomText(
-                text: widget.recipeName != null
-                    ? 'Bewertungen für ${widget.recipeName}'
-                    : 'Meine Bewertungen',
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Container(
+              color: Constants.secondaryBackgroundColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Center(
+                child: CustomText(
+                  text: widget.recipeName != null
+                      ? 'Bewertungen für ${widget.recipeName}'
+                      : 'Meine Bewertungen',
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _ratings.isEmpty
-                    ? const Center(child: Text('Keine Bewertungen vorhanden'))
-                    : ListView.builder(
-                        itemCount: _ratings.length,
-                        itemBuilder: (context, index) {
-                          return _buildRatingCard(_ratings[index]);
-                        },
-                      ),
-          ),
-        ],
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _ratings.isEmpty
+                      ? const Center(child: Text('Keine Bewertungen vorhanden'))
+                      : ListView.builder(
+                          itemCount: _ratings.length,
+                          itemBuilder: (context, index) {
+                            return _buildRatingCard(_ratings[index]);
+                          },
+                        ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: widget.recipeId != null
           ? FloatingActionButton(

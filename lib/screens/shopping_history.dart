@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../data/constants.dart';
 import '../provider/data_provider.dart';
+import '../widgets/dialogs/delete_confirmation_dialog.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../widgets/text/custom_text.dart';
@@ -53,56 +54,6 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
     }
   }
 
-  void _deleteItem(String itemId) async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    try {
-      await dataProvider.removeItemFromShoppingList(itemId);
-      _loadShoppingHistory();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Löschen des Eintrags: $e')),
-      );
-    }
-  }
-
-  void _addItemAgain(Map<String, dynamic> item) async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    try {
-      await dataProvider.addItemToShoppingList(
-          widget.householdId, item['item_name'], item['amount']);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(
-                '${item['item_name']} wurde der Einkaufsliste hinzugefügt.')),
-      );
-      _loadShoppingHistory();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Hinzufügen des Artikels: $e')),
-      );
-    }
-  }
-
-  Future<void> _clearPurchasedList() async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    setState(() => _isLoading = true);
-    try {
-      for (var item in _purchasedItems) {
-        await dataProvider.removeItemFromShoppingList(item['id'].toString());
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Einkaufshistorie erfolgreich geleert')),
-      );
-      _loadShoppingHistory();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Löschen der Einkaufshistorie: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -118,7 +69,6 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
             : Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title Styling
                   Container(
                     color: Constants.secondaryBackgroundColor,
                     padding: const EdgeInsets.symmetric(vertical: 16),
@@ -145,7 +95,6 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
       floatingActionButton: FloatingActionButton(
         onPressed: _clearPurchasedList,
         backgroundColor: Constants.warningColor,
-        // Matching red color for delete actions
         child: const Icon(Icons.delete_sweep, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavBarCustom(
@@ -157,6 +106,81 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
         householdId: widget.householdId,
       ),
     );
+  }
+
+  Future<void> _clearPurchasedList() async {
+    final confirmed = await deleteConfirmationDialog(
+      context,
+      'Einkaufshistorie leeren',
+      'Sind Sie sicher, dass Sie die gesamte Einkaufshistorie leeren möchten?',
+    );
+
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        for (var item in _purchasedItems) {
+          await dataProvider.removeItemFromShoppingList(item['id'].toString());
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Einkaufshistorie erfolgreich geleert')),
+        );
+        _loadShoppingHistory();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Fehler beim Löschen der Einkaufshistorie: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _deleteItem(String itemId) async {
+    final confirmed = await deleteConfirmationDialog(
+      context,
+      'Eintrag löschen',
+      'Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?',
+    );
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        await dataProvider.removeItemFromShoppingList(itemId);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Artikel erfolgreich gelöscht')),
+        );
+        _loadShoppingHistory(); // Neu laden
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Löschen des Artikels: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _addItemAgain(Map<String, dynamic> item) async {
+    setState(() => _isLoading = true);
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    try {
+      await dataProvider.addItemToShoppingList(
+          widget.householdId, item['item_name'], item['amount']);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${item['item_name']} zur Liste hinzugefügt.')),
+      );
+      _loadShoppingHistory(); // Liste neu laden
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Hinzufügen des Artikels: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
   }
 
   Widget _buildShoppingHistoryCard(Map<String, dynamic> item) {

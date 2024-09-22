@@ -12,11 +12,13 @@ import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht für die Detailansicht eines Haushalts
 @RoutePage()
 class HomeDetailScreen extends StatefulWidget {
   final String householdId;
-  final Map<String, dynamic> preloadedHouseholdData; // Preload household data
-  final String preloadedUserRole; // Preload user role
+  final Map<String, dynamic> preloadedHouseholdData;
+  final String preloadedUserRole;
 
   const HomeDetailScreen({
     Key? key,
@@ -69,112 +71,113 @@ class _HomeDetailScreenState extends State<HomeDetailScreen> {
       householdColor = Colors.grey;
     }
 
-    return Column(
-      children: [
-        // Title of the Household with the same style as 'Meine Bewertungen'
-        Container(
-          color: Constants.secondaryBackgroundColor,
-          // Light background similar to 'Meine Bewertungen'
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Center(
-            child:
-                CustomText(text: household['name'] ?? 'Unbenannter Haushalt'),
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          Container(
+            color: Constants.secondaryBackgroundColor,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Center(
+              child:
+                  CustomText(text: household['name'] ?? 'Unbenannter Haushalt'),
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: CircleAvatar(
-            radius: 30,
-            backgroundColor: householdColor,
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: CircleAvatar(
+              radius: 30,
+              backgroundColor: householdColor,
+            ),
           ),
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          'Mitglieder:',
-          style: TextStyle(fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-        FutureBuilder<List<Map<String, dynamic>>>(
-          future: Provider.of<DataProvider>(context, listen: false)
-              .getHouseholdMembers(widget.householdId),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            } else if (snapshot.hasError) {
-              return Text('Fehler: ${snapshot.error}');
-            } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return const Text('Keine Mitglieder gefunden.');
-            } else {
-              final members = snapshot.data!;
-              return Column(
-                children: members
-                    .map(
-                      (member) => ListTile(
-                        title: Center(
-                          child: Text(
-                            member['username'] ?? 'Unbekanntes Mitglied',
-                            style: const TextStyle(color: Colors.black),
+          const SizedBox(height: 20),
+          const Text(
+            'Mitglieder:',
+            style: TextStyle(fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: Provider.of<DataProvider>(context, listen: false)
+                .getHouseholdMembers(widget.householdId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('Fehler: ${snapshot.error}');
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Text('Keine Mitglieder gefunden.');
+              } else {
+                final members = snapshot.data!;
+                return Column(
+                  children: members
+                      .map(
+                        (member) => ListTile(
+                          title: Center(
+                            child: Text(
+                              member['username'] ?? 'Unbekanntes Mitglied',
+                              style: const TextStyle(color: Colors.black),
+                            ),
+                          ),
+                          subtitle: Center(
+                            child: Text(
+                              member['role'] ?? '',
+                              style: const TextStyle(color: Colors.black),
+                            ),
                           ),
                         ),
-                        subtitle: Center(
-                          child: Text(
-                            member['role'] ?? '',
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
+                      )
+                      .toList(),
+                );
+              }
+            },
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            icon: const Icon(Icons.copy),
+            label: const Text('Einladungscode kopieren'),
+            onPressed: () {
+              Clipboard.setData(
+                  ClipboardData(text: household['invite_code'] ?? ''));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Einladungscode kopiert')),
               );
-            }
-          },
-        ),
-        const SizedBox(height: 20),
-        ElevatedButton.icon(
-          icon: const Icon(Icons.copy),
-          label: const Text('Einladungscode kopieren'),
-          onPressed: () {
-            Clipboard.setData(
-                ClipboardData(text: household['invite_code'] ?? ''));
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Einladungscode kopiert')),
-            );
-          },
-          style: Constants.elevatedButtonStyle(),
-        ),
-        const Spacer(),
-        if (userRole == 'admin') ...[
-          ElevatedButton.icon(
-            icon: const Icon(Icons.edit),
-            label: const Text('Haushalt bearbeiten'),
-            onPressed: () {
-              editHouseholdDialog(context, household);
             },
             style: Constants.elevatedButtonStyle(),
           ),
-          const SizedBox(height: 10),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.delete),
-            label: const Text('Haushalt löschen'),
-            onPressed: () {
-              deleteHouseholdConfirmationDialog(context, household);
-            },
-            style: Constants.elevatedButtonStyle(),
-          ),
+          const Spacer(),
+          if (userRole == 'admin') ...[
+            ElevatedButton.icon(
+              icon: const Icon(Icons.edit),
+              label: const Text('Haushalt bearbeiten'),
+              onPressed: () {
+                editHouseholdDialog(context, household);
+              },
+              style: Constants.elevatedButtonStyle(),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.delete),
+              label: const Text('Haushalt löschen'),
+              onPressed: () {
+                deleteHouseholdConfirmationDialog(context, household);
+              },
+              style: Constants.elevatedButtonStyle(),
+            ),
+          ],
+          if (userRole == 'member') ...[
+            ElevatedButton.icon(
+              icon: const Icon(Icons.exit_to_app),
+              label: const Text('Haushalt verlassen'),
+              onPressed: () {
+                leaveConfirmationDialog(context, household['id']);
+              },
+              style: Constants.elevatedButtonStyle(),
+            ),
+          ],
+          const SizedBox(height: 20),
         ],
-        if (userRole == 'member') ...[
-          ElevatedButton.icon(
-            icon: const Icon(Icons.exit_to_app),
-            label: const Text('Haushalt verlassen'),
-            onPressed: () {
-              leaveConfirmationDialog(context, household['id']);
-            },
-            style: Constants.elevatedButtonStyle(),
-          ),
-        ],
-        const SizedBox(height: 20),
-      ],
+      ),
     );
   }
 

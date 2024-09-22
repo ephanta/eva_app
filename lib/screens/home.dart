@@ -40,9 +40,10 @@ class _HomeScreenState extends State<HomeScreen> {
         showProfile: true,
       ),
       body: Consumer<DataProvider>(builder: (context, dataProvider, child) {
-        return Center(
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: <Widget>[
               Container(
                 color: Constants.secondaryBackgroundColor,
@@ -71,70 +72,65 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     }
                     return Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: GridView.builder(
-                          gridDelegate:
-                              const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            crossAxisSpacing: 8.0,
-                            mainAxisSpacing: 8.0,
-                          ),
-                          itemCount: households.length,
-                          itemBuilder: (context, index) {
-                            final household = households[index];
-                            String colorString =
-                                household['color'] ?? '#ffffff';
-                            Color householdColor = Color(
-                              int.parse(colorString.substring(1, 7),
-                                      radix: 16) +
-                                  0xFF000000,
-                            );
-                            return InkWell(
-                              onTap: () async {
-                                try {
-                                  final householdData = await dataProvider
-                                      .getCurrentHousehold(household['id']);
-                                  final userRole = await dataProvider
-                                      .getUserRoleInHousehold(household['id']);
-                                  AutoRouter.of(context).push(
-                                    HomeDetailRoute(
-                                      householdId: household['id'],
-                                      preloadedHouseholdData: householdData,
-                                      preloadedUserRole: userRole,
-                                    ),
-                                  );
-                                } catch (e) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(
-                                            'Fehler beim Laden der Haushaltsdaten: $e')),
-                                  );
-                                }
-                              },
-                              child: Card(
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
-                                color: householdColor,
-                                child: Center(
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      CustomText(
-                                        text: household['name'] ??
-                                            'Unbenannter Haushalt',
-                                        textAlign: TextAlign.center,
-                                        fontSize: 20.0,
-                                        textColor: Colors.white,
-                                      ),
-                                    ],
+                      child: GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 8.0,
+                          mainAxisSpacing: 8.0,
+                        ),
+                        itemCount: households.length,
+                        itemBuilder: (context, index) {
+                          final household = households[index];
+                          String colorString = household['color'] ?? '#ffffff';
+                          Color householdColor = Color(
+                            int.parse(colorString.substring(1, 7), radix: 16) +
+                                0xFF000000,
+                          );
+                          return InkWell(
+                            onTap: () async {
+                              try {
+                                final householdData = await dataProvider
+                                    .getCurrentHousehold(household['id']);
+                                final userRole = await dataProvider
+                                    .getUserRoleInHousehold(household['id']);
+                                AutoRouter.of(context).push(
+                                  HomeDetailRoute(
+                                    householdId: household['id'],
+                                    preloadedHouseholdData: householdData,
+                                    preloadedUserRole: userRole,
                                   ),
+                                );
+                              } catch (e) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(
+                                          'Fehler beim Laden der Haushaltsdaten: $e')),
+                                );
+                              }
+                            },
+                            child: Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12)),
+                              color: householdColor,
+                              child: Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CustomText(
+                                      text: household['name'] ??
+                                          'Unbenannter Haushalt',
+                                      textAlign: TextAlign.center,
+                                      fontSize: 20.0,
+                                      textColor: Colors.white,
+                                    ),
+                                  ],
                                 ),
                               ),
-                            );
-                          },
-                        ),
+                            ),
+                          );
+                        },
                       ),
                     );
                   }

@@ -1,18 +1,21 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:eva_app/provider/data_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+
+import '../../data/constants.dart';
 
 /// {@category Widgets}
 /// Dialog zum Hinzufügen eines neuen Eintrags zur Einkaufsliste
-Future<Future<Object?>> showAddItemDialog(
-    BuildContext context, int householdId) async {
+Future<void> showAddItemDialog(BuildContext context,
+    {required DataProvider dataProvider,
+    required String householdId,
+    required ValueNotifier<bool> isLoading}) async {
   final TextEditingController controllerItemName = TextEditingController();
   final TextEditingController controllerAmount = TextEditingController();
   String itemName = '';
   String amount = '';
 
-  return showGeneralDialog(
+  final result = await showGeneralDialog<Map<String, String>>(
     context: context,
     barrierDismissible: true,
     barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
@@ -20,7 +23,7 @@ Future<Future<Object?>> showAddItemDialog(
         Animation secondaryAnimation) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('Neuen Eintrag erstellen'),
+          title: const Text('Artikel hinzufügen'),
         ),
         body: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -42,47 +45,35 @@ Future<Future<Object?>> showAddItemDialog(
                 controller: controllerItemName,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Was brauchst du?',
+                  labelText: 'Artikelname',
                 ),
                 onChanged: (value) {
                   itemName = value;
                 },
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  itemName = controllerItemName.text;
-                  amount = controllerAmount.text;
-                  if (itemName.isNotEmpty) {
-                    try {
-                      final dataProvider =
-                          Provider.of<DataProvider>(context, listen: false);
-                      await dataProvider.addItemToShoppingList(
-                        householdId.toString(),
-                        itemName,
-                        amount,
-                      );
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                            content: Text('Eintrag erfolgreich erstellt.')),
-                      );
-                      AutoRouter.of(context).maybePop();
-                    } catch (e) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content:
-                                Text('Fehler beim Erstellen des Eintrags: $e')),
-                      );
-                    }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('Bitte geben Sie einen Namen ein')),
-                    );
-                  }
-                },
-                child: const Text('Erstellen'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      AutoRouter.of(context).maybePop(); // Abbrechen
+                    },
+                    child: const Text('Abbrechen'),
+                    style: Constants.elevatedButtonStyleAbort(),
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: () {
+                      AutoRouter.of(context).maybePop({
+                        'name': itemName,
+                        'amount': amount,
+                      }); // Artikel hinzufügen
+                    },
+                    child: const Text('Hinzufügen'),
+                    style: Constants.elevatedButtonStyle(),
+                  ),
+                ],
               ),
             ],
           ),
@@ -101,4 +92,21 @@ Future<Future<Object?>> showAddItemDialog(
       );
     },
   );
+
+  if (result != null) {
+    isLoading.value = true; // Ladezustand aktivieren
+    try {
+      await dataProvider.addItemToShoppingList(
+          householdId, result['name']!, result['amount']!);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Artikel erfolgreich hinzugefügt')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Hinzufügen des Artikels: $e')),
+      );
+    } finally {
+      isLoading.value = false; // Ladezustand deaktivieren
+    }
+  }
 }

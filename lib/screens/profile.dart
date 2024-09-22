@@ -10,6 +10,8 @@ import '../routes/app_router.gr.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht des Profils eines Nutzers
 @RoutePage()
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -340,33 +342,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
         showHome: true,
         showProfile: false,
       ),
-      body: Column(
-        children: [
-          Container(
-            color: Constants.secondaryBackgroundColor,
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: const Center(
-              child: CustomText(
-                text: 'Profil',
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Container(
+              color: Constants.secondaryBackgroundColor,
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: const Center(
+                child: CustomText(
+                  text: 'Profil',
+                ),
               ),
             ),
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _buildProfileSection(),
-                  const SizedBox(height: 20),
-                  _buildActionButtons(),
-                  const SizedBox(height: 20),
-                  _buildLogoutButton(),
-                ],
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    _buildProfileSection(),
+                    const SizedBox(height: 20),
+                    _buildActionButtons(),
+                    const SizedBox(height: 20),
+                    _buildLogoutButton(),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

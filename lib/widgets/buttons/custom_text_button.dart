@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+/// {@category Widgets}
 /// Button-Typen
 /// - abort: Abbrechen-Button
 /// - done: Fertig-Button

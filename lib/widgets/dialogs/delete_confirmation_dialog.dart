@@ -1,64 +1,33 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:eva_app/widgets/buttons/custom_text_button.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-
-import '../../provider/data_provider.dart';
-import '../buttons/custom_text_button.dart';
 
 /// {@category Widgets}
-/// Dialog zum Bestätigen des Löschens eines Haushalts oder eines Eintrags aus der Einkaufsliste
-Future<void> deleteConfirmationDialog(
-  BuildContext context,
-  int householdId,
-  int? id,
-  String subject,
-  String question,
-  String delete, {
-  required VoidCallback onDeleted, // Callback hinzufügen
-}) async {
-  return showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('$subject löschen'),
-        content: SingleChildScrollView(
-          child: ListBody(
-            children: <Widget>[
-              Text(question),
+/// Dialog zur Bestätigung einer Löschaktion
+Future<bool> deleteConfirmationDialog(
+    BuildContext context, String title, String content) async {
+  return await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(title),
+            content: Text(content),
+            actions: [
+              CustomTextButton(
+                buttonType: ButtonType.abort,
+                onPressed: () {
+                  AutoRouter.of(context).maybePop(false);
+                },
+              ),
+              CustomTextButton(
+                buttonText: 'Löschen',
+                onPressed: () {
+                  AutoRouter.of(context).maybePop(true);
+                },
+              ),
             ],
-          ),
-        ),
-        actions: <Widget>[
-          CustomTextButton(
-            buttonType: ButtonType.abort,
-          ),
-          CustomTextButton(
-            buttonText: 'Löschen',
-            onPressed: () async {
-              final dataProvider =
-                  Provider.of<DataProvider>(context, listen: false);
-              try {
-                if (delete == 'household') {
-                  await dataProvider.deleteHousehold(householdId.toString());
-                } else if (delete == 'shoppinglist') {
-                  await dataProvider.removeItemFromShoppingList(id.toString());
-                }
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('$subject erfolgreich gelöscht.')),
-                );
-                AutoRouter.of(context).maybePop();
-                onDeleted();
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content: Text('Fehler beim Löschen des $subject : $e')),
-                );
-              }
-            },
-          ),
-        ],
-      );
-    },
-  );
+          );
+        },
+      ) ??
+      false; // Return false if dialog is dismissed
 }
