@@ -6,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// {@category Provider}
+/// DataProvider ist eine Klasse, die die Kommunikation mit der Supabase-API
 class DataProvider with ChangeNotifier {
   final SupabaseClient _client;
 
@@ -31,6 +33,7 @@ class DataProvider with ChangeNotifier {
     return _client.auth.currentSession;
   }
 
+  /// Funktion zum Abrufen des Authentifizierungstokens
   Future<String?> _getAuthToken() async {
     final session = _client.auth.currentSession;
     if (session != null) {
@@ -48,6 +51,7 @@ class DataProvider with ChangeNotifier {
     return null;
   }
 
+  /// Funktion zum Senden von Anfragen an die Supabase-API
   Future<T> _makeRequest<T>(String url, String method,
       {Map<String, dynamic>? body, Map<String, String>? queryParams}) async {
     final token = await _getAuthToken();
@@ -112,7 +116,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  // Profile-related methods
+  /// Funktion zum Abrufen des Benutzerprofils
   Future<Map<String, dynamic>> fetchUserProfile() async {
     try {
       return await _makeRequest<Map<String, dynamic>>(
@@ -122,6 +126,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Aktualisieren des Benutzerprofils
   Future<void> updateProfile(Map<String, dynamic> profileData) async {
     try {
       await _makeRequest<Map<String, dynamic>>(_profileEdgeFunctionUrl, 'PUT',
@@ -132,12 +137,13 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Abmelden des Benutzers
   Future<void> signOut() async {
     await _client.auth.signOut();
     notifyListeners();
   }
 
-  // Method to update dietary notes
+  /// Funktion zum Aktualisieren der Ernährungshinweise
   Future<void> updateDietaryNotes(String notes) async {
     final body = {
       'hinweise_zur_ernaehrung': notes,
@@ -162,7 +168,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Upload avatar method
+  /// Funktion zum Hochladen eines Benutzer-Avatars
   Future<String> uploadAvatar(String imagePath) async {
     final userId = currentUserId;
     if (userId == null) throw Exception('User not logged in');
@@ -187,7 +193,7 @@ class DataProvider with ChangeNotifier {
     return publicUrl;
   }
 
-  // Recipe-related methods
+  /// Funktion zum Abrufen der Rezepte des Benutzers
   Future<List<Map<String, dynamic>>> fetchUserRecipes() async {
     final response =
         await _makeRequest<Map<String, dynamic>>(_recipeEdgeFunctionUrl, 'GET');
@@ -198,12 +204,14 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Abrufen eines Rezepts
   Future<void> addNewRecipe(Map<String, dynamic> recipe) async {
     await _makeRequest<Map<String, dynamic>>(_recipeEdgeFunctionUrl, 'POST',
         body: recipe);
     notifyListeners();
   }
 
+  /// Funktion zum Aktualisieren eines Rezepts
   Future<void> updateRecipe(
       String recipeId, Map<String, dynamic> updatedRecipe) async {
     final token = _client.auth.currentSession?.accessToken;
@@ -230,13 +238,14 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Funktion zum Löschen eines Rezepts
   Future<void> deleteRecipe(String recipeId) async {
     await _makeRequest<Map<String, dynamic>>(_recipeEdgeFunctionUrl, 'DELETE',
         queryParams: {'id': recipeId});
     notifyListeners();
   }
 
-  // Household-related methods
+  /// Funktion zum Abrufen des aktuellen Haushalts
   Future<Map<String, dynamic>> getCurrentHousehold(String householdId) async {
     try {
       final response = await _makeRequest<Map<String, dynamic>>(
@@ -265,7 +274,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  /// Funktion zum Abrufen der Haushalte des Benutzers
+  /// Funktion zum Abrufen aller Haushalte des Benutzers
   Future<List<Map<String, dynamic>>> fetchUserHouseholds() async {
     final response = await _makeRequest<Map<String, dynamic>>(
       _householdEdgeFunctionUrl,
@@ -321,6 +330,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Aktualisieren des Haushalts
   Future<Map<String, dynamic>> updateHousehold(String householdId,
       {required String name, required String color}) async {
     final response = await _makeRequest<Map<String, dynamic>>(
@@ -333,6 +343,7 @@ class DataProvider with ChangeNotifier {
     return response;
   }
 
+  /// Funktion zum Löschen eines Haushalts
   Future<void> deleteHousehold(String householdId) async {
     await _makeRequest<Map<String, dynamic>>(
         _householdEdgeFunctionUrl, 'DELETE',
@@ -340,6 +351,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Funktion zum Verlassen eines Haushalts
   Future<void> leaveHousehold(String householdId) async {
     await _makeRequest<Map<String, dynamic>>(
       _householdEdgeFunctionUrl,
@@ -349,6 +361,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Funktion zum Abrufen der Haushaltsmitglieder
   Future<List<Map<String, dynamic>>> getHouseholdMembers(
       String householdId) async {
     final response = await _makeRequest<Map<String, dynamic>>(
@@ -361,7 +374,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
-  // Planner-related methods
+  /// Funktion zum Hinzufügen eines Haushaltsmitglieds
   Future<Map<String, Map<String, String?>>> getWeeklyPlan(
       String householdId) async {
     final response = await _makeRequest<Map<String, dynamic>>(
@@ -375,12 +388,14 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Löschen eines Speiseplans
   Future<void> deleteMealPlan(String householdId, String date) async {
     await _makeRequest<Map<String, dynamic>>(_plannerEdgeFunctionUrl, 'DELETE',
         queryParams: {'household_id': householdId, 'datum': date});
     notifyListeners();
   }
 
+  /// Funktion zum Hinzufügen eines Speiseplans
   Future<void> addMealPlan(
       String householdId,
       String date,
@@ -401,6 +416,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Funktion zum Aktualisieren eines Speiseplans
   Future<void> updateMealPlan(
       String householdId,
       String date,
@@ -420,7 +436,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Shopping list-related methods
+  /// Funktion zum Abrufen der Einkaufsliste
   Future<List<Map<String, dynamic>>> getShoppingList(String householdId) async {
     final response = await _makeRequest<Map<String, dynamic>>(
         _shoppingListEdgeFunctionUrl, 'GET',
@@ -432,6 +448,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Hinzufügen eines Artikels zur Einkaufsliste
   Future<void> addItemToShoppingList(
       String householdId, String itemName, String? amount) async {
     await _makeRequest<Map<String, dynamic>>(
@@ -443,6 +460,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Funktion zum Aktualisieren des Status eines Artikels in der Einkaufsliste
   Future<void> updateShoppingItemStatus(String itemId, bool isPurchased) async {
     await _makeRequest<Map<String, dynamic>>(
         _shoppingListEdgeFunctionUrl, 'PUT',
@@ -450,6 +468,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Funktion zum Entfernen eines Artikels aus der Einkaufsliste
   Future<void> removeItemFromShoppingList(String itemId) async {
     await _makeRequest<Map<String, dynamic>>(
         _shoppingListEdgeFunctionUrl, 'DELETE',
@@ -457,7 +476,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Rating-related methods
+  /// Funktion zum Abrufen der Bewertungen eines Rezepts
   Future<List<Map<String, dynamic>>> getRatings(String recipeId) async {
     final response = await _makeRequest<Map<String, dynamic>>(
       _ratingEdgeFunctionUrl,
@@ -471,6 +490,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Hinzufügen einer Bewertung
   Future<void> addRating(String recipeId, int rating, String? comment) async {
     try {
       if (kDebugMode) {
@@ -497,6 +517,7 @@ class DataProvider with ChangeNotifier {
     }
   }
 
+  /// Funktion zum Aktualisieren einer Bewertung
   Future<void> updateRating(
       String ratingId, int rating, String? comment) async {
     await _makeRequest<Map<String, dynamic>>(
@@ -511,6 +532,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Funktion zum Löschen einer Bewertung
   Future<void> deleteRating(String ratingId) async {
     await _makeRequest<Map<String, dynamic>>(
       _ratingEdgeFunctionUrl,
@@ -520,6 +542,7 @@ class DataProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  /// Funktion zum Abrufen der Bewertungen des Benutzers
   Future<List<Map<String, dynamic>>> getUserRatings() async {
     try {
       final response = await _makeRequest<Map<String, dynamic>>(

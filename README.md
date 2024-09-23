@@ -8,7 +8,6 @@ erleichtern sowie Rezepte anzulegen und miteinander zu teilen.
 - Robert Gehrmann
 - Eva-Maria Maurer
 - Alexander Paul
-- Dennis Roukis
 
 ## Plattformen
 
@@ -18,7 +17,10 @@ Die App ist für Android und iOS verfügbar, wurde jedoch nur auf Android getest
 
 - Registrierung und Anmeldung mit E-Mail und Passwort
 - Erstellung und Beitreten eines Haushalts
-- [...]
+- Erstellung und Bearbeitung von Rezepten
+- Planung von Mahlzeiten für die Woche per Kalender
+- Bewertung von Rezepten
+- Einkaufsliste mit automatischer Aktualisierung für alle Haushaltsmitglieder
 
 ## Technologien
 
@@ -64,5 +66,8 @@ Die App ist für Android und iOS verfügbar, wurde jedoch nur auf Android getest
 
 ## Dokumentation
 
-Die Dokumentation erfolgt über [...]
+Die Dokumentation des Codes erfolgt über das Package `dartdoc`. Die Dokumentation kann über den
+Befehl `dart doc`
+generiert werden und ist dann im Ordner `doc/api` zu finden. Anschließend kann die Dokumentation
+über die `index.html` im Browser geöffnet werden. 
 

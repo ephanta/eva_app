@@ -13,7 +13,7 @@ import '../widgets/navigation/bottom_navigation_bar.dart';
 import '../widgets/text/custom_text.dart';
 
 /// {@category Screens}
-/// Ansicht für die Detailansicht eines Haushalts
+/// Ansicht für die Haushalt-Detail-Seite
 @RoutePage()
 class HomeDetailScreen extends StatefulWidget {
   final String householdId;
