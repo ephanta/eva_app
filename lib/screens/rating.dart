@@ -20,10 +20,10 @@ class RatingScreen extends StatefulWidget {
       : super(key: key);
 
   @override
-  _RatingScreenState createState() => _RatingScreenState();
+  RatingScreenState createState() => RatingScreenState();
 }
 
-class _RatingScreenState extends State<RatingScreen> {
+class RatingScreenState extends State<RatingScreen> {
   late DataProvider _dataProvider;
   List<Map<String, dynamic>> _ratings = [];
   bool _isLoading = true;

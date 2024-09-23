@@ -1,7 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.gr.dart';
-import 'package:eva_app/widgets/dialogs/recipeSelectionDialog.dart';
+import 'package:eva_app/widgets/dialogs/recipe_selection_dialog.dart';
 import 'package:flutter/material.dart';
 
 import '../../data/constants.dart';

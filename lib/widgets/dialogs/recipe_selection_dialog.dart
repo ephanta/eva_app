@@ -77,7 +77,7 @@ Future<void> recipeSelectionDialog(
                     if (selectedDay != null && selectedRecipe != null) {
                       try {
                         final currentPlan = wochenplan[
-                                selectedDay!.toIso8601String().split('T')[0]] ??
+                                selectedDay.toIso8601String().split('T')[0]] ??
                             {};
                         final updatedMeals = {
                           'fruehstueck_rezept_id':
@@ -97,7 +97,7 @@ Future<void> recipeSelectionDialog(
                         if (currentPlan.isEmpty) {
                           await dataProvider.addMealPlan(
                             householdId,
-                            selectedDay!.toIso8601String().split('T')[0],
+                            selectedDay.toIso8601String().split('T')[0],
                             updatedMeals['fruehstueck_rezept_id'],
                             updatedMeals['mittagessen_rezept_id'],
                             updatedMeals['abendessen_rezept_id'],
@@ -105,7 +105,7 @@ Future<void> recipeSelectionDialog(
                         } else {
                           await dataProvider.updateMealPlan(
                             householdId,
-                            selectedDay!.toIso8601String().split('T')[0],
+                            selectedDay.toIso8601String().split('T')[0],
                             updatedMeals['fruehstueck_rezept_id'],
                             updatedMeals['mittagessen_rezept_id'],
                             updatedMeals['abendessen_rezept_id'],

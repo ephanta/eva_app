@@ -59,8 +59,8 @@ Future<void> showAddItemDialog(BuildContext context,
                     onPressed: () {
                       AutoRouter.of(context).maybePop(); // Abbrechen
                     },
-                    child: const Text('Abbrechen'),
                     style: Constants.elevatedButtonStyleAbort(),
+                    child: const Text('Abbrechen'),
                   ),
                   const SizedBox(width: 10),
                   ElevatedButton(
@@ -70,8 +70,8 @@ Future<void> showAddItemDialog(BuildContext context,
                         'amount': amount,
                       }); // Artikel hinzufügen
                     },
-                    child: const Text('Hinzufügen'),
                     style: Constants.elevatedButtonStyle(),
+                    child: const Text('Hinzufügen'),
                   ),
                 ],
               ),

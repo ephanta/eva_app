@@ -40,9 +40,11 @@ dependencies:
   intl: ^0.18.0
   uuid: ^4.0.0
   http: ^1.1.0
+  path: ^1.8.0
   image_picker: ^0.8.5+3
   table_calendar: ^3.0.9
   shared_preferences: ^2.3.2
+  dartdoc: ^7.0.2
 
 dev_dependencies:
   flutter_test:

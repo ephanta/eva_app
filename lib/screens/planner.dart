@@ -7,7 +7,7 @@ import 'package:table_calendar/table_calendar.dart';
 import '../data/constants.dart';
 import '../provider/data_provider.dart';
 import '../widgets/buttons/custom_text_button.dart';
-import '../widgets/dialogs/addRecipeDialog.dart';
+import '../widgets/dialogs/add_recipe_dialog.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/text/custom_text.dart';
 

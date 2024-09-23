@@ -158,10 +158,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               valueListenable: isLoading,
               builder: (context, loading, child) {
                 return loading
-                    ? CircularProgressIndicator(
+                    ? const CircularProgressIndicator(
                         color: Constants.primaryTextColor,
                       )
-                    : Icon(Icons.add, color: Constants.primaryTextColor);
+                    : const Icon(Icons.add, color: Constants.primaryTextColor);
               },
             ),
           ),

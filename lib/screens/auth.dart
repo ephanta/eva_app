@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_auth_ui/supabase_auth_ui.dart';
@@ -35,7 +36,9 @@ class _AuthScreenState extends State<AuthScreen> {
         AutoRouter.of(context).push(const HomeRoute());
       }
     } catch (e) {
-      print('Error checking auth status: $e');
+      if (kDebugMode) {
+        print('Error checking auth status: $e');
+      }
       // Handle error appropriately
     }
   }

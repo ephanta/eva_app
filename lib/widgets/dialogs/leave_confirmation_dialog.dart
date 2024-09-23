@@ -1,5 +1,5 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:eva_app/widgets/dialogs/showErrorSnackBar.dart';
+import 'package:eva_app/widgets/dialogs/show_error_snack_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
