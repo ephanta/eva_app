@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// {@category Widgets}
+/// Bottom Navigation Bar Item
 class BottomNavBarItem extends StatelessWidget {
   final IconData icon;
   final String label;

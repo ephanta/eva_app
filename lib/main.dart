@@ -1,19 +1,24 @@
 import 'package:eva_app/provider/data_provider.dart';
 import 'package:eva_app/routes/app_router.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
     await dotenv.load(fileName: '.env');
-    print('.env Datei erfolgreich geladen');
+    if (kDebugMode) {
+      print('.env Datei erfolgreich geladen');
+    }
   } catch (e) {
-    print('Fehler beim Laden der .env Datei: $e');
+    if (kDebugMode) {
+      print('Fehler beim Laden der .env Datei: $e');
+    }
   }
 
   await Supabase.initialize(
@@ -22,7 +27,9 @@ Future<void> main() async {
   );
 
   await initializeDateFormatting('de_DE', null);
-  print('Date formatting for German initialized');
+  if (kDebugMode) {
+    print('Date formatting for German initialized');
+  }
 
   final supabase = Supabase.instance.client;
 
@@ -30,9 +37,13 @@ Future<void> main() async {
   final jwtToken = session?.accessToken;
 
   if (jwtToken != null) {
-    print('JWT Token: $jwtToken');
+    if (kDebugMode) {
+      print('JWT Token: $jwtToken');
+    }
   } else {
-    print('No JWT token found. User may not be authenticated.');
+    if (kDebugMode) {
+      print('No JWT token found. User may not be authenticated.');
+    }
   }
 
   runApp(
@@ -48,7 +59,7 @@ class FamilyFeastApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _appRouter = AppRouter();
+    final appRouter = AppRouter();
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
@@ -57,7 +68,7 @@ class FamilyFeastApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
         useMaterial3: true,
       ),
-      routerConfig: _appRouter.config(),
+      routerConfig: appRouter.config(),
     );
   }
 }

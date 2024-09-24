@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, user-scalable=no">
+  <meta name="description" content="API docs for the recipeSelectionDialog function from the recipeSelectionDialog library, for the Dart programming language.">
+  <title>recipeSelectionDialog function - recipeSelectionDialog library - Dart API</title>
+
+
+  
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet">
+  
+  <link rel="stylesheet" href="../static-assets/github.css?v1">
+  <link rel="stylesheet" href="../static-assets/styles.css?v1">
+  <link rel="icon" href="../static-assets/favicon.png?v1">
+
+  
+</head>
+
+
+<body data-base-href="../" data-using-base-href="false" class="light-theme">
+
+<div id="overlay-under-drawer"></div>
+
+<header id="title">
+  <span id="sidenav-left-toggle" class="material-symbols-outlined" role="button" tabindex="0">menu</span>
+  <ol class="breadcrumbs gt-separated dark hidden-xs">
+    <li><a href="../index.html">eva_app</a></li>
+    <li><a href="../widgets_dialogs_recipeSelectionDialog/widgets_dialogs_recipeSelectionDialog-library.html">widgets\dialogs\recipeSelectionDialog.dart</a></li>
+    <li class="self-crumb">recipeSelectionDialog function</li>
+  </ol>
+  <div class="self-name">recipeSelectionDialog</div>
+  <form class="search navbar-right" role="search">
+    <input type="text" id="search-box" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+  <div class="toggle" id="theme-button" title="Toggle brightness">
+    <label for="theme">
+      <input type="checkbox" id="theme" value="light-theme">
+      <span id="dark-theme-button" class="material-symbols-outlined">
+        dark_mode
+      </span>
+      <span id="light-theme-button" class="material-symbols-outlined">
+        light_mode
+      </span>
+    </label>
+  </div>
+</header>
+<main>
+
+  <div
+      id="dartdoc-main-content"
+      class="main-content"
+      data-above-sidebar="widgets_dialogs_recipeSelectionDialog&#47;widgets_dialogs_recipeSelectionDialog-library-sidebar.html"
+      data-below-sidebar="">
+      <div>
+<h1><span class="kind-function">recipeSelectionDialog</span> function 
+ 
+    <span class="category widgets cp-3 linked" title="This is part of the Widgets topic."><a href="../topics/Widgets-topic.html">Widgets</a></span>
+</h1></div>
+
+    <section class="multi-line-signature">
+        
+
+<span class="returntype"><a href="https://api.flutter.dev/flutter/dart-async/Future-class.html">Future</a><span class="signature">&lt;<wbr><span class="type-parameter">void</span>&gt;</span></span>
+<span class="name ">recipeSelectionDialog</span>(<wbr><ol class="parameter-list"><li><span class="parameter" id="recipeSelectionDialog-param-context"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/widgets/BuildContext-class.html">BuildContext</a></span> <span class="parameter-name">context</span>, </span></li>
+<li><span class="parameter" id="recipeSelectionDialog-param-dataProvider"><span class="type-annotation"><a href="../provider_data_provider/DataProvider-class.html">DataProvider</a></span> <span class="parameter-name">dataProvider</span>, </span></li>
+<li><span class="parameter" id="recipeSelectionDialog-param-mealTypes"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/List-class.html">List</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">mealTypes</span>, </span></li>
+<li><span class="parameter" id="recipeSelectionDialog-param-mealTypeLabels"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>&gt;</span></span> <span class="parameter-name">mealTypeLabels</span>, </span></li>
+<li><span class="parameter" id="recipeSelectionDialog-param-selectedDay"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/DateTime-class.html">DateTime</a>?</span> <span class="parameter-name">selectedDay</span>, </span></li>
+<li><span class="parameter" id="recipeSelectionDialog-param-wochenplan"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/Map-class.html">Map</a><span class="signature">&lt;<wbr><span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span>, <span class="type-parameter"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a>?</span>&gt;</span></span>&gt;</span></span> <span class="parameter-name">wochenplan</span>, </span></li>
+<li><span class="parameter" id="recipeSelectionDialog-param-householdId"><span class="type-annotation"><a href="https://api.flutter.dev/flutter/dart-core/String-class.html">String</a></span> <span class="parameter-name">householdId</span></span></li>
+</ol>)
+
+        
+
+    </section>
+    
+<section class="desc markdown">
+  <p>Dialog um eine Farbe auszuwählen</p>
+</section>
+
+
+    
+<section class="summary source-code" id="source">
+  <h2><span>Implementation</span></h2>
+  <pre class="language-dart"><code class="language-dart">Future&lt;void&gt; recipeSelectionDialog(
+    BuildContext context,
+    DataProvider dataProvider,
+    List&lt;String&gt; mealTypes,
+    Map&lt;String, String&gt; mealTypeLabels,
+    DateTime? selectedDay,
+    Map&lt;String, Map&lt;String, String?&gt;&gt; wochenplan,
+    String householdId) async {
+  try {
+    final recipes = await dataProvider.fetchUserRecipes();
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        String selectedMealType = mealTypes[0];
+        Map&lt;String, dynamic&gt;? selectedRecipe;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text(&quot;Rezept auswählen&quot;,
+                  style: TextStyle(color: Constants.primaryTextColor)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButton&lt;String&gt;(
+                    value: selectedMealType,
+                    items: mealTypes.map((String value) {
+                      return DropdownMenuItem&lt;String&gt;(
+                        value: value,
+                        child: Text(mealTypeLabels[value]!),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        selectedMealType = newValue!;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: recipes.map((recipe) {
+                          return ListTile(
+                            title: Text(recipe[&#39;name&#39;] ?? &#39;Unbekanntes Rezept&#39;),
+                            subtitle: Text(recipe[&#39;beschreibung&#39;] ?? &#39;&#39;),
+                            onTap: () {
+                              setState(() {
+                                selectedRecipe = recipe;
+                              });
+                            },
+                            selected: selectedRecipe != null &amp;&amp;
+                                selectedRecipe![&#39;id&#39;] == recipe[&#39;id&#39;],
+                            selectedTileColor: Colors.grey[200],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                CustomTextButton(
+                  buttonType: ButtonType.abort,
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (selectedDay != null &amp;&amp; selectedRecipe != null) {
+                      try {
+                        final currentPlan = wochenplan[
+                                selectedDay!.toIso8601String().split(&#39;T&#39;)[0]] ??
+                            {};
+                        final updatedMeals = {
+                          &#39;fruehstueck_rezept_id&#39;:
+                              selectedMealType == &#39;fruehstueck&#39;
+                                  ? selectedRecipe![&#39;id&#39;]
+                                  : currentPlan[&#39;fruehstueck_rezept_id&#39;],
+                          &#39;mittagessen_rezept_id&#39;:
+                              selectedMealType == &#39;mittagessen&#39;
+                                  ? selectedRecipe![&#39;id&#39;]
+                                  : currentPlan[&#39;mittagessen_rezept_id&#39;],
+                          &#39;abendessen_rezept_id&#39;:
+                              selectedMealType == &#39;abendessen&#39;
+                                  ? selectedRecipe![&#39;id&#39;]
+                                  : currentPlan[&#39;abendessen_rezept_id&#39;],
+                        };
+
+                        if (currentPlan.isEmpty) {
+                          await dataProvider.addMealPlan(
+                            householdId,
+                            selectedDay!.toIso8601String().split(&#39;T&#39;)[0],
+                            updatedMeals[&#39;fruehstueck_rezept_id&#39;],
+                            updatedMeals[&#39;mittagessen_rezept_id&#39;],
+                            updatedMeals[&#39;abendessen_rezept_id&#39;],
+                          );
+                        } else {
+                          await dataProvider.updateMealPlan(
+                            householdId,
+                            selectedDay!.toIso8601String().split(&#39;T&#39;)[0],
+                            updatedMeals[&#39;fruehstueck_rezept_id&#39;],
+                            updatedMeals[&#39;mittagessen_rezept_id&#39;],
+                            updatedMeals[&#39;abendessen_rezept_id&#39;],
+                          );
+                        } &#47;&#47; Refresh the planner with the updated recipe
+                        AutoRouter.of(context).maybePop(); &#47;&#47; Close the dialog
+                      } catch (e) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  &#39;Fehler beim Hinzufügen des Rezepts: $e&#39;)),
+                        );
+                      }
+                    }
+                  },
+                  style: Constants.elevatedButtonStyle(),
+                  child: const Text(&quot;Bestätigen&quot;),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(&#39;Fehler beim Laden der Rezepte: $e&#39;)),
+    );
+  }
+}</code></pre>
+</section>
+
+
+  </div> <!-- /.main-content -->
+
+  <div id="dartdoc-sidebar-left" class="sidebar sidebar-offcanvas-left">
+    <!-- The search input and breadcrumbs below are only responsively visible at low resolutions. -->
+<header id="header-search-sidebar" class="hidden-l">
+  <form class="search-sidebar" role="search">
+    <input type="text" id="search-sidebar" autocomplete="off" disabled class="form-control typeahead" placeholder="Loading search...">
+  </form>
+</header>
+
+<ol class="breadcrumbs gt-separated dark hidden-l" id="sidebar-nav">
+    <li><a href="../index.html">eva_app</a></li>
+    <li><a href="../widgets_dialogs_recipeSelectionDialog/widgets_dialogs_recipeSelectionDialog-library.html">recipeSelectionDialog</a></li>
+    <li class="self-crumb">recipeSelectionDialog function</li>
+</ol>
+
+
+    <h5>recipeSelectionDialog library</h5>
+    <div id="dartdoc-sidebar-left-content"></div>
+  </div><!--/.sidebar-offcanvas-left-->
+
+  <div id="dartdoc-sidebar-right" class="sidebar sidebar-offcanvas-right">
+  </div><!--/.sidebar-offcanvas-->
+
+</main>
+
+<footer>
+  <span class="no-break">
+    eva_app
+      1.0.0+1
+  </span>
+
+  
+</footer>
+
+
+
+<script src="../static-assets/highlight.pack.js?v1"></script>
+<script src="../static-assets/docs.dart.js"></script>
+
+
+
+</body>
+
+</html>
+

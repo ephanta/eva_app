@@ -4,10 +4,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../data/constants.dart';
 import '../provider/data_provider.dart';
+import '../widgets/dialogs/delete_confirmation_dialog.dart';
 import '../widgets/navigation/app_bar_custom.dart';
 import '../widgets/navigation/bottom_navigation_bar.dart';
+import '../widgets/text/custom_text.dart';
 
+/// {@category Screens}
+/// Ansicht der Einkaufshistorie
 @RoutePage()
 class ShoppingHistoryScreen extends StatefulWidget {
   final String householdId;
@@ -19,6 +24,7 @@ class ShoppingHistoryScreen extends StatefulWidget {
   State<ShoppingHistoryScreen> createState() => _ShoppingHistoryScreenState();
 }
 
+/// Der Zustand für die Einkaufshistorie
 class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
   List<Map<String, dynamic>> _purchasedItems = [];
   bool _isLoading = true;
@@ -34,7 +40,8 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
     try {
       final items = await dataProvider.getShoppingList(widget.householdId);
       setState(() {
-        _purchasedItems = items.where((item) => item['status'] == 'purchased').toList();
+        _purchasedItems =
+            items.where((item) => item['status'] == 'purchased').toList();
         _isLoading = false;
       });
     } catch (e) {
@@ -44,53 +51,6 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Fehler beim Laden der Einkaufshistorie: $e')),
       );
-    }
-  }
-
-  void _deleteItem(String itemId) async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    try {
-      await dataProvider.removeItemFromShoppingList(itemId);
-      _loadShoppingHistory();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Löschen des Eintrags: $e')),
-      );
-    }
-  }
-
-  void _addItemAgain(Map<String, dynamic> item) async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    try {
-      await dataProvider.addItemToShoppingList(widget.householdId, item['item_name'], item['amount']);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${item['item_name']} wurde der Einkaufsliste hinzugefügt.')),
-      );
-      _loadShoppingHistory();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Hinzufügen des Artikels: $e')),
-      );
-    }
-  }
-
-  Future<void> _clearPurchasedList() async {
-    final dataProvider = Provider.of<DataProvider>(context, listen: false);
-    setState(() => _isLoading = true);
-    try {
-      for (var item in _purchasedItems) {
-        await dataProvider.removeItemFromShoppingList(item['id'].toString());
-      }
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Einkaufshistorie erfolgreich geleert')),
-      );
-      _loadShoppingHistory();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Fehler beim Löschen der Einkaufshistorie: $e')),
-      );
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 
@@ -107,40 +67,34 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
         child: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title Styling
-            Container(
-              color: const Color(0xFFFDF6F4),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: const Center(
-                child: Text(
-                  'Einkaufshistorie',
-                  style: TextStyle(
-                    fontSize: 22, // Matching font size
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF3A0B01), // Matching text color
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    color: Constants.secondaryBackgroundColor,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: const Center(
+                      child: CustomText(text: 'Einkaufshistorie'),
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  _purchasedItems.isEmpty
+                      ? const Center(
+                          child: Text('Keine gekauften Artikel vorhanden.'))
+                      : Expanded(
+                          child: ListView.builder(
+                            itemCount: _purchasedItems.length,
+                            itemBuilder: (context, index) {
+                              return _buildShoppingHistoryCard(
+                                  _purchasedItems[index]);
+                            },
+                          ),
+                        ),
+                ],
               ),
-            ),
-            const SizedBox(height: 16),
-            _purchasedItems.isEmpty
-                ? const Center(child: Text('Keine gekauften Artikel vorhanden.'))
-                : Expanded(
-              child: ListView.builder(
-                itemCount: _purchasedItems.length,
-                itemBuilder: (context, index) {
-                  return _buildShoppingHistoryCard(_purchasedItems[index]);
-                },
-              ),
-            ),
-          ],
-        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _clearPurchasedList,
-        backgroundColor: Colors.red, // Matching red color for delete actions
+        backgroundColor: Constants.warningColor,
         child: const Icon(Icons.delete_sweep, color: Colors.white),
       ),
       bottomNavigationBar: BottomNavBarCustom(
@@ -154,34 +108,109 @@ class _ShoppingHistoryScreenState extends State<ShoppingHistoryScreen> {
     );
   }
 
+  Future<void> _clearPurchasedList() async {
+    final confirmed = await deleteConfirmationDialog(
+      context,
+      'Einkaufshistorie leeren',
+      'Sind Sie sicher, dass Sie die gesamte Einkaufshistorie leeren möchten?',
+    );
+
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        for (var item in _purchasedItems) {
+          await dataProvider.removeItemFromShoppingList(item['id'].toString());
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Einkaufshistorie erfolgreich geleert')),
+        );
+        _loadShoppingHistory();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('Fehler beim Löschen der Einkaufshistorie: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _deleteItem(String itemId) async {
+    final confirmed = await deleteConfirmationDialog(
+      context,
+      'Eintrag löschen',
+      'Sind Sie sicher, dass Sie diesen Eintrag löschen möchten?',
+    );
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+
+    if (confirmed == true) {
+      setState(() => _isLoading = true);
+      try {
+        await dataProvider.removeItemFromShoppingList(itemId);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Artikel erfolgreich gelöscht')),
+        );
+        _loadShoppingHistory(); // Neu laden
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Fehler beim Löschen des Artikels: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  void _addItemAgain(Map<String, dynamic> item) async {
+    setState(() => _isLoading = true);
+    final dataProvider = Provider.of<DataProvider>(context, listen: false);
+    try {
+      await dataProvider.addItemToShoppingList(
+          widget.householdId, item['item_name'], item['amount']);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${item['item_name']} zur Liste hinzugefügt.')),
+      );
+      _loadShoppingHistory(); // Liste neu laden
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Fehler beim Hinzufügen des Artikels: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   Widget _buildShoppingHistoryCard(Map<String, dynamic> item) {
     final DateTime purchasedAt = DateTime.parse(item['purchased_at']);
-    final String formattedDate = DateFormat('dd.MM.yyyy HH:mm').format(purchasedAt);
+    final String formattedDate =
+        DateFormat('dd.MM.yyyy HH:mm').format(purchasedAt);
 
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: const Color(0xFFFDD9CF), // Consistent background color for cards
+      color: Constants.primaryBackgroundColor,
+      // Consistent background color for cards
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-        title: Text(
-          item['item_name'] ?? '',
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF3A0B01), // Matching text color
-          ),
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+        title: CustomText(
+          text: item['item_name'] ?? '',
+          fontSize: 18,
         ),
         subtitle: Text('Menge: ${item['amount']} - Gekauft am $formattedDate'),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
-              icon: const Icon(Icons.add_shopping_cart, color: Colors.green),
+              icon: const Icon(Icons.add_shopping_cart,
+                  color: Constants.successColor),
               onPressed: () => _addItemAgain(item),
             ),
             IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
+              icon: const Icon(Icons.delete, color: Constants.warningColor),
               onPressed: () => _deleteItem(item['id'].toString()),
             ),
           ],
