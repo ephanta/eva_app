@@ -12,6 +12,7 @@ erleichtern sowie Rezepte anzulegen und miteinander zu teilen.
 ## Plattformen
 
 Die App ist für Android und iOS verfügbar, wurde jedoch nur auf Android getestet.
+Hierzu wurde ein Google Pixel 8 Pro API 35 mithilfe des Emulators emuliert.
 
 ## Features
 
@@ -31,6 +32,8 @@ Die App ist für Android und iOS verfügbar, wurde jedoch nur auf Android getest
 - Discord
 
 ## Installation
+
+Siehe Dokumentation.
 
 ### Vorraussetzungen
 
