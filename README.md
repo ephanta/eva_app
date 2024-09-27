@@ -53,7 +53,7 @@ Die App ist für Android und iOS verfügbar, wurde jedoch nur auf Android getest
 
 - `flutter doctor` - Überprüft, ob alle Voraussetzungen erfüllt sind
 - `flutter test` - Führt Tests aus
-- `flutter format` - Formatier den Code
+- `flutter format` - Formatiert den Code
 - `flutter pub upgrade` - Updatet alle Packages
 - `dart run build_runner watch` - Generiert Code für JSON-Serialisierung und aktualisiert bei
   Änderungen (wie für die Routen)
