@@ -12,7 +12,6 @@ erleichtern sowie Rezepte anzulegen und miteinander zu teilen.
 ## Plattformen
 
 Die App ist für Android und iOS verfügbar, wurde jedoch nur auf Android getestet.
-Hierzu wurde ein Google Pixel 8 Pro API 35 mithilfe des Emulators emuliert.
 
 ## Features
 
@@ -32,8 +31,6 @@ Hierzu wurde ein Google Pixel 8 Pro API 35 mithilfe des Emulators emuliert.
 - Discord
 
 ## Installation
-
-Siehe Dokumentation.
 
 ### Vorraussetzungen
 
@@ -56,7 +53,6 @@ Siehe Dokumentation.
 
 - `flutter doctor` - Überprüft, ob alle Voraussetzungen erfüllt sind
 - `flutter test` - Führt Tests aus
-- `flutter format` - Formatiert den Code
 - `flutter pub upgrade` - Updatet alle Packages
 - `dart run build_runner watch` - Generiert Code für JSON-Serialisierung und aktualisiert bei
   Änderungen (wie für die Routen)
